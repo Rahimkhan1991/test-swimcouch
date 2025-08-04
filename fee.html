@@ -129,6 +129,15 @@
     function saveFees(fees) {
       localStorage.setItem("fees", JSON.stringify(fees));
     }
+       function showMessage(msg) {
+        const msgDiv = document.getElementById("messageBox");
+        msgDiv.textContent = msg;
+        msgDiv.style.display = "block";
+        setTimeout(() => {
+        msgDiv.style.display = "none";
+        }, 3000);
+        }
+
 
     function populateDropdowns() {
       const students = getStudents();
@@ -159,7 +168,7 @@
       fees.push({studentId, amount, date});
       saveFees(fees);
       document.getElementById("amount").value = "";
-      alert("Fee collected successfully!");
+      showMessage("Fee collected successfully!");
       showStudentBalance();
       loadFeeHistory();
     }
