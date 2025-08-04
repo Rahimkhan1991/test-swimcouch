@@ -140,8 +140,15 @@
     return;
   }
 
-  fees.push({ studentId, amount, date });
-  saveFees(fees);
+fees.push({ studentId, amount, date });
+saveFees(fees);
+
+// Recalculate and update student balance in student object
+const newPaid = totalPaid + amount;
+student.initialPayment = newPaid;
+student.balanceFee = student.totalFee - newPaid;
+localStorage.setItem("students", JSON.stringify(students));
+
 
   document.getElementById("amount").value = "";
   showMessage("Fee collected successfully!");

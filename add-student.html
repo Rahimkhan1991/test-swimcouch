@@ -10,7 +10,6 @@
       background: #f2f2f2;
       padding: 20px;
     }
-
     .container {
       max-width: 480px;
       margin: auto;
@@ -19,13 +18,11 @@
       border-radius: 16px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     }
-
     h2 {
       text-align: center;
       color: #007bff;
       margin-bottom: 16px;
     }
-
     input, select, .dropdown-btn {
       width: 100%;
       padding: 10px;
@@ -34,11 +31,7 @@
       border: 1px solid #ccc;
       box-sizing: border-box;
     }
-
-    label {
-      font-weight: 500;
-    }
-
+    label { font-weight: 500; }
     button {
       width: 100%;
       background-color: #007bff;
@@ -49,11 +42,9 @@
       border-radius: 10px;
       cursor: pointer;
     }
-
     button:hover {
       background-color: #0056b3;
     }
-
     #preview {
       width: 100px;
       height: 100px;
@@ -61,70 +52,61 @@
       margin-top: 10px;
       border-radius: 12px;
       border: 1px solid #ccc;
+      display: none;
     }
-
-   .dropdown-container {
-  position: relative;
-  margin-bottom: 12px;
-}
-
-.dropdown-btn {
-  background-color: white;
-  text-align: left;
-  padding: 10px 12px;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  cursor: pointer;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.dropdown-btn::after {
-  content: "▾";
-  font-size: 16px;
-  color: #777;
-}
-
-.dropdown-content {
-  display: none;
-  position: absolute;
-  background-color: white;
-  border: 1px solid #ccc;
-  width: 100%;
-  max-height: 240px;
-  overflow-y: auto;
-  border-radius: 10px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-  margin-top: 4px;
-  z-index: 10;
-}
-
-.dropdown-content label {
-  display: flex;
-  align-items: center;
-  padding: 12px;
-  font-size: 15px;
-  cursor: pointer;
-  border-bottom: 1px solid #eee;
-}
-
-.dropdown-content label:last-child {
-  border-bottom: none;
-}
-
-.dropdown-content input[type="checkbox"] {
-  accent-color: #007bff;
-  width: 18px;
-  height: 18px;
-  margin-right: 10px;
-}
-
-.dropdown-container.active .dropdown-content {
-  display: block;
-}
-
-
+    .dropdown-container {
+      position: relative;
+      margin-bottom: 12px;
+    }
+    .dropdown-btn {
+      background-color: white;
+      text-align: left;
+      padding: 10px 12px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .dropdown-btn::after {
+      content: "▾";
+      font-size: 16px;
+      color: #777;
+    }
+    .dropdown-content {
+      display: none;
+      position: absolute;
+      background-color: white;
+      border: 1px solid #ccc;
+      width: 100%;
+      max-height: 240px;
+      overflow-y: auto;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      margin-top: 4px;
+      z-index: 10;
+    }
+    .dropdown-content label {
+      display: flex;
+      align-items: center;
+      padding: 12px;
+      font-size: 15px;
+      cursor: pointer;
+      border-bottom: 1px solid #eee;
+    }
+    .dropdown-content label:last-child {
+      border-bottom: none;
+    }
+    .dropdown-content input[type="checkbox"] {
+      accent-color: #007bff;
+      width: 18px;
+      height: 18px;
+      margin-right: 10px;
+    }
+    .dropdown-container.active .dropdown-content {
+      display: block;
+    }
     @media (max-width: 500px) {
       .container {
         padding: 16px;
@@ -135,7 +117,6 @@
 <body>
   <div class="container">
     <h2>Add Student</h2>
-
 
     <label>Name *</label>
     <input type="text" id="name" placeholder="Student name" required>
@@ -168,18 +149,11 @@
 
     <label>Upload/Take Photo</label>
     <input type="file" id="photo" accept="image/*" capture="environment">
-    <img id="preview" src="#" alt="Photo Preview" style="display: none;" />
+    <img id="preview" src="#" alt="Photo Preview" />
 
     <button onclick="addStudent()">Add Student</button>
-
     <button onclick="history.back()" style="margin-top: 12px;">⬅️ Back</button>
-    
-
   </div>
-
-  
-
-
 
   <script>
     const totalFeeInput = document.getElementById("totalFee");
@@ -213,12 +187,11 @@
       }
     });
 
-   function toggleDropdown() {
-  const container = document.getElementById("dayDropdown");
-  container.classList.toggle("active");
-  updateDropdownLabel();
-}
-
+    function toggleDropdown() {
+      const container = document.getElementById("dayDropdown");
+      container.classList.toggle("active");
+      updateDropdownLabel();
+    }
 
     function getSelectedDays() {
       const checkboxes = document.querySelectorAll(".dropdown-content input[type='checkbox']");
@@ -228,12 +201,12 @@
       });
       return selected;
     }
-    function updateDropdownLabel() {
-  const selected = getSelectedDays();
-  const btn = document.querySelector(".dropdown-btn");
-  btn.textContent = selected.length > 0 ? selected.join(", ") : "Select Day(s)";
-}
 
+    function updateDropdownLabel() {
+      const selected = getSelectedDays();
+      const btn = document.querySelector(".dropdown-btn");
+      btn.textContent = selected.length > 0 ? selected.join(", ") : "Select Day(s)";
+    }
 
     function addStudent() {
       const name = document.getElementById("name").value.trim();
@@ -241,8 +214,8 @@
       const selectedDays = getSelectedDays();
       const totalFee = parseFloat(document.getElementById("totalFee").value) || 0;
       const initialPayment = parseFloat(document.getElementById("initialPayment").value) || 0;
-      const balanceFee = parseFloat(document.getElementById("balanceFee").value) || 0;
-
+      const balanceFee = totalFee - initialPayment;
+      
       if (!name || selectedDays.length === 0) {
         alert("Please fill required fields");
         return;
@@ -262,14 +235,21 @@
       let students = JSON.parse(localStorage.getItem("students")) || [];
       students.push(student);
       localStorage.setItem("students", JSON.stringify(students));
-          updateDropdownLabel();  // optional: reflect selected days in dropdown
-      alert("Student added!");
-      
 
+// Also save initial payment as a fee record
+const fees = JSON.parse(localStorage.getItem("fees")) || [];
+fees.push({
+  studentId: student.id,
+  amount: student.initialPayment,
+  date: new Date().toISOString().split("T")[0]
+});
+localStorage.setItem("fees", JSON.stringify(fees));
+
+
+      alert("Student added!");
       window.location.href = "view-students.html";
     }
 
-    // Close dropdown when clicking outside
     document.addEventListener("click", function (e) {
       const dropdown = document.getElementById("dayDropdown");
       if (!dropdown.contains(e.target)) {

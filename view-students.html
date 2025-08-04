@@ -187,12 +187,19 @@
         header.appendChild(namePhone);
         info.appendChild(header);
 
+      const total = parseFloat(student.totalFee) || 0;
+
+// Get all fee payments for this student from localStorage
+const fees = JSON.parse(localStorage.getItem("fees")) || [];
+const studentFees = fees.filter(fee => fee.studentId == student.id);
+const totalPaid = studentFees.reduce((sum, f) => sum + f.amount, 0);
+const pending = Math.max(total - totalPaid, 0);
+
         const feeInfo = document.createElement("div");
-        const pending = (student.totalFee || 0) - (student.initialPayment || 0);
         feeInfo.innerHTML = `
-          💰 Total Fee: ${student.totalFee || 0}<br>
-          💵 Paid: ${student.initialPayment || 0}<br>
-          ${pending > 0 ? `🔴 Pending: ${pending}` : `✅ Paid in full`}
+          💰 Total Fee: Rp${total}<br>
+          💵 Paid: Rp${paid}<br>
+          🧾 Balance: Rp${pending}
         `;
         info.appendChild(feeInfo);
 
@@ -238,15 +245,11 @@
       document.getElementById("editTotalFee").value = student.totalFee || "";
       document.getElementById("editInitialPayment").value = student.initialPayment || "";
 
-      // Reset all checkboxes
-      document.querySelectorAll(".days-checkboxes input").forEach(cb => {
-        cb.checked = false;
-      });
-
+      document.querySelectorAll(".days-checkboxes input").forEach(cb => cb.checked = false);
       const days = Array.isArray(student.day) ? student.day : [student.day];
       days.forEach(day => {
-        const checkbox = document.querySelector(`.days-checkboxes input[value="${day}"]`);
-        if (checkbox) checkbox.checked = true;
+        const cb = document.querySelector(`.days-checkboxes input[value="${day}"]`);
+        if (cb) cb.checked = true;
       });
 
       document.getElementById("editModal").style.display = "flex";
@@ -264,6 +267,7 @@
       student.phone = document.getElementById("editPhone").value;
       student.totalFee = parseFloat(document.getElementById("editTotalFee").value) || 0;
       student.initialPayment = parseFloat(document.getElementById("editInitialPayment").value) || 0;
+      student.balanceFee = student.totalFee - student.initialPayment;
 
       const selectedDays = [];
       document.querySelectorAll(".days-checkboxes input:checked").forEach(cb => {
@@ -279,20 +283,19 @@
 
     renderStudents();
   </script>
+
   <div style="text-align:center; margin-top: 30px;">
-  <button onclick="history.back()" style="
-     width: 100%;
+    <button onclick="history.back()" style="
+      width: 100%;
       background-color: #007bff;
       color: white;
       padding: 12px;
       font-size: 16px;
       border: none;
       border-radius: 10px;
-    cursor: pointer;
-  ">⬅️ Back</button>
-</div>
+      cursor: pointer;
+    ">⬅️ Back</button>
+  </div>
 
 </body>
 </html>
-
-
