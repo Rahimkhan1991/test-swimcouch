@@ -4,200 +4,160 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Student Attendance Report</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     body {
+      margin: 0;
       font-family: Arial, sans-serif;
-      padding: 15px;
-      background-color: #f4f6f7;
-      color: #333;
-    }
-    h2 {
-      text-align: center;
-      margin-bottom: 10px;
+      background: #f2f2f2;
+      padding: 20px;
     }
     .container {
-      max-width: 700px;
+      max-width: 800px;
       margin: auto;
       background: white;
       padding: 20px;
       border-radius: 12px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
     }
-    label, select, button {
-      display: block;
-      width: 100%;
-      margin: 10px 0;
-      font-size: 16px;
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #333;
     }
     select, button {
+      width: 100%;
       padding: 10px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-    }
-    button {
-      cursor: pointer;
-      background-color: #3498db;
-      color: white;
-      border: none;
-    }
-    #attendanceResult {
-      margin-top: 20px;
-      background-color: #fafafa;
-      padding: 15px;
-      border-radius: 8px;
-      border: 1px solid #ddd;
-    }
-    .action-buttons {
-      text-align: center;
-      margin-top: 15px;
-    }
-    .action-buttons button {
-      margin: 5px;
-      padding: 10px 20px;
+      margin-top: 10px;
       font-size: 16px;
       border-radius: 8px;
+      border: 1px solid #ccc;
     }
-    .pdf-btn {
-      background-color: #2ecc71;
+    button {
+      background-color: #007bff;
+      color: white;
+      cursor: pointer;
+      border: none;
     }
-    .wa-btn {
-      background-color: #25d366;
+    button:hover {
+      background-color: #0056b3;
     }
-    .back-btn {
-      background-color: #7f8c8d;
-      margin-top: 20px;
+    .report {
+      margin-top: 30px;
+      padding: 20px;
+      background: #fafafa;
+      border-radius: 10px;
+      box-shadow: 0 0 6px rgba(0,0,0,0.1);
+    }
+    .report h2 {
+      margin-bottom: 15px;
+      font-size: 20px;
+      color: #222;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 10px;
+      text-align: center;
+    }
+    th {
+      background-color: #f0f0f0;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h2>Student Attendance Report</h2>
+    <h1>Student Attendance Report</h1>
 
-    <label for="classDropdown">Select Class:</label>
-    <select id="classDropdown">
-      <option value="">-- Select Class --</option>
-      <!-- Classes dynamically populated -->
-    </select>
-
-    <label for="studentDropdown">Select Student:</label>
-    <select id="studentDropdown">
+    <select id="studentSelect">
       <option value="">-- Select Student --</option>
-      <!-- Students dynamically populated -->
     </select>
 
-    <label for="reportType">Select Report Type:</label>
-    <select id="reportType">
-      <option value="weekly">Weekly</option>
-      <option value="monthly">Monthly</option>
-    </select>
+    <button onclick="generateReport()">Generate Report</button>
+    <button onclick="downloadPDF()">Download PDF</button>
+    <button onclick="shareWhatsApp()">Share via WhatsApp</button>
 
-    <button onclick="generateReport()">📊 Generate Report</button>
-
-    <div id="attendanceResult"></div>
-
-    <div class="action-buttons">
-      <button onclick="generatePDF()" class="pdf-btn">📄 Generate PDF</button>
-      <button id="whatsappBtn" class="wa-btn">📤 Send via WhatsApp</button>
-    </div>
-
-    <button onclick="history.back()" class="back-btn">🔙 Back</button>
+    <div id="reportOutput"></div>
   </div>
 
-  <!-- html2pdf CDN -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"></script>
-
   <script>
-    // Populate dropdowns (dummy data for now)
-    const classDropdown = document.getElementById("classDropdown");
-    const studentDropdown = document.getElementById("studentDropdown");
-
-    const classList = ["Class 1A", "Class 1B", "Class 2A"];
-    const studentList = {
-      "Class 1A": ["Ali", "Fatima"],
-      "Class 1B": ["Rahul", "Sara"],
-      "Class 2A": ["Zara", "Omar"]
-    };
-
-    classList.forEach(cls => {
-      const opt = document.createElement("option");
-      opt.value = cls;
-      opt.textContent = cls;
-      classDropdown.appendChild(opt);
-    });
-
-    classDropdown.addEventListener("change", function () {
-      const selectedClass = this.value;
-      studentDropdown.innerHTML = '<option value="">-- Select Student --</option>';
-      if (studentList[selectedClass]) {
-        studentList[selectedClass].forEach(std => {
-          const opt = document.createElement("option");
-          opt.value = std;
-          opt.textContent = std;
-          studentDropdown.appendChild(opt);
-        });
-      }
-    });
+    function loadStudents() {
+      const students = JSON.parse(localStorage.getItem("students")) || [];
+      const select = document.getElementById("studentSelect");
+      students.forEach(st => {
+        const option = document.createElement("option");
+        option.value = st.name;
+        option.textContent = st.name;
+        select.appendChild(option);
+      });
+    }
 
     function generateReport() {
-      const cls = classDropdown.value;
-      const student = studentDropdown.value;
-      const type = document.getElementById("reportType").value;
+      const student = document.getElementById("studentSelect").value;
+      const attendance = JSON.parse(localStorage.getItem("attendance")) || [];
+      const records = attendance.filter(a => a.name === student);
 
-      if (!cls || !student) {
-        alert("Please select class and student.");
+      if (!student || records.length === 0) {
+        document.getElementById("reportOutput").innerHTML = "<p>No attendance records found.</p>";
         return;
       }
 
-      // Sample report content
-      const reportHTML = `
-        <div id="reportContent">
-          <h3 style="text-align:center;">🏫 CoachTrack Center</h3>
-          <h4>Attendance Report</h4>
-          <p><strong>Class:</strong> ${cls}</p>
-          <p><strong>Student:</strong> ${student}</p>
-          <p><strong>Type:</strong> ${type.toUpperCase()}</p>
-          <table border="1" width="100%" cellpadding="5" cellspacing="0" style="margin-top:10px; border-collapse: collapse;">
-            <tr style="background-color: #dff9fb;">
-              <th>Date</th>
-              <th>Status</th>
-            </tr>
-            <tr><td>01 Aug 2025</td><td>✅ Present</td></tr>
-            <tr><td>02 Aug 2025</td><td>✅ Present</td></tr>
-            <tr><td>03 Aug 2025</td><td>❌ Absent</td></tr>
-            <!-- Add more sample rows -->
+      const html = `
+        <div class="report" id="reportCard">
+          <h2>📊 Attendance Report</h2>
+          <p><strong>Name:</strong> ${student}</p>
+          <p><strong>Total Days Present:</strong> ${records.length}</p>
+          <table>
+            <thead>
+              <tr><th>Date</th><th>Status</th></tr>
+            </thead>
+            <tbody>
+              ${records.map(r => `<tr><td>${r.date}</td><td>${r.status}</td></tr>`).join('')}
+            </tbody>
           </table>
-          <p style="margin-top:15px;"><strong>Total Days:</strong> 3 | ✅ Present: 2 | ❌ Absent: 1</p>
         </div>
       `;
-      document.getElementById("attendanceResult").innerHTML = reportHTML;
+      document.getElementById("reportOutput").innerHTML = html;
     }
 
-    function generatePDF() {
-      const dropdown = document.getElementById("studentDropdown");
-      const studentName = dropdown.value;
-      if (!studentName) return alert("Please select a student.");
-
-      const result = document.getElementById("reportContent");
-      const opt = {
-        margin: 0.5,
-        filename: `${studentName}_Attendance_Report.pdf`,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2 },
-        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
-      };
-      html2pdf().from(result).set(opt).save();
+    function downloadPDF() {
+      const report = document.getElementById("reportCard");
+      if (!report) return alert("Please generate the report first.");
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      doc.html(report, {
+        callback: function (doc) {
+          doc.save("Attendance_Report.pdf");
+        },
+        x: 10,
+        y: 10,
+      });
     }
 
-    // WhatsApp Send
-    document.getElementById("whatsappBtn").addEventListener("click", function () {
-      const studentName = document.getElementById("studentDropdown").value;
-      if (!studentName) return alert("Please select a student.");
-      
-      const message = `Hi ${studentName}, your attendance report is ready. Please find the attached PDF.`;
-      const encodedMsg = encodeURIComponent(message);
-      const whatsappUrl = `https://wa.me/?text=${encodedMsg}`;
-      window.open(whatsappUrl, '_blank');
-    });
+    function shareWhatsApp() {
+      const student = document.getElementById("studentSelect").value;
+      const attendance = JSON.parse(localStorage.getItem("attendance")) || [];
+      const records = attendance.filter(a => a.name === student);
+
+      if (!student || records.length === 0) {
+        alert("Generate report first.");
+        return;
+      }
+
+      let msg = `Attendance Report for ${student}%0A`;
+      records.forEach(r => {
+        msg += `${r.date}: ${r.status}%0A`;
+      });
+
+      const waUrl = `https://wa.me/?text=${msg}`;
+      window.open(waUrl, '_blank');
+    }
+
+    loadStudents();
   </script>
 </body>
 </html>
