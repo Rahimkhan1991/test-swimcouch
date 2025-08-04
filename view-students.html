@@ -5,78 +5,95 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>View Students</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      padding: 10px;
-      background: #f0f4f8;
-    }
+ <style>
+  body {
+    font-family: Arial, sans-serif;
+    padding: 10px;
+    background: #f0f4f8;
+  }
 
-    h2 {
-      color: #007bff;
-    }
+  h2 {
+    color: #007bff;
+  }
 
-    .student-card {
-      background: white;
-      padding: 10px;
-      margin: 10px 0;
-      border-radius: 10px;
-      box-shadow: 0 0 5px rgba(0,0,0,0.1);
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
+  .student-card {
+    background: white;
+    padding: 15px;
+    margin: 10px 0;
+    border-radius: 10px;
+    box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
 
-    .paid {
-      background: #d4edda;
-    }
+  .paid {
+    background: #d4edda;
+  }
 
+  .student-top {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .student-top img {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+
+  .student-info {
+    flex-grow: 1;
+  }
+
+  .student-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  button {
+    padding: 6px 12px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+
+  button.edit-btn { background-color: #ffc107; color: white; }
+  button.delete-btn { background-color: #dc3545; color: white; }
+  button.save-btn { background-color: #28a745; color: white; }
+  button.export-btn { background-color: #007bff; color: white; margin-bottom: 10px; }
+
+  input[type="text"],
+  input[type="number"] {
+    width: 100%;
+    padding: 8px;
+    margin-top: 4px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+  }
+
+  label {
+    display: block;
+    margin-bottom: 10px;
+    font-weight: bold;
+    color: #333;
+  }
+
+  @media (max-width: 600px) {
     .student-top {
-      display: flex;
-      gap: 10px;
-      align-items: center;
-    }
-
-    .student-top img {
-      width: 60px;
-      height: 60px;
-      border-radius: 50%;
-      object-fit: cover;
-    }
-
-    .student-info {
-      flex-grow: 1;
+      flex-direction: column;
+      align-items: flex-start;
     }
 
     .student-actions {
-      display: flex;
-      gap: 10px;
+      flex-direction: column;
     }
+  }
+</style>
 
-    button {
-      padding: 5px 10px;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-
-    button.edit-btn { background-color: #ffc107; color: white; }
-    button.delete-btn { background-color: #dc3545; color: white; }
-    button.save-btn { background-color: #28a745; color: white; }
-    button.export-btn { background-color: #007bff; color: white; margin-bottom: 10px; }
-
-    input[type="text"], input[type="number"] {
-      width: 100%;
-      padding: 5px;
-    }
-
-    @media (max-width: 600px) {
-      .student-top {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-    }
-  </style>
 </head>
 <body>
 
@@ -115,10 +132,6 @@
         const top = document.createElement("div");
         top.className = "student-top";
 
-        const img = document.createElement("img");
-        img.src = student.image || "https://via.placeholder.com/60";
-        img.onerror = () => img.src = "https://via.placeholder.com/60";
-        top.appendChild(img);
 
         const info = document.createElement("div");
         info.className = "student-info";
