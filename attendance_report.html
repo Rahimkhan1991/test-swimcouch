@@ -97,32 +97,42 @@
     }
 
     function generateReport() {
-      const student = document.getElementById("studentSelect").value;
-      const attendance = JSON.parse(localStorage.getItem("attendance")) || [];
-      const records = attendance.filter(a => a.name === student);
+  const studentName = document.getElementById("studentSelect").value;
+  const attendance = JSON.parse(localStorage.getItem("attendance")) || [];
+  let records = attendance.filter(a => a.name === studentName);
 
-      if (!student || records.length === 0) {
-        document.getElementById("reportOutput").innerHTML = "<p>No attendance records found.</p>";
-        return;
-      }
+  if (!studentName || records.length === 0) {
+    document.getElementById("reportOutput").innerHTML = "<p>No records found.</p>";
+    return;
+  }
 
-      const html = `
-        <div class="report" id="reportCard">
-          <h2>📊 Attendance Report</h2>
-          <p><strong>Name:</strong> ${student}</p>
-          <p><strong>Total Days Present:</strong> ${records.length}</p>
-          <table>
-            <thead>
-              <tr><th>Date</th><th>Status</th></tr>
-            </thead>
-            <tbody>
-              ${records.map(r => `<tr><td>${r.date}</td><td>${r.status}</td></tr>`).join('')}
-            </tbody>
-          </table>
-        </div>
-      `;
-      document.getElementById("reportOutput").innerHTML = html;
-    }
+  // Sort records by date ascending
+  records.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+  // Count only "Present" records for session grouping
+  const presentCount = records.filter(r => r.status === "Present").length;
+  const sessionCount = Math.floor(presentCount / 4);
+
+  const html = `
+    <div class="card report">
+      <h2 class="report-title">📊 Attendance Report</h2>
+      <p><strong>👤 Name:</strong> ${studentName}</p>
+      <p><strong>✅ Total Present Days:</strong> ${presentCount}</p>
+      <p><strong>📘 Total Sessions Completed:</strong> ${sessionCount}</p>
+      <div class="report-table-container">
+        <table class="report-table">
+          <thead><tr><th>Date</th><th>Status</th></tr></thead>
+          <tbody>
+            ${records.map(r => `<tr><td>${r.date}</td><td>${r.status}</td></tr>`).join("")}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+
+  document.getElementById("reportOutput").innerHTML = html;
+}
+
 
     function downloadPDF() {
       const report = document.getElementById("reportCard");
