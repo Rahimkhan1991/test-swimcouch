@@ -195,12 +195,13 @@ const studentFees = fees.filter(fee => fee.studentId == student.id);
 const totalPaid = studentFees.reduce((sum, f) => sum + f.amount, 0);
 const pending = Math.max(total - totalPaid, 0);
 
-        const feeInfo = document.createElement("div");
-        feeInfo.innerHTML = `
-          💰 Total Fee: Rp${total}<br>
-          💵 Paid: Rp${paid}<br>
-          🧾 Balance: Rp${pending}
-        `;
+     const feeInfo = document.createElement("div");
+feeInfo.innerHTML = `
+  💰 Total Fee: Rp${total}<br>
+  💵 Paid: Rp${totalPaid}<br>
+  🧾 Balance: Rp${pending}
+`;
+
         info.appendChild(feeInfo);
 
         const dayContainer = document.createElement("div");
