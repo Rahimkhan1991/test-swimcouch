@@ -156,11 +156,9 @@
         const selectedDay = document.getElementById('dayFilter').value;
 
          const filtered = selectedDay 
-         ? students.filter(s => {
-         const assignedDays = s.days || (s.day ? [s.day] : []);
-         return assignedDays.includes(selectedDay);
-         })
+  ? students.filter(s => Array.isArray(s.day) && s.day.includes(selectedDay))
   : students;
+
 
 
         displayStudents(filtered);
