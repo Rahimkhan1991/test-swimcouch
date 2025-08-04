@@ -129,8 +129,7 @@
 
   <header>
     <h2>Attendance</h2>
-    <button class="btn back-btn" onclick="window.history.back()">Back</button>
-  </header>
+   
 
   <div class="top-controls">
     <input type="date" id="attendanceDate">
@@ -152,7 +151,7 @@
   </div>
 
   <button class="btn" onclick="saveAttendance()">Submit Attendance</button>
-
+</header>
   <script>
     // Set today's date
     document.getElementById('attendanceDate').valueAsDate = new Date();
@@ -226,6 +225,8 @@
         showMessage('Error saving attendance: ' + e.message);
       }
     }
+     <button class="btn back-btn" onclick="window.history.back()">Back</button>
+  
 
     function showMessage(msg) {
       const old = document.querySelector('.status-message');
