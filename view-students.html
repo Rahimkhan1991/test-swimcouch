@@ -1,296 +1,166 @@
-<!-- Save this as view-students.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>View Students</title>
- <style>
-  body {
-    font-family: Arial, sans-serif;
-    padding: 10px;
-    background: #f0f4f8;
-  }
-
-  h2 {
-    color: #007bff;
-  }
-
-  .student-card {
-    background: white;
-    padding: 15px;
-    margin: 10px 0;
-    border-radius: 10px;
-    box-shadow: 0 0 5px rgba(0,0,0,0.1);
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-  }
-
-  .paid {
-    background: #d4edda;
-  }
-
-  .student-top {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-  }
-
-  .student-top img {
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    object-fit: cover;
-  }
-
-  .student-info {
-    flex-grow: 1;
-  }
-
-  .student-actions {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-  }
-
-  button {
-    padding: 6px 12px;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-  }
-
-  button.edit-btn { background-color: #ffc107; color: white; }
-  button.delete-btn { background-color: #dc3545; color: white; }
-  button.save-btn { background-color: #28a745; color: white; }
-  button.export-btn { background-color: #007bff; color: white; margin-bottom: 10px; }
-
-  input[type="text"],
-  input[type="number"] {
-    width: 90%;
-    padding: 8px;
-    margin-top: 4px;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-  }
-
-  label {
-    display: block;
-    margin-bottom: 10px;
-    font-weight: bold;
-    color: #333;
-  }
-
-  @media (max-width: 600px) {
-    .student-top {
-      flex-direction: column;
-      align-items: flex-start;
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 0;
+      padding: 1rem;
+      background: #f4f4f4;
     }
 
-    .student-actions {
-      flex-direction: column;
+    h2 {
+      text-align: center;
     }
-  }
 
-  .dropdown-container {
-  position: relative;
-  margin-bottom: 10px;
-}
+    .student-card {
+      background: #fff;
+      border-radius: 10px;
+      padding: 1rem;
+      margin: 1rem 0;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
 
-.dropdown-btn {
-    width: 90%;
-  padding: 8px 12px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  background: #fff;
-  cursor: pointer;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
+    .student-info {
+      flex: 1;
+      min-width: 200px;
+    }
 
-.dropdown-btn::after {
-  content: "▾";
-  font-size: 16px;
-  color: #777;
-}
+    .student-photo {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin-right: 1rem;
+      border: 2px solid #ccc;
+    }
 
-.dropdown-content {
-  display: none;
-  position: absolute;
-  z-index: 10;
-  background-color: #fff;
-  border: 1px solid #ccc;
-  padding: 8px;
-  border-radius: 6px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-  margin-top: 4px;
-}
+    .student-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
 
-.dropdown-content label {
-  display: block;
-  margin: 4px 0;
-}
+    .pill {
+      display: inline-block;
+      background: #d1ecf1;
+      color: #0c5460;
+      padding: 4px 10px;
+      border-radius: 20px;
+      margin: 2px 4px 2px 0;
+      font-size: 0.8rem;
+    }
 
-</style>
+    .buttons {
+      margin-top: 0.5rem;
+    }
 
+    .buttons button {
+      margin-right: 8px;
+      padding: 5px 10px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .edit-btn {
+      background-color: #ffc107;
+      color: #000;
+    }
+
+    .delete-btn {
+      background-color: #dc3545;
+      color: #fff;
+    }
+  </style>
 </head>
 <body>
-
-  <h2>View Students</h2>
-
-  <button class="export-btn" onclick="exportToCSV()">⬇️ Export CSV</button>
-
+  <h2>All Students</h2>
   <div id="studentList"></div>
 
   <script>
-    function getFees() {
-      return JSON.parse(localStorage.getItem("fees")) || [];
-    }
-
-    function getAttendance() {
-      return JSON.parse(localStorage.getItem("attendance")) || [];
-    }
-
     function renderStudents() {
+      const studentList = document.getElementById("studentList");
       const students = JSON.parse(localStorage.getItem("students")) || [];
-      const fees = getFees();
-      const container = document.getElementById("studentList");
-      container.innerHTML = "";
+      studentList.innerHTML = "";
 
       students.forEach((student, index) => {
-        const studentFees = fees.filter(f => f.studentId == student.id);
-        const feeCollected = studentFees.reduce((sum, f) => sum + Number(f.amount || 0), 0);
-        const initial = Number(student.initialPayment || 0);
-        const totalPaid = initial + feeCollected;
-        const pending = Math.max(0, Number(student.totalFee) - totalPaid);
-
         const card = document.createElement("div");
         card.className = "student-card";
-        if (pending <= 0) card.classList.add("paid");
-
-        const top = document.createElement("div");
-        top.className = "student-top";
-
-          const img = document.createElement("img");
-        img.src = student.image || "https://via.placeholder.com/60";
-        img.onerror = () => img.src = "https://via.placeholder.com/60";
-        top.appendChild(img);
-
 
         const info = document.createElement("div");
         info.className = "student-info";
-        info.innerHTML = `
-          <strong>${student.name}</strong><br>
-          📞 ${student.phone}<br>
-          📅 ${student.day || "-"}<br>
-          💰 Total: Rp${student.totalFee}<br>
-          ✅ Paid: Rp${totalPaid}<br>
-          ❌ Pending: ${pending <= 0 
-            ? '<span style="color:green;font-weight:bold;">✅ Paid</span>' 
-            : 'Rp' + pending}
+
+        const header = document.createElement("div");
+        header.className = "student-header";
+
+        const img = document.createElement("img");
+        img.className = "student-photo";
+        img.src = student.image || "https://via.placeholder.com/60";
+
+        const namePhone = document.createElement("div");
+        namePhone.innerHTML = `<strong>${student.name}</strong><br><small>${student.phone}</small>`;
+
+        header.appendChild(img);
+        header.appendChild(namePhone);
+        info.appendChild(header);
+
+        // Fee Info
+        const feeInfo = document.createElement("div");
+        feeInfo.innerHTML = `
+          💰 Total Fee: ${student.totalFee || 0}<br>
+          💵 Paid: ${student.initialPayment || 0}<br>
+          🔴 Pending: ${(student.totalFee || 0) - (student.initialPayment || 0)}<br>
         `;
-        top.appendChild(info);
-        card.appendChild(top);
+        info.appendChild(feeInfo);
 
+        // Day(s) as Pills
+        const dayContainer = document.createElement("div");
+        const days = Array.isArray(student.day) ? student.day : [student.day];
+        days.filter(Boolean).forEach(day => {
+          const pill = document.createElement("span");
+          pill.className = "pill";
+          pill.textContent = day;
+          dayContainer.appendChild(pill);
+        });
+        info.appendChild(dayContainer);
+
+        // Action buttons (optional)
         const actions = document.createElement("div");
-        actions.className = "student-actions";
+        actions.className = "buttons";
+        actions.innerHTML = `
+          <button class="edit-btn" onclick="editStudent(${index})">Edit</button>
+          <button class="delete-btn" onclick="deleteStudent(${index})">Delete</button>
+        `;
+        info.appendChild(actions);
 
-        const editBtn = document.createElement("button");
-        editBtn.className = "edit-btn";
-        editBtn.textContent = "Edit";
-        editBtn.onclick = () => startEdit(card, student, index);
-
-        const deleteBtn = document.createElement("button");
-        deleteBtn.className = "delete-btn";
-        deleteBtn.textContent = "Delete";
-        deleteBtn.onclick = () => {
-          if (confirm("Are you sure to delete this student?")) {
-            students.splice(index, 1);
-            localStorage.setItem("students", JSON.stringify(students));
-            renderStudents();
-          }
-        };
-
-        actions.appendChild(editBtn);
-        actions.appendChild(deleteBtn);
-        card.appendChild(actions);
-        container.appendChild(card);
+        card.appendChild(info);
+        studentList.appendChild(card);
       });
     }
 
-    function startEdit(card, student, index) {
-      card.innerHTML = `
-        <label>Name: <input type="text" id="editName" value="${student.name}"></label>
-        <label>Phone: <input type="text" id="editPhone" value="${student.phone}"></label>
-        <label>Day Assigned</label>
-<div class="dropdown-container" id="editDayDropdown">
-  <div class="dropdown-btn" onclick="toggleDropdownEdit()">Select Day(s)</div>
-  <div class="dropdown-content">
-    <label><input type="checkbox" value="Monday" ${student.day && student.day.includes("Monday") ? "checked" : ""}> Monday</label>
-    <label><input type="checkbox" value="Tuesday" ${student.day && student.day.includes("Tuesday") ? "checked" : ""}> Tuesday</label>
-    <label><input type="checkbox" value="Wednesday" ${student.day && student.day.includes("Wednesday") ? "checked" : ""}> Wednesday</label>
-    <label><input type="checkbox" value="Thursday" ${student.day && student.day.includes("Thursday") ? "checked" : ""}> Thursday</label>
-    <label><input type="checkbox" value="Friday" ${student.day && student.day.includes("Friday") ? "checked" : ""}> Friday</label>
-    <label><input type="checkbox" value="Saturday" ${student.day && student.day.includes("Saturday") ? "checked" : ""}> Saturday</label>
-    <label><input type="checkbox" value="Sunday" ${student.day && student.day.includes("Sunday") ? "checked" : ""}> Sunday</label>
-  </div>
-</div>
-        <label>Total Fee: <input type="number" id="editTotalFee" value="${student.totalFee}"></label>
-        <label>Initial Payment: <input type="number" id="editInitialPayment" value="${student.initialPayment}"></label>
-        <button class="save-btn" onclick="saveEdit(${index})">Save</button>
-      `;
-    }
-
-    function saveEdit(index) {
+    function deleteStudent(index) {
       const students = JSON.parse(localStorage.getItem("students")) || [];
-      students[index] = {
-        ...students[index],
-        name: document.getElementById("editName").value.trim(),
-        phone: document.getElementById("editPhone").value.trim(),
-        day: document.getElementById("editDay").value,
-        totalFee: parseFloat(document.getElementById("editTotalFee").value),
-        initialPayment: parseFloat(document.getElementById("editInitialPayment").value),
-      };
-      localStorage.setItem("students", JSON.stringify(students));
-      renderStudents();
-    }
-
-      function toggleDropdownEdit() {
-  const dropdown = document.querySelector("#editDayDropdown .dropdown-content");
-  // Toggle display style between block and none
-  dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
-}
-
-    function exportToCSV() {
-      const students = JSON.parse(localStorage.getItem("students") || "[]");
-      const fees = JSON.parse(localStorage.getItem("fees") || "[]");
-      const attendance = JSON.parse(localStorage.getItem("attendance") || "[]");
-
-      if (students.length === 0) {
-        alert("No student data available to export.");
-        return;
+      if (confirm("Are you sure to delete this student?")) {
+        students.splice(index, 1);
+        localStorage.setItem("students", JSON.stringify(students));
+        renderStudents();
       }
-
-      let csv = "Name,Phone,Day,Total Fee,Initial Payment,Paid Fee,Pending Fee,Attendance Count\n";
-
-      students.forEach(s => {
-        const studentFees = fees.filter(f => f.studentId == s.id);
-        const paid = (studentFees.reduce((sum, f) => sum + parseFloat(f.amount || 0), 0)) + parseFloat(s.initialPayment || 0);
-        const pending = parseFloat(s.totalFee || 0) - paid;
-        const attendCount = attendance.filter(a => a.studentId == s.id).length;
-
-        csv += `${s.name},${s.phone},${s.day || "-"},${s.totalFee || 0},${s.initialPayment || 0},${paid},${pending},${attendCount}\n`;
-      });
-
-      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = "students_data.csv";
-      link.click();
     }
 
+    function editStudent(index) {
+      // Redirect to edit page with student index (if needed)
+      alert("Edit functionality can be added here or open a modal.");
+    }
+
+    // Initial render
     renderStudents();
   </script>
 </body>
