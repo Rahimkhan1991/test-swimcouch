@@ -4,170 +4,224 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Student Attendance Report</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.2/html2pdf.bundle.min.js"></script>
   <style>
     body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f1f5f9;
       margin: 0;
-      font-family: Arial, sans-serif;
-      background: #f2f2f2;
       padding: 20px;
+      color: #333;
     }
+
     .container {
       max-width: 800px;
       margin: auto;
       background: white;
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      padding: 25px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
+
     h1 {
       text-align: center;
       margin-bottom: 20px;
-      color: #333;
+      color: #0f172a;
     }
+
+    label {
+      font-weight: bold;
+    }
+
     select, button {
-      width: 100%;
       padding: 10px;
-      margin-top: 10px;
-      font-size: 16px;
-      border-radius: 8px;
+      margin: 10px 5px;
+      border-radius: 5px;
       border: 1px solid #ccc;
+      font-size: 1em;
     }
+
     button {
-      background-color: #007bff;
+      background-color: #2563eb;
       color: white;
       cursor: pointer;
-      border: none;
     }
+
     button:hover {
-      background-color: #0056b3;
+      background-color: #1d4ed8;
     }
+
     .report {
-      margin-top: 30px;
+      margin-top: 25px;
       padding: 20px;
-      background: #fafafa;
+      background-color: #f9fafb;
+      border: 1px solid #ddd;
       border-radius: 10px;
-      box-shadow: 0 0 6px rgba(0,0,0,0.1);
     }
-    .report h2 {
+
+    .report-title {
+      text-align: center;
       margin-bottom: 15px;
-      font-size: 20px;
-      color: #222;
+      color: #1e293b;
     }
-    table {
+
+    .report-table {
       width: 100%;
       border-collapse: collapse;
       margin-top: 15px;
     }
-    th, td {
+
+    .report-table th, .report-table td {
       border: 1px solid #ccc;
       padding: 10px;
+      text-align: left;
+    }
+
+    .report-table th {
+      background-color: #e2e8f0;
+      color: #1e293b;
+    }
+
+    .report-table tr:nth-child(even) {
+      background-color: #f1f5f9;
+    }
+
+    .footer-buttons {
+      margin-top: 20px;
       text-align: center;
     }
-    th {
-      background-color: #f0f0f0;
+
+    .footer-buttons button {
+      margin: 5px;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>Student Attendance Report</h1>
+    <h1>📄 Student Attendance Report</h1>
 
-    <select id="studentSelect">
-      <option value="">-- Select Student --</option>
-    </select>
+    <label for="studentSelect">Select Student:</label>
+    <select id="studentSelect"></select>
 
-    <button onclick="generateReport()">Generate Report</button>
-    <button onclick="downloadPDF()">Download PDF</button>
-    <button onclick="shareWhatsApp()">Share via WhatsApp</button>
+    <div class="footer-buttons">
+      <button onclick="generateReport()">Generate Report</button>
+      <button onclick="downloadPDF()">Download PDF</button>
+      <button onclick="sendWhatsApp()">Send via WhatsApp</button>
+    </div>
 
     <div id="reportOutput"></div>
   </div>
 
   <script>
-    function loadStudents() {
+    // Populate student dropdown from localStorage
+    function populateStudentList() {
       const students = JSON.parse(localStorage.getItem("students")) || [];
       const select = document.getElementById("studentSelect");
-      students.forEach(st => {
+      select.innerHTML = '<option value="">-- Select Student --</option>';
+      students.forEach(student => {
         const option = document.createElement("option");
-        option.value = st.name;
-        option.textContent = st.name;
+        option.value = student.name;
+        option.text = student.name;
         select.appendChild(option);
       });
     }
 
     function generateReport() {
-  const studentName = document.getElementById("studentSelect").value;
-  const attendance = JSON.parse(localStorage.getItem("attendance")) || [];
-  let records = attendance.filter(a => a.name === studentName);
-
-  if (!studentName || records.length === 0) {
-    document.getElementById("reportOutput").innerHTML = "<p>No records found.</p>";
-    return;
-  }
-
-  // Sort records by date ascending
-  records.sort((a, b) => new Date(a.date) - new Date(b.date));
-
-  // Count only "Present" records for session grouping
-  const presentCount = records.filter(r => r.status === "Present").length;
-  const sessionCount = Math.floor(presentCount / 4);
-
-  const html = `
-    <div class="card report">
-      <h2 class="report-title">📊 Attendance Report</h2>
-      <p><strong>👤 Name:</strong> ${studentName}</p>
-      <p><strong>✅ Total Present Days:</strong> ${presentCount}</p>
-      <p><strong>📘 Total Sessions Completed:</strong> ${sessionCount}</p>
-      <div class="report-table-container">
-        <table class="report-table">
-          <thead><tr><th>Date</th><th>Status</th></tr></thead>
-          <tbody>
-            ${records.map(r => `<tr><td>${r.date}</td><td>${r.status}</td></tr>`).join("")}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  `;
-
-  document.getElementById("reportOutput").innerHTML = html;
-}
-
-
-    function downloadPDF() {
-      const report = document.getElementById("reportCard");
-      if (!report) return alert("Please generate the report first.");
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF();
-      doc.html(report, {
-        callback: function (doc) {
-          doc.save("Attendance_Report.pdf");
-        },
-        x: 10,
-        y: 10,
-      });
-    }
-
-    function shareWhatsApp() {
-      const student = document.getElementById("studentSelect").value;
+      const studentName = document.getElementById("studentSelect").value;
       const attendance = JSON.parse(localStorage.getItem("attendance")) || [];
-      const records = attendance.filter(a => a.name === student);
+      const reportDiv = document.getElementById("reportOutput");
 
-      if (!student || records.length === 0) {
-        alert("Generate report first.");
+      let records = attendance.filter(a => a.name === studentName);
+
+      if (!studentName || records.length === 0) {
+        reportDiv.innerHTML = "<p>No records found.</p>";
         return;
       }
 
-      let msg = `Attendance Report for ${student}%0A`;
-      records.forEach(r => {
-        msg += `${r.date}: ${r.status}%0A`;
+      // Sort by date ascending
+      records.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+      const presentDates = records.filter(r => r.status === "Present").map(r => r.date);
+      const sessionCount = Math.floor(presentDates.length / 4);
+      const remainingForNext = 4 - (presentDates.length % 4);
+
+      // Group into sessions of 4
+      const groupedSessions = [];
+      for (let i = 0; i < presentDates.length; i += 4) {
+        groupedSessions.push(presentDates.slice(i, i + 4));
+      }
+
+      let sessionTableHTML = "";
+      groupedSessions.forEach((session, index) => {
+        sessionTableHTML += `
+          <tr>
+            <td>Session ${index + 1}</td>
+            <td>${session.join("<br>")}</td>
+          </tr>
+        `;
       });
 
-      const waUrl = `https://wa.me/?text=${msg}`;
-      window.open(waUrl, '_blank');
+      const html = `
+        <div class="card report">
+          <h2 class="report-title">📊 Attendance Summary</h2>
+          <p><strong>👤 Name:</strong> ${studentName}</p>
+          <p><strong>✅ Total Present Days:</strong> ${presentDates.length}</p>
+          <p><strong>📘 Sessions Completed:</strong> ${sessionCount}</p>
+          <p><strong>⏳ Days Remaining for Next Session:</strong> ${remainingForNext === 4 ? 0 : remainingForNext}</p>
+
+          <h3>📅 Session Breakdown</h3>
+          <table class="report-table">
+            <thead><tr><th>Session</th><th>Dates</th></tr></thead>
+            <tbody>
+              ${sessionTableHTML}
+            </tbody>
+          </table>
+        </div>
+      `;
+
+      reportDiv.innerHTML = html;
     }
 
-    loadStudents();
+    function downloadPDF() {
+      const reportDiv = document.getElementById("reportOutput");
+      if (!reportDiv.innerHTML.trim()) {
+        alert("Please generate the report first.");
+        return;
+      }
+
+      const opt = {
+        margin: 0.5,
+        filename: 'AttendanceReport.pdf',
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+      };
+
+      html2pdf().from(reportDiv).set(opt).save();
+    }
+
+    function sendWhatsApp() {
+      const studentName = document.getElementById("studentSelect").value;
+      const phone = getStudentPhone(studentName);
+      const reportDiv = document.getElementById("reportOutput");
+
+      if (!studentName || !phone || !reportDiv.innerHTML.trim()) {
+        alert("Please generate the report first.");
+        return;
+      }
+
+      const msg = encodeURIComponent(`Hello ${studentName}, your attendance report is ready. Please contact us for the PDF.`);
+      const link = `https://wa.me/${phone}?text=${msg}`;
+      window.open(link, "_blank");
+    }
+
+    function getStudentPhone(name) {
+      const students = JSON.parse(localStorage.getItem("students")) || [];
+      const student = students.find(s => s.name === name);
+      return student ? student.phone : "";
+    }
+
+    // Initial call
+    populateStudentList();
   </script>
 </body>
 </html>
