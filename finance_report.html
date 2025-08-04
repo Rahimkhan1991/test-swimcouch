@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Finance Report</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f0f4f8;
+      padding: 20px;
+    }
+
+    h2 {
+      color: #007bff;
+    }
+
+    .summary {
+      display: flex;
+      justify-content: space-around;
+      margin: 20px 0;
+      flex-wrap: wrap;
+    }
+
+    .card {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      width: 280px;
+      margin: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+
+    canvas {
+      max-width: 400px;
+      margin: auto;
+    }
+
+    .back-btn {
+      display: inline-block;
+      margin-bottom: 15px;
+      padding: 10px 20px;
+      background-color: #007bff;
+      color: white;
+      text-decoration: none;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+<body>
+  <a href="home.html" class="back-btn">← Back to Home</a>
+  <h2>Finance Report</h2>
+
+  <div class="summary">
+    <div class="card">
+      <h3>Total Collected</h3>
+      <p id="totalIncome">Rp0</p>
+    </div>
+    <div class="card">
+      <h3>Total Expected</h3>
+      <p id="expectedIncome">Rp0</p>
+    </div>
+    <div class="card">
+      <h3>Total Pending</h3>
+      <p id="pendingIncome">Rp0</p>
+    </div>
+  </div>
+
+  <canvas id="financeChart" width="400" height="400"></canvas>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    function getStudents() {
+      return JSON.parse(localStorage.getItem("students")) || [];
+    }
+
+    function getFees() {
+      return JSON.parse(localStorage.getItem("fees")) || [];
+    }
+
+    function calculateFinanceSummary() {
+      const students = getStudents();
+      const fees = getFees();
+
+      // Sum of initial payments from student records
+      const initialPayments = students.reduce((sum, student) => sum + Number(student.initialPayment || 0), 0);
+
+      // Sum of additional payments from fee.html
+      const additionalPayments = fees.reduce((sum, fee) => sum + Number(fee.amount), 0);
+
+      const totalCollected = initialPayments + additionalPayments;
+      const totalExpected = students.reduce((sum, student) => sum + Number(student.totalFee || 0), 0);
+      const totalPending = totalExpected - totalCollected;
+
+      document.getElementById("totalIncome").textContent = "Rp" + totalCollected;
+      document.getElementById("expectedIncome").textContent = "Rp" + totalExpected;
+      document.getElementById("pendingIncome").textContent = "Rp" + (totalPending < 0 ? 0 : totalPending);
+
+      drawChart(totalCollected, totalPending);
+    }
+
+    function drawChart(collected, pending) {
+      const ctx = document.getElementById("financeChart").getContext("2d");
+      if (window.myChart) {
+        window.myChart.destroy();
+      }
+
+      window.myChart = new Chart(ctx, {
+        type: "pie",
+        data: {
+          labels: ["Collected", "Pending"],
+          datasets: [{
+            data: [collected, pending],
+            backgroundColor: ["#28a745", "#ffc107"]
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: {
+              position: "bottom"
+            }
+          }
+        }
+      });
+    }
+
+    window.onload = calculateFinanceSummary;
+  </script>
+  <script>
+  function drawTrendChart() {
+    const fees = JSON.parse(localStorage.getItem("fees")) || [];
+
+    // Get today's date
+    const today = new Date();
+    const last30Days = [];
+
+    for (let i = 29; i >= 0; i--) {
+      const date = new Date();
+      date.setDate(today.getDate() - i);
+      const dateStr = date.toISOString().split("T")[0];
+      last30Days.push(dateStr);
+    }
+
+    // Group fees by date
+    const dailyCollection = {};
+    fees.forEach(fee => {
+      const date = fee.date?.split("T")[0] || ""; // Use ISO date or fallback
+      if (date in dailyCollection) {
+        dailyCollection[date] += Number(fee.amount);
+      } else {
+        dailyCollection[date] = Number(fee.amount);
+      }
+    });
+
+    // Prepare chart data
+    const chartLabels = last30Days;
+    const chartData = last30Days.map(date => dailyCollection[date] || 0);
+
+    const ctx = document.getElementById("trendChart").getContext("2d");
+    if (window.trendChart) window.trendChart.destroy();
+
+    window.trendChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: chartLabels,
+        datasets: [{
+          label: 'Daily Fee Collected (Rp)',
+          data: chartData,
+          borderColor: '#007bff',
+          backgroundColor: 'rgba(0, 123, 255, 0.1)',
+          tension: 0.3,
+          fill: true,
+        }]
+      },
+      options: {
+        scales: {
+          x: {
+            ticks: {
+              maxTicksLimit: 7,
+              callback: function(value, index, values) {
+                return chartLabels[index].slice(5); // Show MM-DD
+              }
+            }
+          },
+          y: {
+            beginAtZero: true
+          }
+        },
+        plugins: {
+          legend: {
+            display: true,
+            position: 'top'
+          }
+        }
+      }
+    });
+  }
+
+  window.onload = () => {
+    calculateFinanceSummary();
+    drawTrendChart();
+  };
+</script>
+
+  <h3 style="text-align:center; margin-top:30px;">Last 30 Days Fee Collection</h3>
+<canvas id="trendChart" height="200"></canvas>
+
+</body>
+</html>

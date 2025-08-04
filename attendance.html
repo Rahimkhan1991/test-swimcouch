@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Attendance</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    :root {
+      --primary: #007bff;
+      --bg: #f0f4f8;
+      --white: #ffffff;
+      --gray: #ccc;
+      --shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 10px;
+      background-color: var(--bg);
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--white);
+      padding: 15px 10px;
+      border-radius: 10px;
+      box-shadow: var(--shadow);
+      margin-bottom: 10px;
+    }
+
+    h2 {
+      font-size: 20px;
+      margin: 0;
+      color: var(--primary);
+    }
+
+    .btn {
+      padding: 10px 15px;
+      background-color: var(--primary);
+      border: none;
+      color: white;
+      font-size: 14px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .back-btn {
+      background-color: #6c757d;
+    }
+
+    .top-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+
+    input[type="date"], select {
+      padding: 10px;
+      font-size: 14px;
+      border: 1px solid var(--gray);
+      border-radius: 6px;
+      flex: 1;
+      min-width: 130px;
+    }
+
+    label {
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      margin-top: 5px;
+    }
+
+    .student-list {
+      margin-bottom: 20px;
+    }
+
+    .student-card {
+      background: var(--white);
+      padding: 12px 15px;
+      margin-bottom: 10px;
+      border-radius: 10px;
+      box-shadow: var(--shadow);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .student-name {
+      font-weight: bold;
+      font-size: 15px;
+    }
+
+    .status-message {
+      background: #28a745;
+      color: white;
+      text-align: center;
+      padding: 10px;
+      border-radius: 6px;
+      margin-top: 10px;
+    }
+
+    @media (max-width: 600px) {
+      .student-card {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .student-card input[type="checkbox"] {
+        align-self: flex-end;
+        margin-top: 8px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h2>Attendance</h2>
+    <button class="btn back-btn" onclick="window.history.back()">Back</button>
+  </header>
+
+  <div class="top-controls">
+    <input type="date" id="attendanceDate">
+    <select id="dayFilter">
+      <option value="">All Days</option>
+      <option value="Monday">Monday</option>
+      <option value="Tuesday">Tuesday</option>
+      <option value="Wednesday">Wednesday</option>
+      <option value="Thursday">Thursday</option>
+      <option value="Friday">Friday</option>
+      <option value="Saturday">Saturday</option>
+      <option value="Sunday">Sunday</option>
+    </select>
+    <label><input type="checkbox" id="markAll" onchange="markAllPresent()"> Mark All Present</label>
+  </div>
+
+  <div id="studentList" class="student-list">
+    <!-- Students will load here -->
+  </div>
+
+  <button class="btn" onclick="saveAttendance()">Submit Attendance</button>
+
+  <script>
+    // Set today's date
+    document.getElementById('attendanceDate').valueAsDate = new Date();
+
+    function loadStudents() {
+      try {
+        const students = JSON.parse(localStorage.getItem('students')) || [];
+        const selectedDay = document.getElementById('dayFilter').value;
+
+        const filtered = selectedDay 
+          ? students.filter(s => s.day === selectedDay || (s.days && s.days.includes(selectedDay)))
+          : students;
+
+        displayStudents(filtered);
+      } catch (error) {
+        showMessage('Error loading students: ' + error.message);
+      }
+    }
+
+    function displayStudents(students) {
+      const list = document.getElementById('studentList');
+      list.innerHTML = '';
+
+      if (students.length === 0) {
+        list.innerHTML = '<p>No students found</p>';
+        return;
+      }
+
+      const date = document.getElementById('attendanceDate').value;
+      const records = JSON.parse(localStorage.getItem('attendance')) || [];
+      const todaysRecords = records.filter(r => r.date === date);
+
+      students.forEach(student => {
+        const card = document.createElement('div');
+        card.className = 'student-card';
+        card.innerHTML = `
+          <div class="student-name">${student.name}</div>
+          <input type="checkbox" class="mark-present" data-name="${student.name}" 
+            ${todaysRecords.some(r => r.name === student.name) ? 'checked' : ''}>
+        `;
+        list.appendChild(card);
+      });
+    }
+
+    function markAllPresent() {
+      const checked = document.getElementById('markAll').checked;
+      document.querySelectorAll('.mark-present').forEach(cb => cb.checked = checked);
+    }
+
+    function saveAttendance() {
+      try {
+        const date = document.getElementById('attendanceDate').value;
+        if (!date) return showMessage('Please select a date');
+
+        const checkboxes = document.querySelectorAll('.mark-present');
+        const all = JSON.parse(localStorage.getItem('attendance')) || [];
+
+        const updated = all.filter(r => r.date !== date);
+
+        checkboxes.forEach(cb => {
+          if (cb.checked) {
+            updated.push({ date, name: cb.dataset.name, status: 'Present' });
+          }
+        });
+
+        localStorage.setItem('attendance', JSON.stringify(updated));
+        showMessage('Attendance saved successfully!');
+      } catch (e) {
+        showMessage('Error saving attendance: ' + e.message);
+      }
+    }
+
+    function showMessage(msg) {
+      const old = document.querySelector('.status-message');
+      if (old) old.remove();
+
+      const el = document.createElement('div');
+      el.className = 'status-message';
+      el.textContent = msg;
+      document.body.appendChild(el);
+
+      setTimeout(() => el.remove(), 3000);
+    }
+
+    document.getElementById('dayFilter').addEventListener('change', loadStudents);
+    document.getElementById('attendanceDate').addEventListener('change', loadStudents);
+
+    loadStudents();
+  </script>
+</body>
+</html>

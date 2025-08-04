@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Attendance Report</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 15px;
+      background-color: #f6f8fa;
+      margin: 0;
+    }
+
+    h2 {
+      color: #333;
+      font-size: 1.5rem;
+      margin-top: 0;
+    }
+
+    select, button {
+      padding: 10px;
+      margin: 10px 0;
+      width: 100%;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      font-size: 0.9rem;
+    }
+
+    .card {
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    #attendanceResult {
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .student-info {
+      background: #f0f9ff;
+      padding: 10px;
+      margin-bottom: 15px;
+      border-radius: 8px;
+    }
+
+    .attendance-history {
+      margin-top: 15px;
+    }
+
+    .attendance-history ul {
+      padding-left: 20px;
+    }
+
+    /* Mobile-specific adjustments */
+    @media (max-width: 600px) {
+      body {
+        padding: 10px;
+      }
+      .card {
+        padding: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h2>Attendance Report</h2>
+
+  <div class="card">
+    <label>Select Student:</label>
+    <select id="studentDropdown" onchange="showAttendanceHistory()">
+      <option value="">--Select Student--</option>
+    </select>
+    <div id="attendanceResult"></div>
+  </div>
+
+  <div style="text-align: center; margin-top: 20px;">
+    <button onclick="location.href='home.html'"
+      style="background-color: #3498db; color: white; border: none; padding: 10px 20px; margin-right: 10px; border-radius: 10px; cursor: pointer;">🏠 Home</button>
+    <button onclick="history.back()"
+      style="background-color: #95a5a6; color: white; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer;">← Back</button>
+  </div>
+
+  <script>
+    // Load student list
+    function loadStudents() {
+      try {
+        const students = JSON.parse(localStorage.getItem("students") || []);
+        const dropdown = document.getElementById("studentDropdown");
+        dropdown.innerHTML = '<option value="">--Select Student--</option>';
+
+        // Sort students alphabetically
+        students.sort((a, b) => a.name.localeCompare(b.name))
+          .forEach(student => {
+            const opt = document.createElement("option");
+            opt.value = student.name;
+            opt.textContent = `${student.name} (Rp${student.balance || 0} balance)`;
+            dropdown.appendChild(opt);
+          });
+      } catch (e) {
+        console.error("Error loading students:", e);
+        showMessage("Failed to load student data");
+      }
+    }
+
+    function showAttendanceHistory() {
+      const selectedStudentName = document.getElementById("studentDropdown").value;
+      if (!selectedStudentName) {
+        document.getElementById("attendanceResult").innerHTML = "";
+        return;
+      }
+
+      try {
+        const attendance = JSON.parse(localStorage.getItem("attendance") || []);
+        const students = JSON.parse(localStorage.getItem("students") || []);
+        
+        const student = students.find(s => s.name === selectedStudentName);
+        if (!student) {
+          document.getElementById("attendanceResult").innerHTML = "<p>Student not found</p>";
+          return;
+        }
+
+        // Filter attendance by student name
+        const studentAttendance = attendance
+          .filter(a => a.name === selectedStudentName)
+          .sort((a, b) => new Date(b.date) - new Date(a.date)); // Newest first
+
+        // Build student info
+        let html = `<div class="student-info">
+          <strong>Student Details:</strong><br>`;
+        
+        if (student.image) {
+          html += `<img src="${student.image}" alt="${student.name}" style="width: 50px; height: 50px; border-radius: 50%; margin-right: 10px;">`;
+        }
+
+        const total = parseInt(student.totalFee || 0);
+        const paid = parseInt(student.paidAmount || 0);
+        const balance = total - paid;
+
+        html += `Name: ${student.name}<br>
+          Phone: ${student.phone || 'N/A'}<br>
+          Days: ${student.days ? student.days.join(', ') : student.day || 'N/A'}<br>
+          Total Fee: Rp${total}<br>
+          Paid: Rp${paid}<br>
+          Balance: Rp${balance}
+        </div>`;
+
+        // Build attendance history
+        if (studentAttendance.length > 0) {
+          html += `<div class="attendance-history">
+            <h4>Attendance History (${studentAttendance.length} sessions):</h4>
+            <ul>`;
+          
+          studentAttendance.forEach(a => {
+            html += `<li>${formatDate(a.date)} - ${a.status}</li>`;
+          });
+          
+          html += `</ul></div>`;
+        } else {
+          html += "<p>No attendance records found for this student.</p>";
+        }
+
+        document.getElementById("attendanceResult").innerHTML = html;
+      } catch (e) {
+        console.error("Error showing attendance:", e);
+        showMessage("Error loading attendance data");
+      }
+    }
+
+    // Helper to format dates
+    function formatDate(dateString) {
+      const options = { year: 'numeric', month: 'short', day: 'numeric' };
+      return new Date(dateString).toLocaleDateString(undefined, options);
+    }
+
+    // Show status message
+    function showMessage(message) {
+      const msgElement = document.createElement('div');
+      msgElement.className = 'status-message';
+      msgElement.textContent = message;
+      
+      const existingMsg = document.querySelector('.status-message');
+      if (existingMsg) existingMsg.remove();
+      
+      document.body.appendChild(msgElement);
+      setTimeout(() => msgElement.remove(), 3000);
+    }
+
+    // Initialize
+    window.onload = () => {
+      loadStudents();
+    };
+  </script>
+</body>
+</html>

@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Send SMS</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background: #f0f2f5;
+    }
+
+    h2 {
+      color: #333;
+    }
+
+    .card {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 15px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    select,
+    textarea,
+    input,
+    button {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      font-size: 16px;
+    }
+
+    button {
+      background-color: #28a745;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #218838;
+    }
+
+    .template-buttons button {
+      background-color: #007bff;
+      margin-right: 5px;
+      color: white;
+      border: none;
+    }
+
+    .template-buttons button:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h2>Send SMS / WhatsApp Message</h2>
+
+  <div class="card">
+    <label for="studentSelect">Select Student:</label>
+    <select id="studentSelect" onchange="fillPhone()">
+      <option value="">-- Select Student --</option>
+    </select>
+
+    <label for="phone">Phone Number:</label>
+    <input type="tel" id="phone" placeholder="+62...">
+
+    <label for="template">Use Template:</label>
+    <div class="template-buttons">
+      <button onclick="setTemplate('fee')">Fee Reminder</button>
+      <button onclick="setTemplate('absent')">Absent Alert</button>
+      <button onclick="setTemplate('custom')">Custom</button>
+    </div>
+
+    <label for="message">Message:</label>
+    <textarea id="message" rows="5" placeholder="Your message..."></textarea>
+
+    <button onclick="sendWhatsApp()">Send WhatsApp</button>
+  </div>
+
+  <div style="text-align: center; margin-top: 20px;">
+    <button onclick="location.href='home.html'" style="background-color: #3498db; color: white; border: none; padding: 10px 20px; margin-right: 10px; border-radius: 10px; cursor: pointer;">🏠 Home</button>
+    <button onclick="history.back()" style="background-color: #95a5a6; color: white; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer;">← Back</button>
+  </div>
+
+  <script>
+    const students = JSON.parse(localStorage.getItem("students") || "[]");
+
+    function loadStudents() {
+      const select = document.getElementById("studentSelect");
+      students.forEach(s => {
+        const opt = document.createElement("option");
+        opt.value = s.phone;
+        opt.textContent = s.name;
+        select.appendChild(opt);
+      });
+    }
+
+    function fillPhone() {
+      const phone = document.getElementById("studentSelect").value;
+      document.getElementById("phone").value = phone;
+    }
+
+    function setTemplate(type) {
+      const studentName = document.getElementById("studentSelect").selectedOptions[0]?.text || "";
+      let msg = "";
+
+      if (type === "fee") {
+        msg = `Hello ${studentName},\n\nIni adalah pengingat untuk membayar biaya kelas renang Anda yang tertunda.\nTerima kasih!`;
+      } else if (type === "absent") {
+        msg = `Hello ${studentName},\n\nAnda dinyatakan tidak hadir hari ini. Mohon beri tahu kami jika ada alasan yang sah.\n- Coach Beqy`;
+      } else {
+        msg = "";
+      }
+
+      document.getElementById("message").value = msg;
+    }
+
+    function sendWhatsApp() {
+      const phone = document.getElementById("phone").value.replace(/\D/g, '');
+      const message = encodeURIComponent(document.getElementById("message").value);
+
+      if (!phone || !message) {
+        alert("Phone number and message are required.");
+        return;
+      }
+
+      const link = `https://wa.me/${phone}?text=${message}`;
+      window.open(link, "_blank");
+    }
+
+    window.onload = loadStudents;
+  </script>
+
+</body>
+
+</html>
