@@ -81,8 +81,7 @@
     <input type="tel" id="phone" placeholder="Phone number">
 
     <label>Day Assigned</label>
-    <select id="day">
-      <option value="">Select Day</option>
+    <select id="day" multiple size="7">
       <option>Monday</option>
       <option>Tuesday</option>
       <option>Wednesday</option>
@@ -143,12 +142,16 @@
     function addStudent() {
       const name = document.getElementById("name").value.trim();
       const phone = document.getElementById("phone").value.trim();
-      const day = document.getElementById("day").value;
+
+      // Get all selected days
+      const daySelect = document.getElementById("day");
+      const selectedDays = Array.from(daySelect.selectedOptions).map(opt => opt.value);
+
       const totalFee = parseFloat(document.getElementById("totalFee").value) || 0;
       const initialPayment = parseFloat(document.getElementById("initialPayment").value) || 0;
       const balanceFee = parseFloat(document.getElementById("balanceFee").value) || 0;
 
-      if (!name || !day) {
+      if (!name || selectedDays.length === 0) {
         alert("Please fill required fields");
         return;
       }
@@ -157,7 +160,7 @@
         id: Date.now(),
         name,
         phone,
-        day,
+        day: selectedDays, // stored as array
         totalFee,
         initialPayment,
         balanceFee,
