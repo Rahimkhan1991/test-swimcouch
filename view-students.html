@@ -178,7 +178,18 @@
       card.innerHTML = `
         <label>Name: <input type="text" id="editName" value="${student.name}"></label>
         <label>Phone: <input type="text" id="editPhone" value="${student.phone}"></label>
-        <label>Day: <input type="text" id="editDay" value="${student.day}"></label>
+        <label>Day:
+  <select id="editDay">
+    <option value="">Select Day</option>
+    <option value="Monday" ${student.day === "Monday" ? "selected" : ""}>Monday</option>
+    <option value="Tuesday" ${student.day === "Tuesday" ? "selected" : ""}>Tuesday</option>
+    <option value="Wednesday" ${student.day === "Wednesday" ? "selected" : ""}>Wednesday</option>
+    <option value="Thursday" ${student.day === "Thursday" ? "selected" : ""}>Thursday</option>
+    <option value="Friday" ${student.day === "Friday" ? "selected" : ""}>Friday</option>
+    <option value="Saturday" ${student.day === "Saturday" ? "selected" : ""}>Saturday</option>
+    <option value="Sunday" ${student.day === "Sunday" ? "selected" : ""}>Sunday</option>
+  </select>
+</label>
         <label>Total Fee: <input type="number" id="editTotalFee" value="${student.totalFee}"></label>
         <label>Initial Payment: <input type="number" id="editInitialPayment" value="${student.initialPayment}"></label>
         <label>Image URL/Base64: <input type="text" id="editImage" value="${student.image}"></label>
