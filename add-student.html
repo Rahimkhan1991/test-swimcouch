@@ -135,25 +135,13 @@
 <body>
   <div class="container">
     <h2>Add Student</h2>
-<button onclick="history.back()" style="
-  margin-bottom: 16px;
-  background-color: #6c757d;
-  color: white;
-  font-size: 14px;
-  padding: 8px 16px;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  width: auto;
-">
-  ← Back
-</button>
+
 
     <label>Name</label>
     <input type="text" id="name" placeholder="Student name" required>
 
     <label>Phone</label>
-    <input type="tel" id="phone" placeholder="Phone number">
+    <input type="tel" id="phone" placeholder="Phone number" required>
 
     <label>Day Assigned</label>
     <div class="dropdown-container" id="dayDropdown">
@@ -170,13 +158,13 @@
     </div>
 
     <label>Total Fee</label>
-    <input type="number" id="totalFee" placeholder="Total Fee">
+    <input type="number" id="totalFee" placeholder="Total Fee" required>
 
     <label>Initial Payment</label>
-    <input type="number" id="initialPayment" placeholder="Initial Payment">
+    <input type="number" id="initialPayment" placeholder="Initial Payment" required>
 
     <label>Balance Fee</label>
-    <input type="number" id="balanceFee" readonly style="background: #eee;">
+    <input type="number" id="balanceFee" readonly style="background: #b4a4a4;">
 
     <label>Upload/Take Photo</label>
     <input type="file" id="photo" accept="image/*" capture="environment">
@@ -185,6 +173,19 @@
     <button onclick="addStudent()">Add Student</button>
   </div>
 
+    <button onclick="history.back()" style="
+       margin-bottom: 16px;
+       background-color: #0056b3;
+       color: white;
+       font-size: 14px;
+       padding: 8px 16px;
+       border: none;
+       border-radius: 8px;
+       cursor: pointer;
+       width: auto;
+       ">
+       ← Back
+   </button>
   <script>
     const totalFeeInput = document.getElementById("totalFee");
     const initialPaymentInput = document.getElementById("initialPayment");
@@ -266,9 +267,9 @@
       let students = JSON.parse(localStorage.getItem("students")) || [];
       students.push(student);
       localStorage.setItem("students", JSON.stringify(students));
-
+          updateDropdownLabel();  // optional: reflect selected days in dropdown
       alert("Student added!");
-      updateDropdownLabel();  // optional: reflect selected days in dropdown
+      
 
       window.location.href = "view-students.html";
     }
