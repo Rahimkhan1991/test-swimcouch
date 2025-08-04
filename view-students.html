@@ -92,6 +92,45 @@
       flex-direction: column;
     }
   }
+  .dropdown-container {
+  position: relative;
+  margin-bottom: 10px;
+}
+
+.dropdown-btn {
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background: #fff;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.dropdown-btn::after {
+  content: "▾";
+  font-size: 16px;
+  color: #777;
+}
+
+.dropdown-content {
+  display: none;
+  position: absolute;
+  z-index: 10;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  padding: 8px;
+  border-radius: 6px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  margin-top: 4px;
+}
+
+.dropdown-content label {
+  display: block;
+  margin: 4px 0;
+}
+
 </style>
 
 </head>
@@ -131,6 +170,11 @@
 
         const top = document.createElement("div");
         top.className = "student-top";
+
+          const img = document.createElement("img");
+        img.src = student.image || "https://via.placeholder.com/60";
+        img.onerror = () => img.src = "https://via.placeholder.com/60";
+        top.appendChild(img);
 
 
         const info = document.createElement("div");
@@ -193,7 +237,6 @@
 </div>
         <label>Total Fee: <input type="number" id="editTotalFee" value="${student.totalFee}"></label>
         <label>Initial Payment: <input type="number" id="editInitialPayment" value="${student.initialPayment}"></label>
-        <label>Image URL/Base64: <input type="text" id="editImage" value="${student.image}"></label>
         <button class="save-btn" onclick="saveEdit(${index})">Save</button>
       `;
     }
@@ -207,7 +250,6 @@
         day: document.getElementById("editDay").value,
         totalFee: parseFloat(document.getElementById("editTotalFee").value),
         initialPayment: parseFloat(document.getElementById("editInitialPayment").value),
-        image: document.getElementById("editImage").value
       };
       localStorage.setItem("students", JSON.stringify(students));
       renderStudents();
