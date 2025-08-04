@@ -200,19 +200,39 @@
     }
 
     function sendWhatsApp() {
-      const studentName = document.getElementById("studentSelect").value;
-      const phone = getStudentPhone(studentName);
-      const reportDiv = document.getElementById("reportOutput");
-
-      if (!studentName || !phone || !reportDiv.innerHTML.trim()) {
+    if (!currentReportStudent || !currentReportData || currentReportData.length === 0) {
         alert("Please generate the report first.");
         return;
-      }
-
-      const msg = encodeURIComponent(`Hello ${studentName}, your attendance report is ready. Please contact us for the PDF.`);
-      const link = `https://wa.me/${phone}?text=${msg}`;
-      window.open(link, "_blank");
     }
+
+    const name = currentReportStudent.name || "Student";
+    const phone = currentReportStudent.phone || "";
+    const totalSessions = Math.floor(currentReportData.filter(d => d.status === "Present").length / 4);
+    const presents = currentReportData.filter(d => d.status === "Present").length;
+    const absents = currentReportData.filter(d => d.status === "Absent").length;
+    const dates = currentReportData.map(d => d.date);
+    const fromDate = dates[0];
+    const toDate = dates[dates.length - 1];
+
+    const message = 
+`Hello ${name},
+
+Your attendance report is ready 📄
+
+🗓️ Period: ${fromDate} to ${toDate}
+✅ Presents: ${presents}
+❌ Absents: ${absents}
+🎯 Sessions Attended: ${totalSessions}
+
+Your detailed PDF report has been downloaded.
+
+Thank you!`;
+
+    const encodedMessage = encodeURIComponent(message);
+    const whatsappURL = `https://wa.me/${phone.replace(/\D/g, '')}?text=${encodedMessage}`;
+    window.open(whatsappURL, '_blank');
+}
+
 
     function getStudentPhone(name) {
       const students = JSON.parse(localStorage.getItem("students")) || [];
