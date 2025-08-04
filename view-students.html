@@ -178,18 +178,19 @@
       card.innerHTML = `
         <label>Name: <input type="text" id="editName" value="${student.name}"></label>
         <label>Phone: <input type="text" id="editPhone" value="${student.phone}"></label>
-        <label>Day:
-  <select id="editDay">
-    <option value="">Select Day</option>
-    <option value="Monday" ${student.day === "Monday" ? "selected" : ""}>Monday</option>
-    <option value="Tuesday" ${student.day === "Tuesday" ? "selected" : ""}>Tuesday</option>
-    <option value="Wednesday" ${student.day === "Wednesday" ? "selected" : ""}>Wednesday</option>
-    <option value="Thursday" ${student.day === "Thursday" ? "selected" : ""}>Thursday</option>
-    <option value="Friday" ${student.day === "Friday" ? "selected" : ""}>Friday</option>
-    <option value="Saturday" ${student.day === "Saturday" ? "selected" : ""}>Saturday</option>
-    <option value="Sunday" ${student.day === "Sunday" ? "selected" : ""}>Sunday</option>
-  </select>
-</label>
+        <label>Day Assigned</label>
+<div class="dropdown-container" id="editDayDropdown">
+  <div class="dropdown-btn" onclick="toggleDropdownEdit()">Select Day(s)</div>
+  <div class="dropdown-content">
+    <label><input type="checkbox" value="Monday" ${student.day && student.day.includes("Monday") ? "checked" : ""}> Monday</label>
+    <label><input type="checkbox" value="Tuesday" ${student.day && student.day.includes("Tuesday") ? "checked" : ""}> Tuesday</label>
+    <label><input type="checkbox" value="Wednesday" ${student.day && student.day.includes("Wednesday") ? "checked" : ""}> Wednesday</label>
+    <label><input type="checkbox" value="Thursday" ${student.day && student.day.includes("Thursday") ? "checked" : ""}> Thursday</label>
+    <label><input type="checkbox" value="Friday" ${student.day && student.day.includes("Friday") ? "checked" : ""}> Friday</label>
+    <label><input type="checkbox" value="Saturday" ${student.day && student.day.includes("Saturday") ? "checked" : ""}> Saturday</label>
+    <label><input type="checkbox" value="Sunday" ${student.day && student.day.includes("Sunday") ? "checked" : ""}> Sunday</label>
+  </div>
+</div>
         <label>Total Fee: <input type="number" id="editTotalFee" value="${student.totalFee}"></label>
         <label>Initial Payment: <input type="number" id="editInitialPayment" value="${student.initialPayment}"></label>
         <label>Image URL/Base64: <input type="text" id="editImage" value="${student.image}"></label>
@@ -211,6 +212,12 @@
       localStorage.setItem("students", JSON.stringify(students));
       renderStudents();
     }
+
+      function toggleDropdownEdit() {
+  const dropdown = document.querySelector("#editDayDropdown .dropdown-content");
+  // Toggle display style between block and none
+  dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+}
 
     function exportToCSV() {
       const students = JSON.parse(localStorage.getItem("students") || "[]");
