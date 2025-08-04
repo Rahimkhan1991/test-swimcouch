@@ -26,7 +26,7 @@
       margin-bottom: 16px;
     }
 
-    input, select {
+    input, select, .dropdown-btn {
       width: 100%;
       padding: 10px;
       margin-bottom: 12px;
@@ -63,6 +63,42 @@
       border: 1px solid #ccc;
     }
 
+    .dropdown-container {
+      position: relative;
+    }
+
+    .dropdown-btn {
+      background-color: white;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .dropdown-content {
+      display: none;
+      position: absolute;
+      background-color: white;
+      border: 1px solid #ccc;
+      width: 100%;
+      max-height: 160px;
+      overflow-y: auto;
+      border-radius: 8px;
+      z-index: 99;
+    }
+
+    .dropdown-content label {
+      display: block;
+      padding: 8px;
+      cursor: pointer;
+    }
+
+    .dropdown-content input[type="checkbox"] {
+      margin-right: 8px;
+    }
+
+    .dropdown-container.active .dropdown-content {
+      display: block;
+    }
+
     @media (max-width: 500px) {
       .container {
         padding: 16px;
@@ -81,15 +117,18 @@
     <input type="tel" id="phone" placeholder="Phone number">
 
     <label>Day Assigned</label>
-    <select id="day" multiple size="7">
-      <option>Monday</option>
-      <option>Tuesday</option>
-      <option>Wednesday</option>
-      <option>Thursday</option>
-      <option>Friday</option>
-      <option>Saturday</option>
-      <option>Sunday</option>
-    </select>
+    <div class="dropdown-container" id="dayDropdown">
+      <div class="dropdown-btn" onclick="toggleDropdown()">Select Day(s)</div>
+      <div class="dropdown-content">
+        <label><input type="checkbox" value="Monday"> Monday</label>
+        <label><input type="checkbox" value="Tuesday"> Tuesday</label>
+        <label><input type="checkbox" value="Wednesday"> Wednesday</label>
+        <label><input type="checkbox" value="Thursday"> Thursday</label>
+        <label><input type="checkbox" value="Friday"> Friday</label>
+        <label><input type="checkbox" value="Saturday"> Saturday</label>
+        <label><input type="checkbox" value="Sunday"> Sunday</label>
+      </div>
+    </div>
 
     <label>Total Fee</label>
     <input type="number" id="totalFee" placeholder="Total Fee">
@@ -139,14 +178,23 @@
       }
     });
 
+    function toggleDropdown() {
+      document.getElementById("dayDropdown").classList.toggle("active");
+    }
+
+    function getSelectedDays() {
+      const checkboxes = document.querySelectorAll(".dropdown-content input[type='checkbox']");
+      const selected = [];
+      checkboxes.forEach(cb => {
+        if (cb.checked) selected.push(cb.value);
+      });
+      return selected;
+    }
+
     function addStudent() {
       const name = document.getElementById("name").value.trim();
       const phone = document.getElementById("phone").value.trim();
-
-      // Get all selected days
-      const daySelect = document.getElementById("day");
-      const selectedDays = Array.from(daySelect.selectedOptions).map(opt => opt.value);
-
+      const selectedDays = getSelectedDays();
       const totalFee = parseFloat(document.getElementById("totalFee").value) || 0;
       const initialPayment = parseFloat(document.getElementById("initialPayment").value) || 0;
       const balanceFee = parseFloat(document.getElementById("balanceFee").value) || 0;
@@ -160,7 +208,7 @@
         id: Date.now(),
         name,
         phone,
-        day: selectedDays, // stored as array
+        day: selectedDays,
         totalFee,
         initialPayment,
         balanceFee,
@@ -172,8 +220,16 @@
       localStorage.setItem("students", JSON.stringify(students));
 
       alert("Student added!");
-      window.location.href = "view-students.html"; // redirect
+      window.location.href = "view-students.html";
     }
+
+    // Close dropdown when clicking outside
+    document.addEventListener("click", function (e) {
+      const dropdown = document.getElementById("dayDropdown");
+      if (!dropdown.contains(e.target)) {
+        dropdown.classList.remove("active");
+      }
+    });
   </script>
 </body>
 </html>
