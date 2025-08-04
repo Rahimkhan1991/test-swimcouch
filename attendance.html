@@ -155,9 +155,13 @@
         const students = JSON.parse(localStorage.getItem('students')) || [];
         const selectedDay = document.getElementById('dayFilter').value;
 
-        const filtered = selectedDay 
-          ? students.filter(s => s.day === selectedDay || (s.days && s.days.includes(selectedDay)))
-          : students;
+         const filtered = selectedDay 
+         ? students.filter(s => {
+         const assignedDays = s.days || (s.day ? [s.day] : []);
+         return assignedDays.includes(selectedDay);
+         })
+  : students;
+
 
         displayStudents(filtered);
       } catch (error) {
