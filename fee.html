@@ -89,49 +89,69 @@
       });
     }
 
-    function showStudentBalance() {
-      const studentId = document.getElementById("studentSelect").value;
-      const students = getStudents();
-      const student = students.find(s => s.id == studentId);  // Fix 1
+   function showStudentBalance() {
+  const studentId = document.getElementById("studentSelect").value;
+  const students = getStudents();
+  const student = students.find(s => s.id == studentId);
 
-      const box = document.getElementById("balanceBox");
-      if (student) {
-        box.textContent = `Pending Fee: ₹${student.balanceFee}`;
-      } else {
-        box.textContent = "";
-      }
-    }
+  const box = document.getElementById("balanceBox");
+  if (!student) {
+    box.textContent = "";
+    return;
+  }
 
-    function collectFee() {
-      const studentId = document.getElementById("studentSelect").value;
-      const amount = parseFloat(document.getElementById("amount").value);
-      const date = new Date().toISOString().split("T")[0];
+  const fees = getFees();
+  const studentFees = fees.filter(fee => fee.studentId == studentId);
+  const totalPaid = studentFees.reduce((sum, f) => sum + f.amount, 0);
+  const pending = student.totalFee - totalPaid;
 
-      if (!studentId || isNaN(amount)) {
-        showMessage("Please select a student and enter a valid amount.");
-        return;
-      }
+  box.innerHTML = `
+    <div><b>Total Fee:</b> ₹${student.totalFee}</div>
+    <div><b>Paid:</b> ₹${totalPaid}</div>
+    <div><b>Pending:</b> ₹${pending}</div>
+  `;
+}
 
-      const fees = getFees();
-      fees.push({ studentId, amount, date });
-      saveFees(fees);
+ function collectFee() {
+  const studentId = document.getElementById("studentSelect").value;
+  const amount = parseFloat(document.getElementById("amount").value);
+  const date = new Date().toISOString().split("T")[0];
 
-      // Update student balance
-      const students = getStudents();
-      const studentIndex = students.findIndex(s => s.id == studentId);
-      if (studentIndex !== -1) {
-        students[studentIndex].balanceFee -= amount;
-        localStorage.setItem("students", JSON.stringify(students));
-      }
+  if (!studentId || isNaN(amount)) {
+    showMessage("Please select a student and enter a valid amount.");
+    return;
+  }
 
-      document.getElementById("amount").value = "";
-      showMessage("Fee collected successfully!");
-      showStudentBalance();
+  const students = getStudents();
+  const student = students.find(s => s.id == studentId);
+  if (!student) {
+    showMessage("Student not found.");
+    return;
+  }
 
-      populateDropdowns();  // Fix 2
-      document.getElementById("historyStudent").value = studentId;
-      loadFeeHistory();     // Fix 3
-    }
+  // Get total paid amount for this student
+  const fees = getFees();
+  const studentFees = fees.filter(fee => fee.studentId == studentId);
+  const totalPaid = studentFees.reduce((sum, f) => sum + f.amount, 0);
+  const pending = student.totalFee - totalPaid;
+
+  if (amount > pending) {
+    showMessage(`Payment exceeds pending fee. Remaining: ₹${pending}`);
+    return;
+  }
+
+  fees.push({ studentId, amount, date });
+  saveFees(fees);
+
+  document.getElementById("amount").value = "";
+  showMessage("Fee collected successfully!");
+
+  showStudentBalance();
+  populateDropdowns();
+  document.getElementById("historyStudent").value = studentId;
+  loadFeeHistory();
+}
+
 
     function loadFeeHistory() {
       const studentId = document.getElementById("historyStudent").value;
