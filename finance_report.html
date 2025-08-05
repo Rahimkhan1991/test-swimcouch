@@ -126,7 +126,7 @@
       return JSON.parse(localStorage.getItem("fees")) || [];
     }
 
-    function calculateFinanceSummary() {
+ function calculateFinanceSummary() {
   const students = JSON.parse(localStorage.getItem("students")) || [];
   const fees = JSON.parse(localStorage.getItem("fees")) || [];
 
@@ -135,12 +135,9 @@
 
   students.forEach(student => {
     const expected = Number(student.totalFee || 0);
-    const initial = Number(student.initialPayment || 0);
-    const additional = fees
+    const collected = fees
       .filter(fee => fee.studentName === student.name)
       .reduce((sum, fee) => sum + Number(fee.amount || 0), 0);
-
-    const collected = initial + additional;
 
     totalExpected += expected;
     totalCollected += collected;
@@ -154,6 +151,7 @@
 
   drawChart(totalCollected, totalPending);
 }
+
 
 
     function drawPieChart(collected, pending) {
