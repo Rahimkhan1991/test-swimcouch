@@ -112,6 +112,10 @@
     <div id="reportOutput"></div>
   </div>
 
+   <div style="max-width: 500px; width: 100%;">
+    <button class="btn-back" onclick="history.back()">⬅ Back</button>
+  </div>
+
   <script>
     // Populate student dropdown from localStorage
     function populateStudentList() {
@@ -206,10 +210,8 @@ let records = attendance.filter(a => a.name === studentName);
 
 
     populateStudentList();
-    
-  <div style="max-width: 500px; width: 100%;">
-    <button class="btn-back" onclick="history.back()">⬅ Back</button>
-  </div>
+
+ 
 
   </script>
 </body>
