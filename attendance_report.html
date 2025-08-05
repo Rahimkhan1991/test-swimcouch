@@ -203,55 +203,14 @@ let records = attendance.filter(a => a.name === studentName);
       html2pdf().from(reportDiv).set(opt).save();
     }
 
-function sendWhatsApp() {
-  if (!currentReportStudent) {
-    alert("Please generate the report first.");
-    return;
-  }
 
-  const attendance = JSON.parse(localStorage.getItem('attendance')) || [];
-  const studentAttendance = attendance.filter(a => a.studentId == currentReportStudent.id)
-                                      .sort((a, b) => new Date(a.date) - new Date(b.date));
-
-  if (studentAttendance.length === 0) {
-    alert("No attendance records found for this student.");
-    return;
-  }
-
-  const name = currentReportStudent.name || "Student";
-  const phone = currentReportStudent.phone || "";
-  const presents = studentAttendance.filter(d => d.status === "Present").length;
-  const absents = studentAttendance.filter(d => d.status === "Absent").length;
-  const totalSessions = Math.floor(presents / 4);
-  const dates = studentAttendance.map(d => d.date);
-  const fromDate = dates[0];
-  const toDate = dates[dates.length - 1];
-
-  const message =
-`Hello ${name},
-
-Your attendance report is ready 📄
-
-🗓️ Period: ${fromDate} to ${toDate}
-✅ Presents: ${presents}
-❌ Absents: ${absents}
-🎯 Sessions Attended: ${totalSessions}
-
-Your detailed PDF report has been downloaded.
-
-Thank you!`;
-
-  const encodedMessage = encodeURIComponent(message);
-  const whatsappURL = `https://wa.me/${phone}?text=${encodedMessage}`;
-  window.open(whatsappURL, '_blank');
-}
 
     populateStudentList();
     
   </script>
-  <div class="footer-buttons">
-  <button onclick="window.location.href='index.html'">🔙 Back</button>
-</div>
+ <div style="max-width: 500px; width: 100%;">
+    <button class="btn-back" onclick="history.back()">⬅ Back</button>
+  </div>
 
 </body>
 </html>
