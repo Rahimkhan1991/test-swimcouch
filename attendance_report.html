@@ -199,22 +199,31 @@
       html2pdf().from(reportDiv).set(opt).save();
     }
 
-    function sendWhatsApp() {
-    if (!currentReportStudent || !currentReportData || currentReportData.length === 0) {
-        alert("Please generate the report first.");
-        return;
-    }
+function sendWhatsApp() {
+  if (!currentReportStudent) {
+    alert("Please generate the report first.");
+    return;
+  }
 
-    const name = currentReportStudent.name || "Student";
-    const phone = currentReportStudent.phone || "";
-    const totalSessions = Math.floor(currentReportData.filter(d => d.status === "Present").length / 4);
-    const presents = currentReportData.filter(d => d.status === "Present").length;
-    const absents = currentReportData.filter(d => d.status === "Absent").length;
-    const dates = currentReportData.map(d => d.date);
-    const fromDate = dates[0];
-    const toDate = dates[dates.length - 1];
+  const attendance = JSON.parse(localStorage.getItem('attendance')) || [];
+  const studentAttendance = attendance.filter(a => a.studentId == currentReportStudent.id)
+                                      .sort((a, b) => new Date(a.date) - new Date(b.date));
 
-    const message = 
+  if (studentAttendance.length === 0) {
+    alert("No attendance records found for this student.");
+    return;
+  }
+
+  const name = currentReportStudent.name || "Student";
+  const phone = currentReportStudent.phone || "";
+  const presents = studentAttendance.filter(d => d.status === "Present").length;
+  const absents = studentAttendance.filter(d => d.status === "Absent").length;
+  const totalSessions = Math.floor(presents / 4);
+  const dates = studentAttendance.map(d => d.date);
+  const fromDate = dates[0];
+  const toDate = dates[dates.length - 1];
+
+  const message =
 `Hello ${name},
 
 Your attendance report is ready 📄
@@ -228,19 +237,11 @@ Your detailed PDF report has been downloaded.
 
 Thank you!`;
 
-    const encodedMessage = encodeURIComponent(message);
-    const whatsappURL = `https://wa.me/${phone}?text=${encodedMessage}`;
-    window.open(whatsappURL, '_blank');
+  const encodedMessage = encodeURIComponent(message);
+  const whatsappURL = `https://wa.me/${phone.replace(/[^\d]/g, '')}?text=${encodedMessage}`;
+  window.open(whatsappURL, '_blank');
 }
 
-
-    function getStudentPhone(name) {
-      const students = JSON.parse(localStorage.getItem("students")) || [];
-      const student = students.find(s => s.name === name);
-      return student ? student.phone : "";
-    }
-
-    // Initial call
     populateStudentList();
   </script>
 </body>
