@@ -2,163 +2,163 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Student Attendance Report</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     body {
       font-family: Arial, sans-serif;
-      padding: 20px;
-      background: #f2f2f2;
+      padding: 10px;
+      background: #f9f9f9;
     }
+
     h2 {
       text-align: center;
+      color: #2c3e50;
     }
-    .card {
-      background: #fff;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-      margin-bottom: 20px;
-    }
-    label {
-      font-weight: bold;
-    }
+
     select, button {
-      padding: 8px;
-      margin-top: 5px;
-      margin-bottom: 15px;
-      width: 100%;
+      padding: 8px 10px;
+      margin: 5px;
+      font-size: 16px;
     }
+
+    .report-box {
+      background: #fff;
+      padding: 15px;
+      border-radius: 10px;
+      margin-top: 15px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 20px;
+      margin-top: 15px;
     }
+
     th, td {
+      padding: 8px;
       border: 1px solid #ccc;
-      padding: 10px;
       text-align: center;
     }
-    th {
-      background-color: #007BFF;
-      color: white;
+
+    tr:nth-child(even) {
+      background-color: #f1f1f1;
     }
-    .session-row {
-      background-color: #e6f7ff;
+
+    tr.session-header {
+      background-color: #d1ecf1;
+      font-weight: bold;
     }
-    .striped:nth-child(even) {
-      background-color: #f9f9f9;
+
+    .summary {
+      margin-top: 15px;
+      font-weight: bold;
+      text-align: center;
     }
-    .button-group {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      justify-content: center;
+
+    .center {
+      text-align: center;
+      margin-top: 20px;
     }
+
     .btn {
-      padding: 10px 15px;
-      border: none;
-      border-radius: 5px;
-      background-color: #28a745;
+      background: #3498db;
       color: white;
+      border: none;
+      border-radius: 6px;
       cursor: pointer;
     }
-    .btn-print { background-color: #17a2b8; }
-    .btn-back { background-color: #6c757d; }
-    .btn-whatsapp { background-color: #25d366; }
+
+    .btn:hover {
+      background: #2980b9;
+    }
   </style>
 </head>
 <body>
-  <div class="card">
-    <h2>Student Attendance Report</h2>
-    <label for="studentSelect">Select Student:</label>
-    <select id="studentSelect"></select>
 
-    <div class="button-group">
-      <button class="btn" onclick="generateReport()">Generate Report</button>
-      <button class="btn btn-print" onclick="window.print()">Print Report</button>
-      <button class="btn btn-whatsapp" onclick="sendWhatsApp()">Send on WhatsApp</button>
-      <button class="btn btn-back" onclick="window.history.back()">Back</button>
-    </div>
+  <h2>Student Attendance Report</h2>
 
-    <div id="reportSection"></div>
+  <div class="center">
+    <select id="studentSelect">
+      <option value="">-- Select Student --</option>
+    </select>
+    <button class="btn" onclick="generateReport()">Generate Report</button>
+  </div>
+
+  <div id="reportContainer" class="report-box" style="display:none;"></div>
+
+  <div class="center">
+    <button class="btn" onclick="printReport()">Print</button>
+    <button class="btn" onclick="sendWhatsApp()">Send WhatsApp</button>
   </div>
 
   <script>
     let currentReportStudent = null;
 
-    function loadStudents() {
-      const students = JSON.parse(localStorage.getItem('students')) || [];
-      const studentSelect = document.getElementById('studentSelect');
-      studentSelect.innerHTML = '<option value="">-- Select Student --</option>';
-      students.forEach(student => {
-        const option = document.createElement('option');
-        option.value = student.id;
-        option.textContent = student.name;
-        studentSelect.appendChild(option);
+    function getStudentList() {
+      const students = JSON.parse(localStorage.getItem("students") || "[]");
+      const select = document.getElementById("studentSelect");
+      students.forEach(s => {
+        const option = document.createElement("option");
+        option.value = s.id;
+        option.textContent = s.name;
+        select.appendChild(option);
       });
     }
 
     function generateReport() {
-  const studentId = document.getElementById('studentSelect').value;
-  if (!studentId) return alert("Please select a student.");
+      const studentId = document.getElementById("studentSelect").value;
+      if (!studentId) return alert("Please select a student.");
 
-  const students = JSON.parse(localStorage.getItem('students')) || [];
-  const student = students.find(s => s.id.toString() === studentId.toString());
-  if (!student) return alert("Student not found.");
+      const students = JSON.parse(localStorage.getItem("students") || "[]");
+      const attendance = JSON.parse(localStorage.getItem("attendance") || "[]");
 
-  currentReportStudent = student;
+      const student = students.find(s => s.id == studentId);
+      const studentAttendance = attendance
+        .filter(a => a.studentId == studentId && a.status === 'Present')
+        .sort((a, b) => new Date(a.date) - new Date(b.date));
 
-  const attendance = JSON.parse(localStorage.getItem('attendance')) || [];
-  const studentAttendance = attendance.filter(a => a.studentId.toString() === studentId.toString() && a.status === 'Present')
-                                      .sort((a, b) => new Date(a.date) - new Date(b.date));
+      const totalSessions = Math.floor(studentAttendance.length / 4);
+      const remainingDays = studentAttendance.length % 4;
 
-  let reportHTML = `<h3>${student.name}</h3>`;
-  reportHTML += `<p>Phone: ${student.phone}</p>`;
+      currentReportStudent = { student, studentAttendance, totalSessions, remainingDays };
 
-  const sessionCount = Math.floor(studentAttendance.length / 4);
-  const remaining = studentAttendance.length % 4;
+      let html = `<h3>${student.name}</h3>`;
+      html += `<div class="summary">Total Sessions: ${totalSessions} | Remaining Days: ${remainingDays}</div>`;
+      html += `<table><thead><tr><th>#</th><th>Date</th></tr></thead><tbody>`;
 
-  reportHTML += `<p><strong>Total Sessions:</strong> ${sessionCount}</p>`;
-  reportHTML += `<p><strong>Remaining Days:</strong> ${remaining}</p>`;
+      let session = 1;
+      studentAttendance.forEach((a, i) => {
+        if (i % 4 === 0) {
+          html += `<tr class="session-header"><td colspan="2">Session ${session++}</td></tr>`;
+        }
+        html += `<tr><td>${i + 1}</td><td>${a.date}</td></tr>`;
+      });
 
-  reportHTML += '<table><tr><th>Session</th><th>Date</th></tr>';
+      html += `</tbody></table>`;
+      document.getElementById("reportContainer").innerHTML = html;
+      document.getElementById("reportContainer").style.display = 'block';
+    }
 
-  studentAttendance.forEach((att, index) => {
-    const sessionNumber = Math.floor(index / 4) + 1;
-    const isNewSession = index % 4 === 0;
-    reportHTML += `<tr class="${isNewSession ? 'session-row' : 'striped'}"><td>Session ${sessionNumber}</td><td>${att.date}</td></tr>`;
-  });
-
-  reportHTML += '</table>';
-
-  document.getElementById('reportSection').innerHTML = reportHTML;
-}
+    function printReport() {
+      if (!currentReportStudent) return alert("Please generate the report first.");
+      window.print();
+    }
 
     function sendWhatsApp() {
       if (!currentReportStudent) return alert("Please generate the report first.");
 
-      const attendance = JSON.parse(localStorage.getItem('attendance')) || [];
-      const studentAttendance = attendance.filter(a => a.studentId == currentReportStudent.id && a.status === 'Present')
-                                          .sort((a, b) => new Date(a.date) - new Date(b.date));
+      const { student, totalSessions, remainingDays } = currentReportStudent;
+      let message = `📚 *Attendance Report*\n\n`;
+      message += `👤 *Student:* ${student.name}\n📅 *Total Sessions:* ${totalSessions}\n⏳ *Remaining Days:* ${remainingDays}\n\n`;
+      message += `Thank you!\n-Coach`;
 
-      const sessionCount = Math.floor(studentAttendance.length / 4);
-      const remaining = studentAttendance.length % 4;
-
-      let message = `*Attendance Report for ${currentReportStudent.name}*\n`;
-      message += `Phone: ${currentReportStudent.phone}\n\n`;
-      message += `Total Sessions: ${sessionCount}\nRemaining Days: ${remaining}\n\nDates:\n`;
-
-      studentAttendance.forEach((att, index) => {
-        const sessionNumber = Math.floor(index / 4) + 1;
-        message += `Session ${sessionNumber}: ${att.date}\n`;
-      });
-
-      const whatsappURL = `https://wa.me/${currentReportStudent.phone.replace(/[^\d]/g, '')}?text=${encodeURIComponent(message)}`;
-      window.open(whatsappURL, '_blank');
+      const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+      window.open(whatsappUrl, '_blank');
     }
 
-    loadStudents();
+    getStudentList();
   </script>
 </body>
 </html>
