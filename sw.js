@@ -1,22 +1,24 @@
-// sw.js
-self.addEventListener('install', event => {
-  event.waitUntil(
-    caches.open('attendance-cache').then(cache => {
+self.addEventListener("install", e => {
+  e.waitUntil(
+    caches.open("coachtrack-cache").then(cache => {
       return cache.addAll([
-        '/',
-        '/index.html',
-        '/style.css',
-        '/script.js',
-        '/manifest.json',
-        '/icon-192.png',
-        '/icon-512.png'
+        "index.html",
+        "home.html",
+        "style.css",
+        "script.js",
+        "manifest.json",
+        "icons/icon-192.png",
+        "icons/icon-512.png"
+        // Add more assets if needed
       ]);
     })
   );
 });
 
-self.addEventListener('fetch', event => {
-  event.respondWith(
-    caches.match(event.request).then(response => response || fetch(event.request))
+self.addEventListener("fetch", e => {
+  e.respondWith(
+    caches.match(e.request).then(response => {
+      return response || fetch(e.request);
+    })
   );
 });
