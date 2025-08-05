@@ -126,7 +126,6 @@
       return JSON.parse(localStorage.getItem("fees")) || [];
     }
 
- f<script>
   function calculateFinanceSummary() {
     const students = JSON.parse(localStorage.getItem("students")) || [];
     const fees = JSON.parse(localStorage.getItem("fees")) || [];
@@ -147,10 +146,6 @@
 
     drawChart(totalCollected, totalPending);
   }
-</script>
-
-
-
 
     function drawPieChart(collected, pending) {
       const ctx = document.getElementById("financeChart").getContext("2d");
