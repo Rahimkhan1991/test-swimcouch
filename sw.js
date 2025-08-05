@@ -22,3 +22,5 @@ self.addEventListener("fetch", e => {
     })
   );
 });
+
+

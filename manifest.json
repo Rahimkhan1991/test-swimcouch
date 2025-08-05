@@ -1,11 +1,12 @@
 {
-  "name": "CoachTrack - Attendance",
+  "name": "CoachTrack - Swimming Class Manager",
   "short_name": "CoachTrack",
   "start_url": "index.html",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#2563eb",
+  "theme_color": "#3b82f6",
   "orientation": "portrait",
+  "scope": "./",
   "icons": [
     {
       "src": "icons/icon-192.png",
