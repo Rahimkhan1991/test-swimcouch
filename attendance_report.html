@@ -238,12 +238,12 @@ Your detailed PDF report has been downloaded.
 Thank you!`;
 
   const encodedMessage = encodeURIComponent(message);
-  const whatsappURL = `https://wa.me/${phone.replace(/[^\d]/g, '')}?text=${encodedMessage}`;
+  const whatsappURL = `https://wa.me/${phone}?text=${encodedMessage}`;
   window.open(whatsappURL, '_blank');
 }
 
     populateStudentList();
-    <button onclick="history.back()" style="margin-top: 12px;">⬅️ Back</button>
+    
   </script>
 </body>
 </html>
