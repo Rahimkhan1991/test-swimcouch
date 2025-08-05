@@ -127,22 +127,34 @@
     }
 
     function calculateFinanceSummary() {
-      const students = getStudents();
-      const fees = getFees();
+  const students = JSON.parse(localStorage.getItem("students")) || [];
+  const fees = JSON.parse(localStorage.getItem("fees")) || [];
 
-      const totalExpected = students.reduce((sum, s) => sum + Number(s.totalFee || 0), 0);
-      const initialPayments = students.reduce((sum, s) => sum + Number(s.initialPayment || 0), 0);
-      const additionalPayments = fees.reduce((sum, f) => sum + Number(f.amount || 0), 0);
+  let totalExpected = 0;
+  let totalCollected = 0;
 
-      const totalCollected = initialPayments + additionalPayments;
-      const totalPending = Math.max(totalExpected - totalCollected, 0);
+  students.forEach(student => {
+    const expected = Number(student.totalFee || 0);
+    const initial = Number(student.initialPayment || 0);
+    const additional = fees
+      .filter(fee => fee.studentName === student.name)
+      .reduce((sum, fee) => sum + Number(fee.amount || 0), 0);
 
-      document.getElementById("totalIncome").textContent = "Rp" + totalCollected.toLocaleString();
-      document.getElementById("expectedIncome").textContent = "Rp" + totalExpected.toLocaleString();
-      document.getElementById("pendingIncome").textContent = "Rp" + totalPending.toLocaleString();
+    const collected = initial + additional;
 
-      drawPieChart(totalCollected, totalPending);
-    }
+    totalExpected += expected;
+    totalCollected += collected;
+  });
+
+  const totalPending = Math.max(totalExpected - totalCollected, 0);
+
+  document.getElementById("totalIncome").textContent = "Rp" + totalCollected;
+  document.getElementById("expectedIncome").textContent = "Rp" + totalExpected;
+  document.getElementById("pendingIncome").textContent = "Rp" + totalPending;
+
+  drawChart(totalCollected, totalPending);
+}
+
 
     function drawPieChart(collected, pending) {
       const ctx = document.getElementById("financeChart").getContext("2d");
