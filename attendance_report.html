@@ -127,11 +127,15 @@
     }
 
     function generateReport() {
-      const studentName = document.getElementById("studentSelect").value;
-      const attendance = JSON.parse(localStorage.getItem("attendance")) || [];
-      const reportDiv = document.getElementById("reportOutput");
+   const studentName = document.getElementById("studentSelect").value;
+const attendance = JSON.parse(localStorage.getItem("attendance")) || [];
+const reportDiv = document.getElementById("reportOutput");
 
-      let records = attendance.filter(a => a.name === studentName);
+const students = JSON.parse(localStorage.getItem("students")) || [];
+window.currentReportStudent = students.find(s => s.name === studentName);
+
+let records = attendance.filter(a => a.name === studentName);
+
 
       if (!studentName || records.length === 0) {
         reportDiv.innerHTML = "<p>No records found.</p>";
@@ -245,5 +249,9 @@ Thank you!`;
     populateStudentList();
     
   </script>
+  <div class="footer-buttons">
+  <button onclick="window.location.href='index.html'">🔙 Back</button>
+</div>
+
 </body>
 </html>
