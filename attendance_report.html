@@ -100,40 +100,40 @@
     }
 
     function generateReport() {
-      const studentId = document.getElementById('studentSelect').value;
-      if (!studentId) return alert("Please select a student.");
+  const studentId = document.getElementById('studentSelect').value;
+  if (!studentId) return alert("Please select a student.");
 
-      const students = JSON.parse(localStorage.getItem('students')) || [];
-      const student = students.find(s => s.id == studentId);
-      if (!student) return alert("Student not found.");
+  const students = JSON.parse(localStorage.getItem('students')) || [];
+  const student = students.find(s => s.id.toString() === studentId.toString());
+  if (!student) return alert("Student not found.");
 
-      currentReportStudent = student;
+  currentReportStudent = student;
 
-      const attendance = JSON.parse(localStorage.getItem('attendance')) || [];
-      const studentAttendance = attendance.filter(a => a.studentId == studentId && a.status === 'Present')
-                                          .sort((a, b) => new Date(a.date) - new Date(b.date));
+  const attendance = JSON.parse(localStorage.getItem('attendance')) || [];
+  const studentAttendance = attendance.filter(a => a.studentId.toString() === studentId.toString() && a.status === 'Present')
+                                      .sort((a, b) => new Date(a.date) - new Date(b.date));
 
-      let reportHTML = `<h3>${student.name}</h3>`;
-      reportHTML += `<p>Phone: ${student.phone}</p>`;
+  let reportHTML = `<h3>${student.name}</h3>`;
+  reportHTML += `<p>Phone: ${student.phone}</p>`;
 
-      const sessionCount = Math.floor(studentAttendance.length / 4);
-      const remaining = studentAttendance.length % 4;
+  const sessionCount = Math.floor(studentAttendance.length / 4);
+  const remaining = studentAttendance.length % 4;
 
-      reportHTML += `<p><strong>Total Sessions:</strong> ${sessionCount}</p>`;
-      reportHTML += `<p><strong>Remaining Days:</strong> ${remaining}</p>`;
+  reportHTML += `<p><strong>Total Sessions:</strong> ${sessionCount}</p>`;
+  reportHTML += `<p><strong>Remaining Days:</strong> ${remaining}</p>`;
 
-      reportHTML += '<table><tr><th>Session</th><th>Date</th></tr>';
+  reportHTML += '<table><tr><th>Session</th><th>Date</th></tr>';
 
-      studentAttendance.forEach((att, index) => {
-        const sessionNumber = Math.floor(index / 4) + 1;
-        const isNewSession = index % 4 === 0;
-        reportHTML += `<tr class="${isNewSession ? 'session-row' : 'striped'}"><td>Session ${sessionNumber}</td><td>${att.date}</td></tr>`;
-      });
+  studentAttendance.forEach((att, index) => {
+    const sessionNumber = Math.floor(index / 4) + 1;
+    const isNewSession = index % 4 === 0;
+    reportHTML += `<tr class="${isNewSession ? 'session-row' : 'striped'}"><td>Session ${sessionNumber}</td><td>${att.date}</td></tr>`;
+  });
 
-      reportHTML += '</table>';
+  reportHTML += '</table>';
 
-      document.getElementById('reportSection').innerHTML = reportHTML;
-    }
+  document.getElementById('reportSection').innerHTML = reportHTML;
+}
 
     function sendWhatsApp() {
       if (!currentReportStudent) return alert("Please generate the report first.");
