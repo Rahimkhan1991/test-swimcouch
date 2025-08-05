@@ -126,31 +126,29 @@
       return JSON.parse(localStorage.getItem("fees")) || [];
     }
 
- function calculateFinanceSummary() {
-  const students = JSON.parse(localStorage.getItem("students")) || [];
-  const fees = JSON.parse(localStorage.getItem("fees")) || [];
+ f<script>
+  function calculateFinanceSummary() {
+    const students = JSON.parse(localStorage.getItem("students")) || [];
+    const fees = JSON.parse(localStorage.getItem("fees")) || [];
 
-  let totalExpected = 0;
-  let totalCollected = 0;
+    // Total collected from fees[] only
+    const totalCollected = fees.reduce((sum, fee) => sum + Number(fee.amount || 0), 0);
 
-  students.forEach(student => {
-    const expected = Number(student.totalFee || 0);
-    const collected = fees
-      .filter(fee => fee.studentName === student.name)
-      .reduce((sum, fee) => sum + Number(fee.amount || 0), 0);
+    // Total expected from student.totalFee
+    const totalExpected = students.reduce((sum, student) => sum + Number(student.totalFee || 0), 0);
 
-    totalExpected += expected;
-    totalCollected += collected;
-  });
+    // Total pending = expected - collected
+    const totalPending = Math.max(totalExpected - totalCollected, 0);
 
-  const totalPending = Math.max(totalExpected - totalCollected, 0);
+    // Update HTML
+    document.getElementById("totalIncome").textContent = "Rp" + totalCollected;
+    document.getElementById("expectedIncome").textContent = "Rp" + totalExpected;
+    document.getElementById("pendingIncome").textContent = "Rp" + totalPending;
 
-  document.getElementById("totalIncome").textContent = "Rp" + totalCollected;
-  document.getElementById("expectedIncome").textContent = "Rp" + totalExpected;
-  document.getElementById("pendingIncome").textContent = "Rp" + totalPending;
+    drawChart(totalCollected, totalPending);
+  }
+</script>
 
-  drawChart(totalCollected, totalPending);
-}
 
 
 
