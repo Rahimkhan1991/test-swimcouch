@@ -7,19 +7,34 @@
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #f0f4f8;
+      background: #eef3f9;
+      margin: 0;
       padding: 20px;
+      color: #333;
     }
 
     h2 {
       color: #007bff;
+      text-align: center;
+      margin-bottom: 10px;
+    }
+
+    .back-btn {
+      display: inline-block;
+      margin-bottom: 20px;
+      padding: 10px 20px;
+      background-color: #007bff;
+      color: white;
+      text-decoration: none;
+      border-radius: 8px;
     }
 
     .summary {
       display: flex;
-      justify-content: space-around;
-      margin: 20px 0;
+      justify-content: center;
       flex-wrap: wrap;
+      gap: 15px;
+      margin-bottom: 30px;
     }
 
     .card {
@@ -27,28 +42,57 @@
       padding: 20px;
       border-radius: 10px;
       width: 280px;
-      margin: 10px;
       box-shadow: 0 0 10px rgba(0,0,0,0.1);
       text-align: center;
+      transition: 0.3s;
+    }
+
+    .card:hover {
+      transform: scale(1.03);
+    }
+
+    .card h3 {
+      margin-bottom: 10px;
+      color: #555;
+    }
+
+    .card p {
+      font-size: 1.5em;
+      font-weight: bold;
+    }
+
+    .charts {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 30px;
+      margin-bottom: 50px;
     }
 
     canvas {
-      max-width: 400px;
-      margin: auto;
+      background: #fff;
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      max-width: 100%;
     }
 
-    .back-btn {
-      display: inline-block;
-      margin-bottom: 15px;
-      padding: 10px 20px;
-      background-color: #007bff;
-      color: white;
-      text-decoration: none;
-      border-radius: 8px;
+    @media (max-width: 768px) {
+      .charts {
+        flex-direction: column;
+        align-items: center;
+      }
+    }
+
+    h3.section-title {
+      text-align: center;
+      margin-top: 30px;
+      color: #007bff;
     }
   </style>
 </head>
 <body>
+
   <a href="home.html" class="back-btn">← Back to Home</a>
   <h2>Finance Report</h2>
 
@@ -67,7 +111,10 @@
     </div>
   </div>
 
-  <canvas id="financeChart" width="400" height="400"></canvas>
+  <div class="charts">
+    <canvas id="financeChart" width="350" height="350"></canvas>
+    <canvas id="trendChart" width="500" height="350"></canvas>
+  </div>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
@@ -83,28 +130,23 @@
       const students = getStudents();
       const fees = getFees();
 
-      // Sum of initial payments from student records
-      const initialPayments = students.reduce((sum, student) => sum + Number(student.initialPayment || 0), 0);
-
-      // Sum of additional payments from fee.html
-      const additionalPayments = fees.reduce((sum, fee) => sum + Number(fee.amount), 0);
+      const totalExpected = students.reduce((sum, s) => sum + Number(s.totalFee || 0), 0);
+      const initialPayments = students.reduce((sum, s) => sum + Number(s.initialPayment || 0), 0);
+      const additionalPayments = fees.reduce((sum, f) => sum + Number(f.amount || 0), 0);
 
       const totalCollected = initialPayments + additionalPayments;
-      const totalExpected = students.reduce((sum, student) => sum + Number(student.totalFee || 0), 0);
-      const totalPending = totalExpected - totalCollected;
+      const totalPending = Math.max(totalExpected - totalCollected, 0);
 
-      document.getElementById("totalIncome").textContent = "Rp" + totalCollected;
-      document.getElementById("expectedIncome").textContent = "Rp" + totalExpected;
-      document.getElementById("pendingIncome").textContent = "Rp" + (totalPending < 0 ? 0 : totalPending);
+      document.getElementById("totalIncome").textContent = "Rp" + totalCollected.toLocaleString();
+      document.getElementById("expectedIncome").textContent = "Rp" + totalExpected.toLocaleString();
+      document.getElementById("pendingIncome").textContent = "Rp" + totalPending.toLocaleString();
 
-      drawChart(totalCollected, totalPending);
+      drawPieChart(totalCollected, totalPending);
     }
 
-    function drawChart(collected, pending) {
+    function drawPieChart(collected, pending) {
       const ctx = document.getElementById("financeChart").getContext("2d");
-      if (window.myChart) {
-        window.myChart.destroy();
-      }
+      if (window.myChart) window.myChart.destroy();
 
       window.myChart = new Chart(ctx, {
         type: "pie",
@@ -126,86 +168,75 @@
       });
     }
 
-    window.onload = calculateFinanceSummary;
-  </script>
-  <script>
-  function drawTrendChart() {
-    const fees = JSON.parse(localStorage.getItem("fees")) || [];
+    function drawTrendChart() {
+      const fees = getFees();
+      const today = new Date();
+      const last30Days = [];
 
-    // Get today's date
-    const today = new Date();
-    const last30Days = [];
-
-    for (let i = 29; i >= 0; i--) {
-      const date = new Date();
-      date.setDate(today.getDate() - i);
-      const dateStr = date.toISOString().split("T")[0];
-      last30Days.push(dateStr);
-    }
-
-    // Group fees by date
-    const dailyCollection = {};
-    fees.forEach(fee => {
-      const date = fee.date?.split("T")[0] || ""; // Use ISO date or fallback
-      if (date in dailyCollection) {
-        dailyCollection[date] += Number(fee.amount);
-      } else {
-        dailyCollection[date] = Number(fee.amount);
+      for (let i = 29; i >= 0; i--) {
+        const date = new Date();
+        date.setDate(today.getDate() - i);
+        const dateStr = date.toISOString().split("T")[0];
+        last30Days.push(dateStr);
       }
-    });
 
-    // Prepare chart data
-    const chartLabels = last30Days;
-    const chartData = last30Days.map(date => dailyCollection[date] || 0);
+      const dailyCollection = {};
+      fees.forEach(fee => {
+        const date = fee.date?.split("T")[0] || "";
+        if (dailyCollection[date]) {
+          dailyCollection[date] += Number(fee.amount || 0);
+        } else {
+          dailyCollection[date] = Number(fee.amount || 0);
+        }
+      });
 
-    const ctx = document.getElementById("trendChart").getContext("2d");
-    if (window.trendChart) window.trendChart.destroy();
+      const chartData = last30Days.map(date => dailyCollection[date] || 0);
 
-    window.trendChart = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: chartLabels,
-        datasets: [{
-          label: 'Daily Fee Collected (Rp)',
-          data: chartData,
-          borderColor: '#007bff',
-          backgroundColor: 'rgba(0, 123, 255, 0.1)',
-          tension: 0.3,
-          fill: true,
-        }]
-      },
-      options: {
-        scales: {
-          x: {
-            ticks: {
-              maxTicksLimit: 7,
-              callback: function(value, index, values) {
-                return chartLabels[index].slice(5); // Show MM-DD
+      const ctx = document.getElementById("trendChart").getContext("2d");
+      if (window.trendChart) window.trendChart.destroy();
+
+      window.trendChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: last30Days,
+          datasets: [{
+            label: 'Daily Fee Collected (Rp)',
+            data: chartData,
+            borderColor: '#007bff',
+            backgroundColor: 'rgba(0, 123, 255, 0.1)',
+            tension: 0.3,
+            fill: true,
+          }]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            x: {
+              ticks: {
+                callback: function(val, i) {
+                  return last30Days[i].slice(5); // Show MM-DD
+                }
               }
+            },
+            y: {
+              beginAtZero: true
             }
           },
-          y: {
-            beginAtZero: true
-          }
-        },
-        plugins: {
-          legend: {
-            display: true,
-            position: 'top'
+          plugins: {
+            legend: {
+              display: true,
+              position: 'top'
+            }
           }
         }
-      }
-    });
-  }
+      });
+    }
 
-  window.onload = () => {
-    calculateFinanceSummary();
-    drawTrendChart();
-  };
-</script>
-
-  <h3 style="text-align:center; margin-top:30px;">Last 30 Days Fee Collection</h3>
-<canvas id="trendChart" height="200"></canvas>
-
+    // Run both when page loads
+    window.onload = () => {
+      calculateFinanceSummary();
+      drawTrendChart();
+    };
+  </script>
 </body>
 </html>
