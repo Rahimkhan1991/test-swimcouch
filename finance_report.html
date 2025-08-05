@@ -7,34 +7,22 @@
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #eef3f9;
-      margin: 0;
+      background: #f0f4f8;
       padding: 20px;
-      color: #333;
+      margin: 0;
     }
 
     h2 {
       color: #007bff;
       text-align: center;
-      margin-bottom: 10px;
-    }
-
-    .back-btn {
-      display: inline-block;
-      margin-bottom: 20px;
-      padding: 10px 20px;
-      background-color: #007bff;
-      color: white;
-      text-decoration: none;
-      border-radius: 8px;
     }
 
     .summary {
       display: flex;
       justify-content: center;
       flex-wrap: wrap;
+      margin: 20px 0;
       gap: 15px;
-      margin-bottom: 30px;
     }
 
     .card {
@@ -44,56 +32,35 @@
       width: 280px;
       box-shadow: 0 0 10px rgba(0,0,0,0.1);
       text-align: center;
-      transition: 0.3s;
-    }
-
-    .card:hover {
-      transform: scale(1.03);
-    }
-
-    .card h3 {
-      margin-bottom: 10px;
-      color: #555;
-    }
-
-    .card p {
-      font-size: 1.5em;
-      font-weight: bold;
-    }
-
-    .charts {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 30px;
-      margin-bottom: 50px;
     }
 
     canvas {
-      background: #fff;
-      border-radius: 10px;
-      padding: 20px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
       max-width: 100%;
+      margin: 20px auto;
+      display: block;
     }
 
-    @media (max-width: 768px) {
-      .charts {
-        flex-direction: column;
-        align-items: center;
-      }
-    }
-
-    h3.section-title {
+    .back-btn {
+      display: block;
+      margin: 30px auto 10px;
+      padding: 12px 25px;
+      background-color: #007bff;
+      color: white;
+      text-decoration: none;
+      border-radius: 8px;
+      width: fit-content;
       text-align: center;
-      margin-top: 30px;
-      color: #007bff;
+    }
+
+    @media (max-width: 600px) {
+      .card {
+        width: 90%;
+      }
     }
   </style>
 </head>
 <body>
 
-  <a href="home.html" class="back-btn">← Back to Home</a>
   <h2>Finance Report</h2>
 
   <div class="summary">
@@ -111,43 +78,31 @@
     </div>
   </div>
 
-  <div class="charts">
-    <canvas id="financeChart" width="350" height="350"></canvas>
-    <canvas id="trendChart" width="500" height="350"></canvas>
-  </div>
+  <canvas id="financeChart" height="300"></canvas>
+
+  <h3 style="text-align:center; margin-top:30px;">Last 30 Days Fee Collection</h3>
+  <canvas id="trendChart" height="200"></canvas>
+
+  <a href="home.html" class="back-btn">← Back to Home</a>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
-    function getStudents() {
-      return JSON.parse(localStorage.getItem("students")) || [];
+    function calculateFinanceSummary() {
+      const students = JSON.parse(localStorage.getItem("students")) || [];
+      const fees = JSON.parse(localStorage.getItem("fees")) || [];
+
+      const totalCollected = fees.reduce((sum, fee) => sum + Number(fee.amount || 0), 0);
+      const totalExpected = students.reduce((sum, student) => sum + Number(student.totalFee || 0), 0);
+      const totalPending = Math.max(totalExpected - totalCollected, 0);
+
+      document.getElementById("totalIncome").textContent = "Rp" + totalCollected;
+      document.getElementById("expectedIncome").textContent = "Rp" + totalExpected;
+      document.getElementById("pendingIncome").textContent = "Rp" + totalPending;
+
+      drawChart(totalCollected, totalPending);
     }
 
-    function getFees() {
-      return JSON.parse(localStorage.getItem("fees")) || [];
-    }
-
-  function calculateFinanceSummary() {
-    const students = JSON.parse(localStorage.getItem("students")) || [];
-    const fees = JSON.parse(localStorage.getItem("fees")) || [];
-
-    // Total collected from fees[] only
-    const totalCollected = fees.reduce((sum, fee) => sum + Number(fee.amount || 0), 0);
-
-    // Total expected from student.totalFee
-    const totalExpected = students.reduce((sum, student) => sum + Number(student.totalFee || 0), 0);
-
-    // Total pending = expected - collected
-    const totalPending = Math.max(totalExpected - totalCollected, 0);
-
-    // Update HTML
-    document.getElementById("totalIncome").textContent = "Rp" + totalCollected;
-    document.getElementById("expectedIncome").textContent = "Rp" + totalExpected;
-    document.getElementById("pendingIncome").textContent = "Rp" + totalPending;
-
-    drawChart(totalCollected, totalPending);
-  }
-
-    function drawPieChart(collected, pending) {
+    function drawChart(collected, pending) {
       const ctx = document.getElementById("financeChart").getContext("2d");
       if (window.myChart) window.myChart.destroy();
 
@@ -172,7 +127,8 @@
     }
 
     function drawTrendChart() {
-      const fees = getFees();
+      const fees = JSON.parse(localStorage.getItem("fees")) || [];
+
       const today = new Date();
       const last30Days = [];
 
@@ -186,13 +142,12 @@
       const dailyCollection = {};
       fees.forEach(fee => {
         const date = fee.date?.split("T")[0] || "";
-        if (dailyCollection[date]) {
-          dailyCollection[date] += Number(fee.amount || 0);
-        } else {
-          dailyCollection[date] = Number(fee.amount || 0);
+        if (date) {
+          dailyCollection[date] = (dailyCollection[date] || 0) + Number(fee.amount || 0);
         }
       });
 
+      const chartLabels = last30Days;
       const chartData = last30Days.map(date => dailyCollection[date] || 0);
 
       const ctx = document.getElementById("trendChart").getContext("2d");
@@ -201,7 +156,7 @@
       window.trendChart = new Chart(ctx, {
         type: 'line',
         data: {
-          labels: last30Days,
+          labels: chartLabels,
           datasets: [{
             label: 'Daily Fee Collected (Rp)',
             data: chartData,
@@ -212,12 +167,12 @@
           }]
         },
         options: {
-          responsive: true,
           scales: {
             x: {
               ticks: {
-                callback: function(val, i) {
-                  return last30Days[i].slice(5); // Show MM-DD
+                maxTicksLimit: 7,
+                callback: function(value, index) {
+                  return chartLabels[index].slice(5); // Show MM-DD
                 }
               }
             },
@@ -235,7 +190,6 @@
       });
     }
 
-    // Run both when page loads
     window.onload = () => {
       calculateFinanceSummary();
       drawTrendChart();
