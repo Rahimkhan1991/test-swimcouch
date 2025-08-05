@@ -206,7 +206,18 @@ let records = attendance.filter(a => a.name === studentName);
 
       html2pdf().from(reportDiv).set(opt).save();
     }
+        function sendWhatsApp() {
+      const phone = document.getElementById("phone").value.replace(/\D/g, '');
+      const message = encodeURIComponent(document.getElementById("message").value);
 
+      if (!phone || !message) {
+        alert("Phone number and message are required.");
+        return;
+      }
+
+      const link = `https://wa.me/${phone}?text=${message}`;
+      window.open(link, "_blank");
+    }
 
 
     populateStudentList();
