@@ -206,18 +206,22 @@ let records = attendance.filter(a => a.name === studentName);
 
       html2pdf().from(reportDiv).set(opt).save();
     }
-        function sendWhatsApp() {
-      const phone = document.getElementById("phone").value.replace(/\D/g, '');
-      const message = encodeURIComponent(document.getElementById("message").value);
+  function sendWhatsApp() {
+  const phone = currentReportStudent?.phone?.replace(/\D/g, '');
+  const name = currentReportStudent?.name || "Student";
 
-      if (!phone || !message) {
-        alert("Phone number and message are required.");
-        return;
-      }
+  if (!phone) {
+    alert("Phone number not available for the selected student.");
+    return;
+  }
 
-      const link = `https://wa.me/${phone}?text=${message}`;
-      window.open(link, "_blank");
-    }
+  const message = `Hello ${name}, your attendance PDF report is ready. Please check your downloads. 📄`;
+
+  const encodedMessage = encodeURIComponent(message);
+  const link = `https://wa.me/${phone}?text=${encodedMessage}`;
+  window.open(link, "_blank");
+}
+
 
 
     populateStudentList();
