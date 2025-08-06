@@ -70,6 +70,9 @@
     <input type="text" id="username" placeholder="Username" />
     <input type="password" id="password" placeholder="Password" />
     <button onclick="login()">Login</button>
+    <input type="text" id="licenseKey" placeholder="Enter your license key" />
+<button onclick="activateLicense()">Activate</button>
+
   </div>
 
   <script>
@@ -94,6 +97,40 @@
   navigator.serviceWorker.register('sw.js')
     .then(() => console.log('Service Worker Registered'));
 }
+
+  const SHEET_URL = "https://script.google.com/macros/s/AKfycbwrg_ZS-hKi27mhbC3YC9vP9H4MNC4NX-2hbHSkW0932kS7fVj5RmAUXy6fbFduFrsa/exec"; // Replace with deployed URL
+
+  function activateLicense() {
+    const key = document.getElementById("licenseKey").value;
+    const user = localStorage.getItem("deviceId") || generateDeviceId();
+
+    fetch(`${SHEET_URL}?key=${key}&user=${user}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          alert(data.message);
+          localStorage.setItem("licenseKey", key);
+          localStorage.setItem("licenseExpires", data.expires);
+          window.location.href = "home.html";
+        } else {
+          alert(data.message);
+        }
+      });
+  }
+
+  function generateDeviceId() {
+    const id = "device-" + Math.random().toString(36).substr(2, 10);
+    localStorage.setItem("deviceId", id);
+    return id;
+  }
+
+  // Optional: check on load
+  window.onload = () => {
+    const expiry = new Date(localStorage.getItem("licenseExpires"));
+    if (expiry && new Date() <= expiry) {
+      window.location.href = "home.html";
+    }
+  };
 
   </script>
 </body>
