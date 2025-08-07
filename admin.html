@@ -45,11 +45,19 @@
   <h1>🔒 Admin Panel</h1>
 
   <div class="section">
-    <h2>🗃️ Data Control</h2>
-    <button onclick="backupData()">🔽 Backup Data</button>
-    <button onclick="triggerRestore()">🔁 Restore Data</button>
-    <input type="file" id="restoreFileInput" accept=".json" style="display: none;" />
-  </div>
+  <h2>🗃️ Data Control</h2>
+  <button onclick="backupData()">🔽 Download Backup</button>
+  <button onclick="triggerRestore()">🔁 Restore Backup</button>
+  <input type="file" id="restoreFileInput" accept=".json" style="display: none;" />
+
+  <hr style="margin: 20px 0;"/>
+
+  <label for="driveScriptUrl"><strong>📤 Google Drive Backup URL:</strong></label>
+  <input type="text" id="driveScriptUrl" placeholder="Paste your Apps Script URL here" style="width:100%;padding:10px;margin:10px 0;border:1px solid #ccc;border-radius:8px;">
+  <button onclick="backupToGoogleDrive()">☁️ Backup to Google Drive</button>
+  <div id="driveBackupStatus" style="margin-top: 10px;"></div>
+</div>
+
 
   <div class="section">
     <h2>🧹 App Reset</h2>
@@ -99,7 +107,41 @@
       reader.readAsText(file);
     });
 
-    function confirmDataReset() {
+  function backupToGoogleDrive() {
+    const scriptUrl = document.getElementById("driveScriptUrl").value.trim();
+    const statusEl = document.getElementById("driveBackupStatus");
+    statusEl.innerHTML = "";
+
+    if (!scriptUrl) {
+      alert("❌ Please enter your Google Apps Script Web App URL.");
+      return;
+    }
+
+    const data = {};
+    for (let key in localStorage) {
+      if (localStorage.hasOwnProperty(key)) {
+        data[key] = localStorage.getItem(key);
+      }
+    }
+
+    fetch(scriptUrl, {
+      method: "POST",
+      body: JSON.stringify(data),
+      headers: {
+        "Content-Type": "application/json"
+      }
+    })
+    .then((res) => res.text())
+    .then((text) => {
+      statusEl.innerHTML = "✅ Backup saved to your Google Drive.";
+      console.log(text);
+    })
+    .catch((err) => {
+      console.error(err);
+      statusEl.innerHTML = "❌ Failed to back up to Google Drive.";
+    });
+  }
+      function confirmDataReset() {
       const password = prompt("Enter admin password to reset all app data:");
       if (password === "admin123") {
         const confirmReset = confirm("Are you sure? This will permanently erase all app data.");
