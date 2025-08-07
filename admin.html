@@ -1,0 +1,117 @@
+<!-- admin.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Panel - Swim Coach</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background: #f0f4f8;
+    }
+
+    h1 {
+      text-align: center;
+      color: #007bff;
+    }
+
+    .section {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      margin-top: 20px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    }
+
+    button {
+      background: #007bff;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-size: 16px;
+      margin: 10px 5px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #0056b3;
+    }
+  </style>
+</head>
+<body>
+  <h1>🔒 Admin Panel</h1>
+
+  <div class="section">
+    <h2>🗃️ Data Control</h2>
+    <button onclick="backupData()">🔽 Backup Data</button>
+    <button onclick="triggerRestore()">🔁 Restore Data</button>
+    <input type="file" id="restoreFileInput" accept=".json" style="display: none;" />
+  </div>
+
+  <div class="section">
+    <h2>🧹 App Reset</h2>
+    <button onclick="confirmDataReset()">Reset App (Requires Admin Password)</button>
+  </div>
+
+  <script>
+    function backupData() {
+      const data = {};
+      for (let key in localStorage) {
+        if (localStorage.hasOwnProperty(key)) {
+          data[key] = localStorage.getItem(key);
+        }
+      }
+
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "swimcoach_backup_" + new Date().toISOString().split("T")[0] + ".json";
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function triggerRestore() {
+      document.getElementById("restoreFileInput").click();
+    }
+
+    document.getElementById("restoreFileInput").addEventListener("change", function (event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        try {
+          const data = JSON.parse(e.target.result);
+          if (confirm("Restore this backup? It will overwrite current app data.")) {
+            for (let key in data) {
+              localStorage.setItem(key, data[key]);
+            }
+            alert("✅ Data restored. Please reload the app.");
+          }
+        } catch (err) {
+          alert("❌ Invalid file. Cannot restore.");
+        }
+      };
+      reader.readAsText(file);
+    });
+
+    function confirmDataReset() {
+      const password = prompt("Enter admin password to reset all app data:");
+      if (password === "admin123") {
+        const confirmReset = confirm("Are you sure? This will permanently erase all app data.");
+        if (confirmReset) {
+          localStorage.clear();
+          alert("All data erased. App has been reset.");
+          location.reload();
+        }
+      } else {
+        alert("❌ Incorrect password.");
+      }
+    }
+  </script>
+</body>
+</html>
