@@ -57,7 +57,7 @@
     }
 
     input[type="text"] {
-      width: 100%;
+      width: 95%;
       padding: 12px;
       margin: 15px 0;
       border: 1px solid #ccc;
@@ -96,25 +96,28 @@
 
     <div class="section">
       <h2>🗃️ Backup & Restore</h2>
-      <button onclick="backupData()">🔽 Download Backup</button>
-      <button onclick="triggerRestore()">🔁 Restore Backup</button>
+      <button onclick="backupData()">🔽 Backup</button>
+      <button onclick="triggerRestore()">🔁 Restore </button>
       <input type="file" id="restoreFileInput" accept=".json" />
 
       <div id="driveBackupStatus"></div>
 
       <div id="driveScriptSection">
         <input type="text" id="driveScriptUrl" placeholder="Paste your Google Script URL here">
-        <button onclick="saveScriptUrl()">💾 Save Backup URL</button>
+        <button onclick="saveScriptUrl()">💾 Save URL</button>
       </div>
 
       <button onclick="backupToGoogleDrive()">☁️ Backup to Google Drive</button>
-      <button onclick="changeScriptUrl()">✏️ Change Backup URL</button>
+      <button onclick="changeScriptUrl()">✏️ Update  URL</button>
     </div>
 
-    <div class="section">
-      <h2>🧹 App Reset</h2>
-      <button onclick="confirmDataReset()">🗑️ Reset App (Admin Password)</button>
-    </div>
+   <div class="section">
+  <h2>🧹 App Reset</h2>
+  <button onclick="confirmDataReset()" style="background: #dc3545; color: white; border: none; padding: 12px 20px; border-radius: 8px; font-size: 16px; margin: 10px 5px; cursor: pointer;">
+    🗑️ Reset App (Admin Password)
+  </button>
+</div>
+
 
   </div>
 
