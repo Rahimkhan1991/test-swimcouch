@@ -107,33 +107,30 @@
       reader.readAsText(file);
     });
 
-  function backupToGoogleDrive() {
-  const scriptUrl = document.getElementById("driveScriptUrl").value.trim();
-  if (!scriptUrl) return alert("❗ Please paste your Apps Script URL first.");
-
-  const data = {
-    students: JSON.parse(localStorage.getItem('students')) || [],
-    attendance: JSON.parse(localStorage.getItem('attendance')) || [],
-    fees: JSON.parse(localStorage.getItem('fees')) || [],
-    timestamp: new Date().toISOString()
+function backupToGoogleDrive() {
+  const backupData = {
+    students: localStorage.getItem('students'),
+    attendance: localStorage.getItem('attendance'),
+    fees: localStorage.getItem('fees')
   };
 
-fetch('https://script.google.com/macros/s/AKfy.../exec', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify(data)
-})
-.then(response => response.json())
-.then(res => {
-  console.log("Backup response:", res);
-})
-.catch(err => {
-  console.error("Backup failed:", err);
-});
+  const formData = new FormData();
+  formData.append('data', JSON.stringify(backupData));
 
+  fetch('https://script.google.com/macros/s/AKfy.../exec', {
+    method: 'POST',
+    body: formData
+  })
+    .then(res => res.json())
+    .then(result => {
+      console.log("Backup result:", result);
+      alert("Backup successful!");
+    })
+    .catch(err => {
+      console.error("Backup failed:", err);
+      alert("Backup failed: " + err.message);
+    });
 }
-
-
 
       function confirmDataReset() {
       const password = prompt("Enter admin password to reset all app data:");
