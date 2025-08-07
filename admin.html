@@ -118,23 +118,19 @@
     timestamp: new Date().toISOString()
   };
 
-  fetch(scriptUrl, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data)
-  })
-  .then(res => res.json())
-  .then(res => {
-    if (res.status === "success") {
-      alert("✅ Backup successful to your Google Drive!");
-    } else {
-      alert("❌ Backup failed: " + res.message);
-    }
-  })
-  .catch(err => {
-    console.error(err);
-    alert("❌ Network error during backup");
-  });
+fetch('https://script.google.com/macros/s/AKfy.../exec', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify(data)
+})
+.then(response => response.json())
+.then(res => {
+  console.log("Backup response:", res);
+})
+.catch(err => {
+  console.error("Backup failed:", err);
+});
+
 }
 
 
