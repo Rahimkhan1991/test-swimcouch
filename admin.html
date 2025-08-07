@@ -117,21 +117,20 @@ function backupToGoogleDrive() {
   const formData = new FormData();
   formData.append('data', JSON.stringify(backupData));
 
-  fetch('https://script.google.com/macros/s/AKfy.../exec', {
+  fetch('https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID/exec', {
     method: 'POST',
     body: formData
   })
     .then(res => res.json())
     .then(result => {
       console.log("Backup result:", result);
-      alert("Backup successful!");
+      alert("✅ Backup successful!");
     })
     .catch(err => {
-      console.error("Backup failed:", err);
-      alert("Backup failed: " + err.message);
+      console.error("❌ Backup failed:", err);
+      alert("❌ Backup failed: " + err.message);
     });
 }
-
       function confirmDataReset() {
       const password = prompt("Enter admin password to reset all app data:");
       if (password === "admin123") {
