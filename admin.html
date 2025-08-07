@@ -108,6 +108,9 @@
     });
 
   function backupToGoogleDrive() {
+  const scriptUrl = document.getElementById("driveScriptUrl").value.trim();
+  if (!scriptUrl) return alert("❗ Please paste your Apps Script URL first.");
+
   const data = {
     students: JSON.parse(localStorage.getItem('students')) || [],
     attendance: JSON.parse(localStorage.getItem('attendance')) || [],
@@ -115,7 +118,7 @@
     timestamp: new Date().toISOString()
   };
 
-  fetch('https://script.google.com/macros/s/AKfycbywZjGE1701zP8LDk75E5MjwVaHvQ7OrjKRmEmboovWz8HGFlWvggAEyoa7d6_Bgc5O/exec', {
+  fetch(scriptUrl, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data)
@@ -133,6 +136,7 @@
     alert("❌ Network error during backup");
   });
 }
+
 
 
       function confirmDataReset() {
