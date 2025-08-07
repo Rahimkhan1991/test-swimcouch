@@ -1,104 +1,214 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Admin Panel - SwimCoach</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Panel - Swim Coach</title>
   <style>
-    body { font-family: sans-serif; padding: 20px; background: #f4f4f4; }
-    h2 { color: #333; }
-    button { padding: 10px 15px; margin: 5px; cursor: pointer; }
-    input[type="text"] { width: 100%; padding: 8px; margin-top: 10px; }
-    #urlSection, #changeUrlBtn { margin-top: 15px; }
-    #log { margin-top: 10px; font-size: 14px; color: green; }
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background: #f0f4f8;
+    }
+
+    h1 {
+      text-align: center;
+      color: #007bff;
+    }
+
+    .section {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      margin-top: 20px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    }
+
+    button {
+      background: #007bff;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-size: 16px;
+      margin: 10px 5px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #0056b3;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+
+    #driveScriptSection {
+      display: none;
+    }
+
+    #restoreFileInput {
+      display: none;
+    }
   </style>
 </head>
 <body>
-  <h2>Admin Panel</h2>
+  <h1>🔒 Admin Panel</h1>
 
-  <div id="urlSection">
-    <label for="backupUrl">Enter Google Script Backup URL:</label>
-    <input type="text" id="backupUrl" placeholder="https://script.google.com/macros/s/.../exec" />
-    <button onclick="saveBackupUrl()">Save URL</button>
+  <div class="section">
+    <h2>🗃️ Data Control</h2>
+    <button onclick="backupData()">🔽 Download Backup</button>
+    <button onclick="triggerRestore()">🔁 Restore Backup</button>
+    <input type="file" id="restoreFileInput" accept=".json" />
+
+    <hr style="margin: 20px 0;"/>
+
+    <div id="driveBackupStatus"></div>
+
+    <div id="driveScriptSection">
+      <label for="driveScriptUrl"><strong>📤 Google Drive Backup URL:</strong></label>
+      <input type="text" id="driveScriptUrl" placeholder="Paste your Apps Script URL here">
+      <button onclick="saveScriptUrl()">💾 Save Script URL</button>
+    </div>
+
+    <button id="backupNowBtn" onclick="backupToGoogleDrive()">☁️ Backup to Google Drive</button>
+    <button id="changeUrlBtn" onclick="changeScriptUrl()">✏️ Change Backup URL</button>
   </div>
 
-  <button id="changeUrlBtn" onclick="changeBackupUrl()" style="display:none;">✏️ Change Backup URL</button>
-  <button onclick="backupNow()">🔁 Backup Now</button>
-
-  <div id="log"></div>
+  <div class="section">
+    <h2>🧹 App Reset</h2>
+    <button onclick="confirmDataReset()">Reset App (Requires Admin Password)</button>
+  </div>
 
   <script>
-    const BACKUP_INTERVAL_MINUTES = 60; // 🔁 Auto backup every 60 mins
+    const BACKUP_INTERVAL_MINUTES = 30;
 
-    // Load backup URL from localStorage
-    const storedUrl = localStorage.getItem("backup_url");
-    const backupUrlInput = document.getElementById("backupUrl");
-    const urlSection = document.getElementById("urlSection");
-    const changeUrlBtn = document.getElementById("changeUrlBtn");
-
-    if (storedUrl) {
-      urlSection.style.display = "none";
-      changeUrlBtn.style.display = "inline-block";
-    }
-
-    function saveBackupUrl() {
-      const url = backupUrlInput.value.trim();
-      if (!url.startsWith("https://script.google.com")) {
-        log("❌ Invalid URL. Must start with script.google.com", true);
-        return;
+    function backupData() {
+      const data = {};
+      for (let key in localStorage) {
+        if (localStorage.hasOwnProperty(key)) {
+          data[key] = localStorage.getItem(key);
+        }
       }
-      localStorage.setItem("backup_url", url);
-      urlSection.style.display = "none";
-      changeUrlBtn.style.display = "inline-block";
-      log("✅ Backup URL saved.");
+
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "swimcoach_backup_" + new Date().toISOString().split("T")[0] + ".json";
+      a.click();
+      URL.revokeObjectURL(url);
     }
 
-    function changeBackupUrl() {
-      urlSection.style.display = "block";
-      backupUrlInput.value = localStorage.getItem("backup_url") || "";
+    function triggerRestore() {
+      document.getElementById("restoreFileInput").click();
     }
 
-    function backupNow() {
-      const backupUrl = localStorage.getItem("backup_url");
-      if (!backupUrl) {
-        log("❌ No backup URL set. Please enter it first.", true);
+    document.getElementById("restoreFileInput").addEventListener("change", function (event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        try {
+          const data = JSON.parse(e.target.result);
+          if (confirm("Restore this backup? It will overwrite current app data.")) {
+            for (let key in data) {
+              localStorage.setItem(key, data[key]);
+            }
+            alert("✅ Data restored. Please reload the app.");
+          }
+        } catch (err) {
+          alert("❌ Invalid file. Cannot restore.");
+        }
+      };
+      reader.readAsText(file);
+    });
+
+    function backupToGoogleDrive() {
+      const scriptUrl = localStorage.getItem("driveScriptUrl");
+      if (!scriptUrl) {
+        alert("❌ No Google Script URL set. Click 'Change Backup URL' first.");
         return;
       }
 
       const backupData = {
-        students: localStorage.getItem("students") || "{}",
-        attendance: localStorage.getItem("attendance") || "{}",
-        fees: localStorage.getItem("fees") || "{}"
+        students: localStorage.getItem('students'),
+        attendance: localStorage.getItem('attendance'),
+        fees: localStorage.getItem('fees')
       };
 
-      fetch(backupUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: "data=" + encodeURIComponent(JSON.stringify(backupData))
+      const formData = new FormData();
+      formData.append('data', JSON.stringify(backupData));
+
+      fetch(scriptUrl, {
+        method: 'POST',
+        body: formData
       })
-      .then(res => res.json())
-      .then(res => {
-        if (res.status === "success") {
-          log("✅ Backup successful.");
-        } else {
-          log("❌ Backup failed: " + res.message, true);
+        .then(res => res.json())
+        .then(result => {
+          console.log("Backup result:", result);
+          if (result.status === "success") {
+            document.getElementById("driveBackupStatus").innerText = "✅ Backup successful: " + new Date().toLocaleString();
+          } else {
+            throw new Error(result.message || "Unknown error");
+          }
+        })
+        .catch(err => {
+          console.error("❌ Backup failed:", err);
+          document.getElementById("driveBackupStatus").innerText = "❌ Backup failed: " + err.message;
+        });
+    }
+
+    function changeScriptUrl() {
+      document.getElementById("driveScriptSection").style.display = "block";
+    }
+
+    function saveScriptUrl() {
+      const url = document.getElementById("driveScriptUrl").value.trim();
+      if (url) {
+        localStorage.setItem("driveScriptUrl", url);
+        document.getElementById("driveScriptSection").style.display = "none";
+        alert("✅ Script URL saved. Backup will auto-start.");
+        sendBackup(); // first run
+        setInterval(sendBackup, BACKUP_INTERVAL_MINUTES * 60 * 1000);
+      } else {
+        alert("❌ Please enter a valid URL.");
+      }
+    }
+
+    function sendBackup() {
+      const url = localStorage.getItem("driveScriptUrl");
+      if (url) {
+        backupToGoogleDrive();
+      }
+    }
+
+    // If URL already exists, show "Change" only and start auto-backup
+    window.onload = function () {
+      const savedUrl = localStorage.getItem("driveScriptUrl");
+      if (savedUrl) {
+        setInterval(sendBackup, BACKUP_INTERVAL_MINUTES * 60 * 1000);
+      }
+    }
+
+    function confirmDataReset() {
+      const password = prompt("Enter admin password to reset all app data:");
+      if (password === "admin123") {
+        const confirmReset = confirm("Are you sure? This will permanently erase all app data.");
+        if (confirmReset) {
+          localStorage.clear();
+          alert("All data erased. App has been reset.");
+          location.reload();
         }
-      })
-      .catch(err => log("❌ Backup error: " + err.message, true));
+      } else {
+        alert("❌ Incorrect password.");
+      }
     }
-
-    function log(message, isError = false) {
-      const logDiv = document.getElementById("log");
-      logDiv.style.color = isError ? "red" : "green";
-      logDiv.textContent = message;
-    }
-
-    // First run backup immediately if URL is saved
-    if (storedUrl) backupNow();
-
-    // 🔁 Then auto-backup every X minutes
-    setInterval(() => {
-      if (localStorage.getItem("backup_url")) backupNow();
-    }, BACKUP_INTERVAL_MINUTES * 60 * 1000);
   </script>
 </body>
 </html>
