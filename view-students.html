@@ -50,7 +50,7 @@
     }
 
     .pill {
-      display: inline-block;
+    
       background: #d1ecf1;
       color: #0c5460;
       padding: 4px 10px;
@@ -177,14 +177,12 @@
         const header = document.createElement("div");
         header.className = "student-header";
 
-        const img = document.createElement("img");
-        img.className = "student-photo";
-        img.src = student.image || "https://via.placeholder.com/60";
+       
 
         const namePhone = document.createElement("div");
         namePhone.innerHTML = `<strong>${student.name}</strong><br><small>${student.phone}</small>`;
 
-        header.appendChild(img);
+        
         header.appendChild(namePhone);
         info.appendChild(header);
 
