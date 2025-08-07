@@ -198,11 +198,22 @@
 
       let students = JSON.parse(localStorage.getItem("students")) || [];
 
-      // Duplicate check: Name + Phone
-      if (students.some(s => s.name === name && s.phone === phone)) {
-        alert("Student already exists with this name and phone.");
-        return;
-      }
+     // Trim inputs
+name = name.trim();
+phone = phone.trim();
+
+// Check for duplicate name
+if (students.some(s => s.name.toLowerCase() === name.toLowerCase())) {
+  alert("A student with this name already exists.");
+  return;
+}
+
+// Check for duplicate phone number
+if (students.some(s => s.phone === phone)) {
+  alert("A student with this phone number already exists.");
+  return;
+}
+
 
       const student = {
         id: Date.now(),
