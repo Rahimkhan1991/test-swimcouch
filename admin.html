@@ -39,25 +39,32 @@
     button:hover {
       background: #0056b3;
     }
+
+    #driveScriptUrl {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
   </style>
 </head>
 <body>
   <h1>🔒 Admin Panel</h1>
 
   <div class="section">
-  <h2>🗃️ Data Control</h2>
-  <button onclick="backupData()">🔽 Download Backup</button>
-  <button onclick="triggerRestore()">🔁 Restore Backup</button>
-  <input type="file" id="restoreFileInput" accept=".json" style="display: none;" />
+    <h2>🗃️ Data Control</h2>
+    <button onclick="backupData()">🔽 Download Backup</button>
+    <button onclick="triggerRestore()">🔁 Restore Backup</button>
+    <input type="file" id="restoreFileInput" accept=".json" style="display: none;" />
 
-  <hr style="margin: 20px 0;"/>
+    <hr style="margin: 20px 0;"/>
 
-  <label for="driveScriptUrl"><strong>📤 Google Drive Backup URL:</strong></label>
-<input type="text" id="driveScriptUrl" placeholder="Paste your Apps Script URL here"style="width:100%;padding:10px;margin:10px 0;border:1px solid #ccc;border-radius:8px;">
-  <button onclick="backupToGoogleDrive()">☁️ Backup to Google Drive</button>
-  <div id="driveBackupStatus" style="margin-top: 10px;"></div>
-</div>
-
+    <label for="driveScriptUrl"><strong>📤 Google Drive Backup URL:</strong></label>
+    <input type="text" id="driveScriptUrl" placeholder="Paste your Apps Script URL here">
+    <button onclick="backupToGoogleDrive()">☁️ Backup to Google Drive</button>
+    <div id="driveBackupStatus" style="margin-top: 10px; color: green;"></div>
+  </div>
 
   <div class="section">
     <h2>🧹 App Reset</h2>
@@ -107,31 +114,43 @@
       reader.readAsText(file);
     });
 
-function backupToGoogleDrive() {
-  const backupData = {
-    students: localStorage.getItem('students'),
-    attendance: localStorage.getItem('attendance'),
-    fees: localStorage.getItem('fees')
-  };
+    function backupToGoogleDrive() {
+      const scriptUrl = document.getElementById("driveScriptUrl").value.trim();
+      if (!scriptUrl) {
+        alert("❗ Please enter the Google Apps Script URL.");
+        return;
+      }
 
-  const formData = new FormData();
-  formData.append('data', JSON.stringify(backupData));
+      const backupData = {
+        students: localStorage.getItem("students"),
+        attendance: localStorage.getItem("attendance"),
+        fees: localStorage.getItem("fees")
+      };
 
-  fetch('https://script.google.com/macros/s/AKfycbywZjGE1701zP8LDk75E5MjwVaHvQ7OrjKRmEmboovWz8HGFlWvggAEyoa7d6_Bgc5O/exec', {
-    method: 'POST',
-    body: formData
-  })
-    .then(res => res.json())
-    .then(result => {
-      console.log("Backup result:", result);
-      alert("✅ Backup successful!");
-    })
-    .catch(err => {
-      console.error("❌ Backup failed:", err);
-      alert("❌ Backup failed: " + err.message);
-    });
-}
-      function confirmDataReset() {
+      const formData = new URLSearchParams();
+      formData.append("data", JSON.stringify(backupData));
+
+      fetch(scriptUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded"
+        },
+        body: formData
+      })
+      .then(res => res.json())
+      .then(result => {
+        if (result.status === "success") {
+          document.getElementById("driveBackupStatus").textContent = "✅ Backup successful!";
+        } else {
+          document.getElementById("driveBackupStatus").textContent = "❌ Backup failed: " + result.message;
+        }
+      })
+      .catch(err => {
+        document.getElementById("driveBackupStatus").textContent = "❌ Network or server error: " + err.message;
+      });
+    }
+
+    function confirmDataReset() {
       const password = prompt("Enter admin password to reset all app data:");
       if (password === "admin123") {
         const confirmReset = confirm("Are you sure? This will permanently erase all app data.");
