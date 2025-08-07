@@ -96,25 +96,29 @@
 
     <div class="section">
       <h2>🗃️ Backup & Restore</h2>
-      <button onclick="backupData()">🔽 Backup</button>
+      <button onclick="backupData()"style="background: #2fa837;">  🔽 Backup</button>
       <button onclick="triggerRestore()">🔁 Restore </button>
       <input type="file" id="restoreFileInput" accept=".json" />
 
       <div id="driveBackupStatus"></div>
+      </div>
+      
+      <div class="section">
+      <h2>☁️  Auto-Backup</h2>
 
       <div id="driveScriptSection">
         <input type="text" id="driveScriptUrl" placeholder="Paste your Google Script URL here">
         <button onclick="saveScriptUrl()">💾 Save URL</button>
       </div>
 
-      <button onclick="backupToGoogleDrive()">☁️ Backup to Google Drive</button>
+      <button onclick="backupToGoogleDrive()"style="background: #2fa837;">☁️ Backup to Google Drive</button>
       <button onclick="changeScriptUrl()">✏️ Update  URL</button>
     </div>
 
    <div class="section">
   <h2>🧹 App Reset</h2>
   <button onclick="confirmDataReset()" style="background: #dc3545; color: white; border: none; padding: 12px 20px; border-radius: 8px; font-size: 16px; margin: 10px 5px; cursor: pointer;">
-    🗑️ Reset App (Admin Password)
+    🗑️ Reset App
   </button>
 </div>
 
