@@ -199,17 +199,17 @@
       let students = JSON.parse(localStorage.getItem("students")) || [];
 
      // Trim inputs
-name = name.trim();
-phone = phone.trim();
+const trimmedName = name.trim();
+const trimmedPhone = phone.trim();
+
 
 // Check for duplicate name
-if (students.some(s => s.name.toLowerCase() === name.toLowerCase())) {
+if (students.some(s => s.name.toLowerCase() === trimmedName.toLowerCase())) {
   alert("A student with this name already exists.");
   return;
 }
 
-// Check for duplicate phone number
-if (students.some(s => s.phone === phone)) {
+if (students.some(s => s.phone === trimmedPhone)) {
   alert("A student with this phone number already exists.");
   return;
 }
