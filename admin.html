@@ -117,7 +117,7 @@ function backupToGoogleDrive() {
   const formData = new FormData();
   formData.append('data', JSON.stringify(backupData));
 
-  fetch('https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID/exec', {
+  fetch('https://script.google.com/macros/s/AKfycbywZjGE1701zP8LDk75E5MjwVaHvQ7OrjKRmEmboovWz8HGFlWvggAEyoa7d6_Bgc5O/exec', {
     method: 'POST',
     body: formData
   })
