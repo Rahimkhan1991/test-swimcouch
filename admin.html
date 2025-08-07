@@ -108,38 +108,34 @@
     });
 
   function backupToGoogleDrive() {
-    const scriptUrl = document.getElementById("driveScriptUrl").value.trim();
-    const statusEl = document.getElementById("driveBackupStatus");
-    statusEl.innerHTML = "";
-
-    if (!scriptUrl) {
-      alert("❌ Please enter your Google Apps Script Web App URL.");
-      return;
+  const data = {};
+  for (let key in localStorage) {
+    if (localStorage.hasOwnProperty(key)) {
+      data[key] = localStorage.getItem(key);
     }
+  }
 
-    const data = {};
-    for (let key in localStorage) {
-      if (localStorage.hasOwnProperty(key)) {
-        data[key] = localStorage.getItem(key);
+  fetch('YOUR_SCRIPT_URL_HERE', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
+  })
+    .then((res) => res.json())
+    .then((res) => {
+      if (res.status === 'success') {
+        alert('✅ Backup saved to your Google Drive!');
+      } else {
+        alert('❌ Backup failed: ' + res.message);
       }
-    }
-
-    fetch(scriptUrl, {
-      method: "POST",
-      body: JSON.stringify(data),
-      headers: {
-        "Content-Type": "application/json"
-      }
-    })
-    .then((res) => res.text())
-    .then((text) => {
-      statusEl.innerHTML = "✅ Backup saved to your Google Drive.";
-      console.log(text);
     })
     .catch((err) => {
       console.error(err);
-      statusEl.innerHTML = "❌ Failed to back up to Google Drive.";
+      alert('❌ Network error during backup');
     });
+}
+
   }
       function confirmDataReset() {
       const password = prompt("Enter admin password to reset all app data:");
