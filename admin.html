@@ -108,33 +108,32 @@
     });
 
   function backupToGoogleDrive() {
-  const data = {};
-  for (let key in localStorage) {
-    if (localStorage.hasOwnProperty(key)) {
-      data[key] = localStorage.getItem(key);
-    }
-  }
+  const data = {
+    students: JSON.parse(localStorage.getItem('students')) || [],
+    attendance: JSON.parse(localStorage.getItem('attendance')) || [],
+    fees: JSON.parse(localStorage.getItem('fees')) || [],
+    timestamp: new Date().toISOString()
+  };
 
   fetch('https://script.google.com/macros/s/AKfycbywZjGE1701zP8LDk75E5MjwVaHvQ7OrjKRmEmboovWz8HGFlWvggAEyoa7d6_Bgc5O/exec', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(data),
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
   })
-    .then((res) => res.json())
-    .then((res) => {
-      if (res.status === 'success') {
-        alert('✅ Backup saved to your Google Drive!');
-      } else {
-        alert('❌ Backup failed: ' + res.message);
-      }
-    })
-    .catch((err) => {
-      console.error(err);
-      alert('❌ Network error during backup');
-    });
+  .then(res => res.json())
+  .then(res => {
+    if (res.status === "success") {
+      alert("✅ Backup successful to your Google Drive!");
+    } else {
+      alert("❌ Backup failed: " + res.message);
+    }
+  })
+  .catch(err => {
+    console.error(err);
+    alert("❌ Network error during backup");
+  });
 }
+
 
       function confirmDataReset() {
       const password = prompt("Enter admin password to reset all app data:");
