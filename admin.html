@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Admin Panel - Swim Coach</title>
@@ -91,13 +93,24 @@
   </style>
 </head>
 <body>
-  <h1>🔒 Admin Panel</h1>
+  <h1><span class="material-icons" style="font-size: 60px; vertical-align: middle; margin-right: 6px;">
+  admin_panel_settings
+</span>
+Admin Panel</h1>
   <div class="container">
 
     <div class="section">
-      <h2>🗃️ Backup & Restore</h2>
-      <button onclick="backupData()"">  🔽 Backup</button>
-      <button onclick="triggerRestore()">🔁 Restore </button>
+      <h2>️
+<span class="material-icons" style="font-size: 30px; vertical-align: middle; margin-right: 6px;">
+  storage
+</span>
+Backup & Restore</h2>
+      <button onclick="backupData()"> <span class="material-icons" style="vertical-align: middle; margin-right: 6px;"
+      >backup
+      </span>
+      Backup</button>
+     <button onclick="triggerRestore()"><span class="material-icons" style="vertical-align: middle; margin-right: 6px;">settings_backup_restore
+      </span> Restore </button>
       <input type="file" id="restoreFileInput" accept=".json" />
 
       <div id="driveBackupStatus"></div>
@@ -108,17 +121,31 @@
 
       <div id="driveScriptSection">
         <input type="text" id="driveScriptUrl" placeholder="Paste your Google Script URL here">
-        <button onclick="saveScriptUrl()">💾 Save URL</button>
+        <button onclick="saveScriptUrl()"><span class="material-icons" style="vertical-align: middle; margin-right: 6px;">
+    add_link
+  </span>Save URL</button>
       </div>
 
-      <button onclick="backupToGoogleDrive()";">☁️ Backup to Google Drive</button>
-      <button onclick="changeScriptUrl()">✏️ Update  URL</button>
+      <button onclick="backupToGoogleDrive()" style="padding: 10px 16px; font-weight: bold;">
+  <span class="material-icons" style="vertical-align: middle; margin-right: 6px;">
+  add_to_drive
+  </span>
+  Backup to Google Drive
+</button>
+
+      <button onclick="changeScriptUrl()"> <span class="material-icons" style="vertical-align: middle; margin-right: 6px;">
+    link
+  </span> Update  URL</button>
     </div>
 
    <div class="section">
-  <h2>🧹 App Reset</h2>
+  <h2> <span class="material-icons" style="vertical-align: middle; margin-right: 6px;">
+    delete
+  </span> App Reset</h2>
   <button onclick="confirmDataReset()" style="background: #dc3545; color: white; border: none; padding: 12px 20px; border-radius: 8px; font-size: 16px; margin: 10px 5px; cursor: pointer;">
-    🗑️ Reset App
+    <span class="material-icons" style="vertical-align: middle; margin-right: 6px;">
+    delete_forever
+  </span>️ Reset App
   </button>
 </div>
 
@@ -126,8 +153,8 @@
   </div>
     <div class="footer-buttons">
    
-   <button class="btn-back" onclick="history.back()" 
-  style="width: 95%; margin: 15px auto; font-weight: bold; display: block;">
+  <button class="btn-back" onclick="history.back()" 
+  style="width: 95%; ; margin: 15px auto; font-weight: bold; display: block;">
   ◀ Back
 </button>
 
