@@ -2,6 +2,7 @@
 <html lang="en">
 
 <head>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <meta charset="UTF-8">
   <title>Send SMS</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -87,13 +88,13 @@
     }
 
     .footer-buttons button {
-      background-color: #3498db;
+      background-color: #007bff;
       padding: 10px 16px;
       margin: 5px;
     }
 
     .footer-buttons button:last-child {
-      background-color: #95a5a6;
+      background-color: #007bff;
     }
 
     @media (max-width: 480px) {
@@ -140,20 +141,31 @@
 
     <label>Use Template:</label>
     <div class="template-buttons">
-      <button onclick="setTemplate('fee')">Fee Reminder</button>
-      <button onclick="setTemplate('absent')">Absent Alert</button>
-      <button onclick="setTemplate('custom')">Custom</button>
+      <button onclick="setTemplate('fee')"> <span class="material-icons" style="vertical-align: middle; margin-right: 6px;">
+    payments
+  </span> Fee Reminder</button>
+    <button onclick="setTemplate('absent')"><span class="material-icons" style="vertical-align: middle; margin-right: 6px;">
+    block
+  </span> Absent Alert </button>
+      
+      
+      
+      <button onclick="setTemplate('custom')"><span class="material-icons" style="vertical-align: middle; margin-right: 6px;">
+    tune
+  </span>Custom</button>
     </div>
 
     <label for="message">Message:</label>
     <textarea id="message" rows="5" placeholder="Your message..."></textarea>
 
-    <button onclick="sendWhatsApp()">📲 Send WhatsApp</button>
+    <button onclick="sendWhatsApp()"> <span class="material-icons" style="vertical-align: middle; margin-right: 6px;">
+    send
+  </span>️ Send WhatsApp</button>
   </div>
 
   <div class="footer-buttons">
-    <button onclick="location.href='home.html'">🏠 Home</button>
-    <button onclick="history.back()">← Back</button>
+    
+    <button onclick="history.back()">◀ Back</button>
   </div>
 
   <script>
