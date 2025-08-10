@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
- 
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Swim Coach - Home</title>
@@ -76,6 +75,27 @@
       color: #007bff;
       font-weight: bold;
     }
+
+    /* WhatsApp Floating Button */
+    .whatsapp-float {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 1000;
+      background-color: #25D366;
+      border-radius: 50%;
+      padding: 12px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+      transition: background-color 0.3s ease;
+    }
+    .whatsapp-float:hover {
+      background-color: #1EBE5D;
+    }
+    .whatsapp-icon {
+      width: 40px;
+      height: 40px;
+      display: block;
+    }
   </style>
 </head>
 <body>
@@ -103,55 +123,27 @@
     <a class="card" href="sms.html">
       <span>📩</span> SMS Alerts
     </a>
-   <a class="card" href="admin.html">
-  <span>🔒</span> Admin Panel
-</a>
+    <a class="card" href="admin.html">
+      <span>🔒</span> Admin Panel
+    </a>
     <a class="card" href="#" onclick="logout()">
-  <span>🚪</span> Logout
-</a>
-
+      <span>🚪</span> Logout
+    </a>
   </div>
 
-  
+  <!-- WhatsApp Floating Button -->
+  <a href="https://wa.me/6285739677818?text=Hi%20I%20have%20an%20issue%20with%20Coach%20App.%20Here%20are%20the%20details..."
+     target="_blank" 
+     class="whatsapp-float">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp" class="whatsapp-icon">
+  </a>
+
   <script>
-    ///function updateDashboardSummary() {
-      //const students = JSON.parse(localStorage.getItem('students') || '[]');
-      //const fees = JSON.parse(localStorage.getItem('feeRecords') || '[]');
-
-      //let totalStudents = students.length;
-      //let totalCollected = 0;
-      //let pendingFee = 0;
-
-      ///students.forEach(student => {
-        ///const initial = parseFloat(student.initialPayment) || 0;
-        ///const totalFee = parseFloat(student.totalFee) || 0;
-
-        ///const feeSum = fees
-         /// .filter(f => f.studentId === student.id)
-          ///.reduce((sum, f) => sum + (parseFloat(f.amount) || 0), 0);
-
-        //const paid = initial + feeSum;
-        //const pending = Math.max(totalFee - paid, 0);
-
-        //totalCollected += paid;
-        //pendingFee += pending;
-      //});
-
-      //document.getElementById('totalStudentsCard').textContent = totalStudents;
-      //document.getElementById('totalCollectedCard').textContent = `₹${totalCollected}`;
-      ///document.getElementById('totalPendingCard').textContent = `₹${pendingFee}`;
-    ///}
-
-  function logout() {
-    localStorage.removeItem("isLoggedIn");
-    localStorage.removeItem("user");
-    window.location.href = "index.html";
-  }
-
-  
-
-  // updateDashboardSummary(); // ← Uncomment if using summary
-
+    function logout() {
+      localStorage.removeItem("isLoggedIn");
+      localStorage.removeItem("user");
+      window.location.href = "index.html";
+    }
 
     function confirmDataReset() {
       const password = prompt("Enter admin password to reset all app data:");
@@ -168,7 +160,6 @@
     }
 
     updateDashboardSummary();
-    
   </script>
 </body>
 </html>
