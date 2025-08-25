@@ -190,7 +190,22 @@ if (!studentId || isNaN(amount) || amount <= 0) {
 showMessage("Please select a student and enter a valid amount.");
 return;
 }
-const { data: { user } } = await supabase.auth.getSession();
+const { data: { session } } = await supabase.auth.getSession();
+const user = session?.user;
+if (!user) {
+showMessage("Your session has expired. Please log in again.");
+return;
+}
+const { data: companyData, error: companyError } = await supabase
+.from('users')
+.select('company_id')
+.eq('id', user.id)
+.single();
+if (companyError || !companyData) {
+showMessage("Error fetching company info.");
+return;
+}
+const company_id = companyData.company_id;
 const { data: student, error: studentError } = await supabase.from('students').select('totalFee').eq('id', studentId).single();
 if (studentError) {
 showMessage("Error fetching student data.");
@@ -207,12 +222,11 @@ if (amount > pending) {
 showMessage(`Payment exceeds pending fee. Remaining: ${pending}`);
 return;
 }
-const newFee = { student_id: studentId, amount: amount, date: new Date().toISOString().split("T")[0], user_id: user.id };
+const newFee = { student_id: studentId, amount: amount, date: new Date().toISOString().split("T")[0], user_id: user.id, company_id: company_id }; // ✅ Added company_id here
 const { data, error } = await supabase.from('fees').insert([newFee]);
 if (error) {
 showMessage("Failed to collect fee: " + error.message);
 } else {
-// Update the student's initialPayment and balanceFee fields in Supabase
 const { error: updateError } = await supabase
 .from('students')
 .update({ initialPayment: totalPaid + amount, balanceFee: pending - amount })
