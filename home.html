@@ -116,9 +116,9 @@ display: block;
 <a class="card" href="admin.html">
 <span>🔒</span> Admin Panel
 </a>
-<a class="card" href="index.html">
+<button class="card" id="logoutButton">
 <span>🚪</span> Logout
-</a>
+</button>
 </div>
 <a href="https://wa.me/6285739677818?text=Hi%20I%20have%20an%20issue%20with%20Coach%20App.%20Here%20are%20the%20details..."
 target="_blank"
@@ -138,14 +138,18 @@ window.location.href = 'index.html'; // Assuming 'index.html' is your login page
 }
 checkUserSession(); // Run the check immediately on page load
 // The logout function now uses Supabase to sign the user out.
+// The logout function now uses Supabase to sign the user out.
 async function logout() {
 const { error } = await supabase.auth.signOut();
 if (error) {
 console.error("Logout error:", error);
 } else {
+// Only redirect after the sign-out is successful
 window.location.href = "index.html";
 }
 }
+// Listen for the click event on the button
+document.getElementById('logoutButton').addEventListener('click', logout);
 // The confirmDataReset function has been removed from this page.
 // It is now on the admin.html page.
 </script>
