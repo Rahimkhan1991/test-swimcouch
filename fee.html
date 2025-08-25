@@ -1,286 +1,258 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Collect Fee</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <style>
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background: #f2f2f2;
-      margin: 0;
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-
-    h2, h3 {
-      color: #007bff;
-      text-align: center;
-    }
-
-    .container {
-      background: #f8f8f8;
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-      max-width: 500px;
-      width: 85%;
-      margin-bottom: 30px;
-    }
-
-    label {
-      margin-top: 15px;
-      display: block;
-      font-weight: 500;
-      color: #444;
-    }
-
-    select, input {
-      width: 100%;
-      padding: 10px;
-      margin-top: 8px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
-      font-size: 16px;
-    }
-
-    button {
-      width: 100%;
-      margin-top: 20px;
-      padding: 12px;
-      background-color: #28a745;
-      border: none;
-      color: white;
-      font-size: 16px;
-      border-radius: 8px;
-      cursor: pointer;
-    }
-
-    button:hover {
-      background-color: #007bff;
-    }
-
-    .btn-secondary {
-      background-color: #28a745;
-    }
-
-    .btn-secondary:hover {
-      background-color: #007bff;
-    }
-
-    .btn-back {
-      background-color: #007bff;
-    }
-
-    .btn-back:hover {
-      background-color: #007bff;
-    }
-
-    #balanceBox {
-      margin-top: 15px;
-      padding: 10px;
-      background-color: #f9f9f9;
-      border-left: 5px solid #17a2b8;
-      border-radius: 8px;
-      font-size: 15px;
-      line-height: 1.6;
-    }
-
-    #feeHistory {
-      margin-top: 20px;
-    }
-
-    #feeHistory ul {
-      padding-left: 20px;
-      line-height: 1.6;
-      font-size: 15px;
-    }
-
-    #messageBox {
-      display: none;
-      padding: 12px;
-      margin: 10px auto;
-      text-align: center;
-      background-color: #d4edda;
-      color: #155724;
-      border: 1px solid #c3e6cb;
-      border-radius: 5px;
-      max-width: 300px;
-    }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Collect Fee</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+body {
+font-family: 'Segoe UI', sans-serif;
+background: #f2f2f2;
+margin: 0;
+padding: 20px;
+display: flex;
+flex-direction: column;
+align-items: center;
+}
+h2, h3 {
+color: #007bff;
+text-align: center;
+}
+.container {
+background: #f8f8f8;
+padding: 20px;
+border-radius: 12px;
+box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+max-width: 500px;
+width: 85%;
+margin-bottom: 30px;
+}
+label {
+margin-top: 15px;
+display: block;
+font-weight: 500;
+color: #444;
+}
+select, input {
+width: 100%;
+padding: 10px;
+margin-top: 8px;
+border: 1px solid #ccc;
+border-radius: 8px;
+box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
+font-size: 16px;
+}
+button {
+width: 100%;
+margin-top: 20px;
+padding: 12px;
+background-color: #28a745;
+border: none;
+color: white;
+font-size: 16px;
+border-radius: 8px;
+cursor: pointer;
+}
+button:hover {
+background-color: #007bff;
+}
+.btn-secondary {
+background-color: #28a745;
+}
+.btn-secondary:hover {
+background-color: #007bff;
+}
+.btn-back {
+background-color: #007bff;
+}
+.btn-back:hover {
+background-color: #007bff;
+}
+#balanceBox {
+margin-top: 15px;
+padding: 10px;
+background-color: #f9f9f9;
+border-left: 5px solid #17a2b8;
+border-radius: 8px;
+font-size: 15px;
+line-height: 1.6;
+}
+#feeHistory {
+margin-top: 20px;
+}
+#feeHistory ul {
+padding-left: 20px;
+line-height: 1.6;
+font-size: 15px;
+}
+#messageBox {
+display: none;
+padding: 12px;
+margin: 10px auto;
+text-align: center;
+background-color: #d4edda;
+color: #155724;
+border: 1px solid #c3e6cb;
+border-radius: 5px;
+max-width: 300px;
+}
+</style>
 </head>
 <body>
-
-  <div class="container">
-    <h2>Collect Fee</h2>
-
-    <label for="studentSelect">Select Student:</label>
-    <select id="studentSelect" onchange="showStudentBalance()"></select>
-
-    <label for="amount">Enter Amount:</label>
+<div class="container">
+<h2>Collect Fee</h2>
+<label for="studentSelect">Select Student:</label>
+<select id="studentSelect" onchange="showStudentBalance()"></select>
+<label for="amount">Enter Amount:</label>
 <input type="number" id="amount" placeholder="Enter fee amount" style="
-    width: 270px;
+width: 270px;
 ">
-
-    <div id="balanceBox"></div>
-
-    <button onclick="collectFee()">Collect Fee</button>
-  </div>
-
-  <div class="container">
-    <h3>Fee History</h3>
-
-    <label for="historyStudent">Select Student:</label>
-    <select id="historyStudent"></select>
-
-    <button class="btn-secondary" onclick="loadFeeHistory()">Show History</button>
-
-    <div id="feeHistory"></div>
-  </div>
-
-  <div style="max-width: 500px; width: 100%;">
-    <button class="btn-back" onclick="history.back()">⬅ Back</button>
-  </div>
-
-  <div id="messageBox"></div>
-
-  <script>
-    const SUPABASE_URL = 'https://ndishfwnkzdedfcywcle.supabase.co';
+<div id="balanceBox"></div>
+<button onclick="collectFee()">Collect Fee</button>
+</div>
+<div class="container">
+<h3>Fee History</h3>
+<label for="historyStudent">Select Student:</label>
+<select id="historyStudent"></select>
+<button class="btn-secondary" onclick="loadFeeHistory()">Show History</button>
+<div id="feeHistory"></div>
+</div>
+<div style="max-width: 500px; width: 100%;">
+<button class="btn-back" onclick="history.back()">⬅ Back</button>
+</div>
+<div id="messageBox"></div>
+<script>
+const SUPABASE_URL = 'https://ndishfwnkzdedfcywcle.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5kaXNoZndua3pkZWRmY3l3Y2xlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYwOTk0MjcsImV4cCI6MjA3MTY3NTQyN30.CXQSfhR0MVLF40v2Tp-BcENBpHpPshG9Ys3zLYiBQaM';
 const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
- // Check for an active session. If none exists, redirect to the login page.
-    async function checkUserSession() {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        window.location.href = 'index.html'; // Assuming 'index.html' is your login page
-      }
-    }
-    checkUserSession(); // Run the check immediately on page load
-    
-    function getStudents() {
-      return JSON.parse(localStorage.getItem("students")) || [];
-    }
-
-    function getFees() {
-      return JSON.parse(localStorage.getItem("fees")) || [];
-    }
-
-    function saveFees(fees) {
-      localStorage.setItem("fees", JSON.stringify(fees));
-    }
-
-    function populateDropdowns() {
-      const students = getStudents();
-      const select1 = document.getElementById("studentSelect");
-      const select2 = document.getElementById("historyStudent");
-
-      select1.innerHTML = '<option value="">-- Select Student --</option>';
-      select2.innerHTML = '<option value="">-- Select Student --</option>';
-
-      students.forEach(student => {
-        const option1 = document.createElement("option");
-        const option2 = document.createElement("option");
-
-        option1.value = student.id;
-        option1.textContent = student.name;
-        option2.value = student.id;
-        option2.textContent = student.name;
-
-        select1.appendChild(option1);
-        select2.appendChild(option2);
-      });
-    }
-
-    function showStudentBalance() {
-      const studentId = document.getElementById("studentSelect").value;
-      const students = getStudents();
-      const student = students.find(s => s.id == studentId);
-
-      const box = document.getElementById("balanceBox");
-      if (!student) {
-        box.textContent = "";
-        return;
-      }
-
-      const fees = getFees();
-      const studentFees = fees.filter(fee => fee.studentId == studentId);
-      const totalPaid = studentFees.reduce((sum, f) => sum + f.amount, 0);
-      const pending = student.totalFee - totalPaid;
-
-      box.innerHTML = `
-        <div><b>Total Fee:</b> ₹${student.totalFee}</div>
-        <div><b>Paid:</b> ₹${totalPaid}</div>
-        <div><b>Pending:</b> ₹${pending}</div>
-      `;
-    }
-
-    function collectFee() {
-      const studentId = document.getElementById("studentSelect").value;
-      const amount = parseFloat(document.getElementById("amount").value);
-      const date = new Date().toISOString().split("T")[0];
-
-      if (!studentId || isNaN(amount)) {
-        showMessage("Please select a student and enter a valid amount.");
-        return;
-      }
-
-      const students = getStudents();
-      const student = students.find(s => s.id == studentId);
-      if (!student) {
-        showMessage("Student not found.");
-        return;
-      }
-
-      const fees = getFees();
-      const studentFees = fees.filter(fee => fee.studentId == studentId);
-      const totalPaid = studentFees.reduce((sum, f) => sum + f.amount, 0);
-      const pending = student.totalFee - totalPaid;
-
-      if (amount > pending) {
-        showMessage(`Payment exceeds pending fee. Remaining: ₹${pending}`);
-        return;
-      }
-
-      fees.push({ studentId, amount, date });
-      saveFees(fees);
-
-      const newPaid = totalPaid + amount;
-      student.initialPayment = newPaid;
-      student.balanceFee = student.totalFee - newPaid;
-      localStorage.setItem("students", JSON.stringify(students));
-
-      document.getElementById("amount").value = "";
-      showMessage("Fee collected successfully!");
-
-      showStudentBalance();
-      populateDropdowns();
-      document.getElementById("historyStudent").value = studentId;
-    }
-
-    function loadFeeHistory() {
-      const studentId = document.getElementById("historyStudent").value;
-      const fees = getFees();
-      const studentFees = fees.filter(fee => fee.studentId == studentId);
-
-      const list = studentFees.map(fee => `<li>${fee.date}: ₹${fee.amount}</li>`).join("");
-      document.getElementById("feeHistory").innerHTML = list ? `<ul>${list}</ul>` : "No fee records.";
-    }
-
-    function showMessage(msg) {
-      const box = document.getElementById("messageBox");
-      box.textContent = msg;
-      box.style.display = "block";
-      setTimeout(() => {
-        box.style.display = "none";
-      }, 3000);
-    }
-
-    populateDropdowns();
-  </script>
+//Check for an active session. If none exists, redirect to the login page.
+async function checkUserSession() {
+const { data: { session } } = await supabase.auth.getSession();
+if (!session) {
+window.location.href = 'index.html'; // Assuming 'index.html' is your login page
+}
+}
+checkUserSession(); // Run the check immediately on page load
+// Populate student dropdowns from Supabase
+async function populateDropdowns() {
+const { data: students, error } = await supabase.from('students').select('id, name, totalFee, initialPayment');
+if (error) {
+console.error('Error fetching students:', error.message);
+return;
+}
+const select1 = document.getElementById("studentSelect");
+const select2 = document.getElementById("historyStudent");
+select1.innerHTML = '<option value="">-- Select Student --</option>';
+select2.innerHTML = '<option value="">-- Select Student --</option>';
+students.forEach(student => {
+const option1 = document.createElement("option");
+const option2 = document.createElement("option");
+option1.value = student.id;
+option1.textContent = student.name;
+option2.value = student.id;
+option2.textContent = student.name;
+select1.appendChild(option1);
+select2.appendChild(option2);
+});
+}
+// Show a student's balance by fetching their fee history from Supabase
+async function showStudentBalance() {
+const studentId = document.getElementById("studentSelect").value;
+if (!studentId) {
+document.getElementById("balanceBox").innerHTML = "";
+return;
+}
+const { data: student, error: studentError } = await supabase.from('students').select('totalFee').eq('id', studentId).single();
+if (studentError) {
+console.error('Error fetching student:', studentError.message);
+return;
+}
+const { data: fees, error: feesError } = await supabase.from('fees').select('amount').eq('student_id', studentId);
+if (feesError) {
+console.error('Error fetching fees:', feesError.message);
+return;
+}
+const totalPaid = fees.reduce((sum, f) => sum + f.amount, 0);
+const pending = student.totalFee - totalPaid;
+const box = document.getElementById("balanceBox");
+box.innerHTML = `
+<div><b>Total Fee:</b> ${student.totalFee}</div>
+<div><b>Paid:</b> ${totalPaid}</div>
+<div><b>Pending:</b> ${pending}</div>
+`;
+}
+// Collect a new fee and save it to the database
+async function collectFee() {
+const studentId = document.getElementById("studentSelect").value;
+const amount = parseFloat(document.getElementById("amount").value);
+if (!studentId || isNaN(amount) || amount <= 0) {
+showMessage("Please select a student and enter a valid amount.");
+return;
+}
+const { data: { user } } = await supabase.auth.getSession();
+const { data: student, error: studentError } = await supabase.from('students').select('totalFee').eq('id', studentId).single();
+if (studentError) {
+showMessage("Error fetching student data.");
+return;
+}
+const { data: fees, error: feesError } = await supabase.from('fees').select('amount').eq('student_id', studentId);
+if (feesError) {
+showMessage("Error fetching fees.");
+return;
+}
+const totalPaid = fees.reduce((sum, f) => sum + f.amount, 0);
+const pending = student.totalFee - totalPaid;
+if (amount > pending) {
+showMessage(`Payment exceeds pending fee. Remaining: ${pending}`);
+return;
+}
+const newFee = { student_id: studentId, amount: amount, date: new Date().toISOString().split("T")[0], user_id: user.id };
+const { data, error } = await supabase.from('fees').insert([newFee]);
+if (error) {
+showMessage("Failed to collect fee: " + error.message);
+} else {
+// Update the student's initialPayment and balanceFee fields in Supabase
+const { error: updateError } = await supabase
+.from('students')
+.update({ initialPayment: totalPaid + amount, balanceFee: pending - amount })
+.eq('id', studentId);
+if (updateError) {
+console.error('Failed to update student balance:', updateError.message);
+}
+document.getElementById("amount").value = "";
+showMessage("Fee collected successfully!");
+showStudentBalance();
+}
+}
+// Load a student's fee history from the database
+async function loadFeeHistory() {
+const studentId = document.getElementById("historyStudent").value;
+if (!studentId) {
+document.getElementById("feeHistory").innerHTML = "No fee records.";
+return;
+}
+const { data: fees, error } = await supabase
+.from('fees')
+.select('date, amount')
+.eq('student_id', studentId)
+.order('date', { ascending: true });
+if (error) {
+document.getElementById("feeHistory").innerHTML = "Error fetching history.";
+return;
+}
+const list = fees.map(fee => `<li>${fee.date}: ${fee.amount}</li>`).join("");
+document.getElementById("feeHistory").innerHTML = list ? `<ul>${list}</ul>` : "No fee records.";
+}
+function showMessage(msg) {
+const box = document.getElementById("messageBox");
+box.textContent = msg;
+box.style.display = "block";
+setTimeout(() => {
+box.style.display = "none";
+}, 3000);
+}
+populateDropdowns();
+</script>
 </body>
 </html>

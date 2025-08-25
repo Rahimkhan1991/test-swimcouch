@@ -1,235 +1,200 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-  <meta charset="UTF-8">
-  <title>Send SMS</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      padding: 15px;
-      margin: 0;
-      background: #f0f2f5;
-    }
-
-    h2 {
-      color: #007bff;
-      font-size: 22px;
-      text-align: center;
-      margin-bottom: 20px;
-    }
-
-    .card {
-      background: white;
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-      max-width: 600px;
-      margin: 0 auto 20px auto;
-    }
-
-    label {
-      font-weight: bold;
-      display: block;
-      margin-top: 10px;
-    }
-
-    select,
-    textarea,
-    input,
-    button {
-      width: 100%;
-      padding: 12px;
-      margin-top: 6px;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-      font-size: 16px;
-      box-sizing: border-box;
-    }
-
-    textarea {
-      resize: vertical;
-    }
-
-    button {
-      background-color: #28a745;
-      color: white;
-      border: none;
-      font-weight: bold;
-      margin-top: 15px;
-    }
-
-    button:hover {
-      background-color: #218838;
-    }
-
-    .template-buttons {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-top: 6px;
-    }
-
-    .template-buttons button {
-      flex: 1;
-      background-color: #007bff;
-      margin: 0;
-    }
-
-    .template-buttons button:hover {
-      background-color: #0056b3;
-    }
-
-    .footer-buttons {
-      text-align: center;
-      margin-top: 20px;
-    }
-
-    .footer-buttons button {
-      background-color: #007bff;
-      padding: 10px 16px;
-      margin: 5px;
-    }
-
-    .footer-buttons button:last-child {
-      background-color: #007bff;
-    }
-
-    @media (max-width: 480px) {
-      h2 {
-        font-size: 20px;
-      }
-
-      .card {
-        padding: 15px;
-      }
-
-      select,
-      textarea,
-      input,
-      button {
-        font-size: 15px;
-      }
-
-      .template-buttons button {
-        font-size: 14px;
-        padding: 10px;
-      }
-
-      .footer-buttons button {
-        width: 100%;
-        margin: 8px 0;
-      }
-    }
-  </style>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+<meta charset="UTF-8">
+<title>Send SMS</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+body {
+font-family: Arial, sans-serif;
+padding: 15px;
+margin: 0;
+background: #f0f2f5;
+}
+h2 {
+color: #007bff;
+font-size: 22px;
+text-align: center;
+margin-bottom: 20px;
+}
+.card {
+background: white;
+padding: 20px;
+border-radius: 12px;
+box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+max-width: 600px;
+margin: 0 auto 20px auto;
+}
+label {
+font-weight: bold;
+display: block;
+margin-top: 10px;
+}
+select,
+textarea,
+input,
+button {
+width: 100%;
+padding: 12px;
+margin-top: 6px;
+border-radius: 8px;
+border: 1px solid #ccc;
+font-size: 16px;
+box-sizing: border-box;
+}
+textarea {
+resize: vertical;
+}
+button {
+background-color: #28a745;
+color: white;
+border: none;
+font-weight: bold;
+margin-top: 15px;
+}
+button:hover {
+background-color: #218838;
+}
+.template-buttons {
+display: flex;
+flex-wrap: wrap;
+gap: 8px;
+margin-top: 6px;
+}
+.template-buttons button {
+flex: 1;
+background-color: #007bff;
+margin: 0;
+}
+.template-buttons button:hover {
+background-color: #0056b3;
+}
+.footer-buttons {
+text-align: center;
+margin-top: 20px;
+}
+.footer-buttons button {
+background-color: #007bff;
+padding: 10px 16px;
+margin: 5px;
+}
+.footer-buttons button:last-child {
+background-color: #007bff;
+}
+@media (max-width: 480px) {
+h2 {
+font-size: 20px;
+}
+.card {
+padding: 15px;
+}
+select,
+textarea,
+input,
+button {
+font-size: 15px;
+}
+.template-buttons button {
+font-size: 14px;
+padding: 10px;
+}
+.footer-buttons button {
+width: 100%;
+margin: 8px 0;
+}
+}
+</style>
 </head>
-
 <body>
-
-  <h2>Send SMS / WhatsApp Message</h2>
-
-  <div class="card">
-    <label for="studentSelect">Select Student:</label>
-    <select id="studentSelect" onchange="fillPhone()">
-      <option value="">-- Select Student --</option>
-    </select>
-
-    <label for="phone">Phone Number:</label>
-    <input type="tel" id="phone" placeholder="+62...">
-
-    <label>Use Template:</label>
-    <div class="template-buttons">
-      <button onclick="setTemplate('fee')"> <span class="material-icons" style="vertical-align: middle; margin-right: 6px;">
-    payments
-  </span> Fee Reminder</button>
-    <button onclick="setTemplate('absent')"><span class="material-icons" style="vertical-align: middle; margin-right: 6px;">
-    block
-  </span> Absent Alert </button>
-      
-      
-      
-      <button onclick="setTemplate('custom')"><span class="material-icons" style="vertical-align: middle; margin-right: 6px;">
-    tune
-  </span>Custom</button>
-    </div>
-
-    <label for="message">Message:</label>
-    <textarea id="message" rows="5" placeholder="Your message..."></textarea>
-
-    <button onclick="sendWhatsApp()"> <span class="material-icons" style="vertical-align: middle; margin-right: 6px;">
-    send
-  </span>️ Send WhatsApp</button>
-  </div>
-
-  <div class="footer-buttons">
-    
-    <button onclick="history.back()">◀ Back</button>
-  </div>
-
-  <script>
-    const SUPABASE_URL = 'https://ndishfwnkzdedfcywcle.supabase.co';
+<h2>Send SMS / WhatsApp Message</h2>
+<div class="card">
+<label for="studentSelect">Select Student:</label>
+<select id="studentSelect" onchange="fillPhone()">
+<option value="">-- Select Student --</option>
+</select>
+<label for="phone">Phone Number:</label>
+<input type="tel" id="phone" placeholder="+62...">
+<label>Use Template:</label>
+<div class="template-buttons">
+<button onclick="setTemplate('fee')"> <span class="material-icons" style="vertical-align: middle; margin-right: 6px;">
+payments
+</span> Fee Reminder</button>
+<button onclick="setTemplate('absent')"><span class="material-icons" style="vertical-align: middle; margin-right: 6px;">
+block
+</span> Absent Alert </button>
+<button onclick="setTemplate('custom')"><span class="material-icons" style="vertical-align: middle; margin-right: 6px;">
+tune
+</span>Custom</button>
+</div>
+<label for="message">Message:</label>
+<textarea id="message" rows="5" placeholder="Your message..."></textarea>
+<button onclick="sendWhatsApp()"> <span class="material-icons" style="vertical-align: middle; margin-right: 6px;">
+send
+</span>️ Send WhatsApp</button>
+</div>
+<div class="footer-buttons">
+<button onclick="history.back()">◀ Back</button>
+</div>
+<script>
+const SUPABASE_URL = 'https://ndishfwnkzdedfcywcle.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5kaXNoZndua3pkZWRmY3l3Y2xlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYwOTk0MjcsImV4cCI6MjA3MTY3NTQyN30.CXQSfhR0MVLF40v2Tp-BcENBpHpPshG9Ys3zLYiBQaM';
 const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
- // Check for an active session. If none exists, redirect to the login page.
-    async function checkUserSession() {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        window.location.href = 'index.html'; // Assuming 'index.html' is your login page
-      }
-    }
-    checkUserSession(); // Run the check immediately on page load
-
-    const students = JSON.parse(localStorage.getItem("students") || "[]");
-
-    function loadStudents() {
-      const select = document.getElementById("studentSelect");
-      students.forEach(s => {
-        const opt = document.createElement("option");
-        opt.value = s.phone;
-        opt.textContent = s.name;
-        select.appendChild(opt);
-      });
-    }
-
-    function fillPhone() {
-      const phone = document.getElementById("studentSelect").value;
-      document.getElementById("phone").value = phone;
-    }
-
-    function setTemplate(type) {
-      const studentName = document.getElementById("studentSelect").selectedOptions[0]?.text || "";
-      let msg = "";
-
-      if (type === "fee") {
-        msg = `Hello ${studentName},\n\nIni adalah pengingat untuk membayar biaya kelas renang Anda yang tertunda.\nTerima kasih!`;
-      } else if (type === "absent") {
-        msg = `Hello ${studentName},\n\nAnda dinyatakan tidak hadir hari ini. Mohon beri tahu kami jika ada alasan yang sah.\n- Coach Beqy`;
-      } else {
-        msg = "";
-      }
-
-      document.getElementById("message").value = msg;
-    }
-
-    function sendWhatsApp() {
-      const phone = document.getElementById("phone").value.replace(/\D/g, '');
-      const message = encodeURIComponent(document.getElementById("message").value);
-
-      if (!phone || !message) {
-        alert("Phone number and message are required.");
-        return;
-      }
-
-      const link = `https://wa.me/${phone}?text=${message}`;
-      window.open(link, "_blank");
-    }
-
-    window.onload = loadStudents;
-  </script>
-
+//Check for an active session. If none exists, redirect to the login page.
+async function checkUserSession() {
+const { data: { session } } = await supabase.auth.getSession();
+if (!session) {
+window.location.href = 'index.html'; // Assuming 'index.html' is your login page
+}
+}
+checkUserSession(); // Run the check immediately on page load
+// Loads students from the database and populates the dropdown
+async function loadStudents() {
+const { data: students, error } = await supabase.from('students').select('name, phone');
+if (error) {
+console.error('Error fetching students:', error.message);
+return;
+}
+const select = document.getElementById("studentSelect");
+students.forEach(s => {
+const opt = document.createElement("option");
+opt.value = s.phone;
+opt.textContent = s.name;
+select.appendChild(opt);
+});
+}
+// Fills the phone number input based on the selected student
+function fillPhone() {
+const phone = document.getElementById("studentSelect").value;
+document.getElementById("phone").value = phone;
+}
+// Fills the message textarea with a pre-defined template
+function setTemplate(type) {
+const selectedOption = document.getElementById("studentSelect").selectedOptions[0];
+const studentName = selectedOption && selectedOption.value !== "" ? selectedOption.textContent : "Student";
+let msg = "";
+if (type === "fee") {
+msg = `Hello ${studentName},\n\nThis is a reminder to pay your outstanding swimming class fees.\nThank you!`;
+} else if (type === "absent") {
+msg = `Hello ${studentName},\n\nYou have been marked as absent today. Please inform us if there is a valid reason.\n- Coach Beqy`;
+} else {
+msg = "";
+}
+document.getElementById("message").value = msg;
+}
+// Sends the WhatsApp message
+function sendWhatsApp() {
+const phone = document.getElementById("phone").value.replace(/\D/g, '');
+const message = encodeURIComponent(document.getElementById("message").value);
+if (!phone || !message) {
+alert("Phone number and message are required.");
+return;
+}
+const link = `https://wa.me/${phone}?text=${message}`;
+window.open(link, "_blank");
+}
+window.onload = loadStudents;
+</script>
 </body>
-
 </html>

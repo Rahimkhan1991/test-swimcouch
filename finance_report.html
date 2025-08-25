@@ -1,211 +1,196 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Finance Report</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f0f4f8;
-      padding: 20px;
-      margin: 0;
-    }
-
-    h2 {
-      color: #007bff;
-      text-align: center;
-    }
-
-    .summary {
-      display: flex;
-      justify-content: center;
-      flex-wrap: wrap;
-      margin: 20px 0;
-      gap: 15px;
-    }
-
-    .card {
-      background: white;
-      padding: 20px;
-      border-radius: 10px;
-      width: 280px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-      text-align: center;
-    }
-
-    canvas {
-      max-width: 100%;
-      margin: 20px auto;
-      display: block;
-    }
-
-    .back-btn {
-      display: block;
-      margin: 30px auto 10px;
-      padding: 12px 25px;
-      background-color: #007bff;
-      color: white;
-      text-decoration: none;
-      border-radius: 8px;
-      width: fit-content;
-      text-align: center;
-    }
-
-    @media (max-width: 600px) {
-      .card {
-        width: 90%;
-      }
-    }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Finance Report</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+body {
+font-family: Arial, sans-serif;
+background: #f0f4f8;
+padding: 20px;
+margin: 0;
+}
+h2 {
+color: #007bff;
+text-align: center;
+}
+.summary {
+display: flex;
+justify-content: center;
+flex-wrap: wrap;
+margin: 20px 0;
+gap: 15px;
+}
+.card {
+background: white;
+padding: 20px;
+border-radius: 10px;
+width: 280px;
+box-shadow: 0 0 10px rgba(0,0,0,0.1);
+text-align: center;
+}
+canvas {
+max-width: 100%;
+margin: 20px auto;
+display: block;
+}
+.back-btn {
+display: block;
+margin: 30px auto 10px;
+padding: 12px 25px;
+background-color: #007bff;
+color: white;
+text-decoration: none;
+border-radius: 8px;
+width: fit-content;
+text-align: center;
+}
+@media (max-width: 600px) {
+.card {
+width: 90%;
+}
+}
+</style>
 </head>
 <body>
-
-  <h2>Finance Report</h2>
-
-  <div class="summary">
-    <div class="card">
-      <h3>Total Collected</h3>
-      <p id="totalIncome">Rp0</p>
-    </div>
-    <div class="card">
-      <h3>Total Expected</h3>
-      <p id="expectedIncome">Rp0</p>
-    </div>
-    <div class="card">
-      <h3>Total Pending</h3>
-      <p id="pendingIncome">Rp0</p>
-    </div>
-  </div>
-
-  <canvas id="financeChart" height="300"></canvas>
-
-  <h3 style="text-align:center; margin-top:30px;">Last 30 Days Fee Collection</h3>
-  <canvas id="trendChart" height="200"></canvas>
-
-  <a href="home.html" class="back-btn">← Back to Home</a>
-
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script>
-    const SUPABASE_URL = 'https://ndishfwnkzdedfcywcle.supabase.co';
+<h2>Finance Report</h2>
+<div class="summary">
+<div class="card">
+<h3>Total Collected</h3>
+<p id="totalIncome">Rp0</p>
+</div>
+<div class="card">
+<h3>Total Expected</h3>
+<p id="expectedIncome">Rp0</p>
+</div>
+<div class="card">
+<h3>Total Pending</h3>
+<p id="pendingIncome">Rp0</p>
+</div>
+</div>
+<canvas id="financeChart" height="300"></canvas>
+<h3 style="text-align:center; margin-top:30px;">Last 30 Days Fee Collection</h3>
+<canvas id="trendChart" height="200"></canvas>
+<a href="home.html" class="back-btn">← Back to Home</a>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const SUPABASE_URL = 'https://ndishfwnkzdedfcywcle.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5kaXNoZndua3pkZWRmY3l3Y2xlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYwOTk0MjcsImV4cCI6MjA3MTY3NTQyN30.CXQSfhR0MVLF40v2Tp-BcENBpHpPshG9Ys3zLYiBQaM';
 const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
- // Check for an active session. If none exists, redirect to the login page.
-    async function checkUserSession() {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        window.location.href = 'index.html'; // Assuming 'index.html' is your login page
-      }
-    }
-    checkUserSession(); // Run the check immediately on page load
-    function calculateFinanceSummary() {
-      const students = JSON.parse(localStorage.getItem("students")) || [];
-      const fees = JSON.parse(localStorage.getItem("fees")) || [];
-
-      const totalCollected = fees.reduce((sum, fee) => sum + Number(fee.amount || 0), 0);
-      const totalExpected = students.reduce((sum, student) => sum + Number(student.totalFee || 0), 0);
-      const totalPending = Math.max(totalExpected - totalCollected, 0);
-
-      document.getElementById("totalIncome").textContent = "Rp" + totalCollected;
-      document.getElementById("expectedIncome").textContent = "Rp" + totalExpected;
-      document.getElementById("pendingIncome").textContent = "Rp" + totalPending;
-
-      drawChart(totalCollected, totalPending);
-    }
-
-    function drawChart(collected, pending) {
-      const ctx = document.getElementById("financeChart").getContext("2d");
-      if (window.myChart) window.myChart.destroy();
-
-      window.myChart = new Chart(ctx, {
-        type: "pie",
-        data: {
-          labels: ["Collected", "Pending"],
-          datasets: [{
-            data: [collected, pending],
-            backgroundColor: ["#28a745", "#ffc107"]
-          }]
-        },
-        options: {
-          responsive: true,
-          plugins: {
-            legend: {
-              position: "bottom"
-            }
-          }
-        }
-      });
-    }
-
-    function drawTrendChart() {
-      const fees = JSON.parse(localStorage.getItem("fees")) || [];
-
-      const today = new Date();
-      const last30Days = [];
-
-      for (let i = 29; i >= 0; i--) {
-        const date = new Date();
-        date.setDate(today.getDate() - i);
-        const dateStr = date.toISOString().split("T")[0];
-        last30Days.push(dateStr);
-      }
-
-      const dailyCollection = {};
-      fees.forEach(fee => {
-        const date = fee.date?.split("T")[0] || "";
-        if (date) {
-          dailyCollection[date] = (dailyCollection[date] || 0) + Number(fee.amount || 0);
-        }
-      });
-
-      const chartLabels = last30Days;
-      const chartData = last30Days.map(date => dailyCollection[date] || 0);
-
-      const ctx = document.getElementById("trendChart").getContext("2d");
-      if (window.trendChart) window.trendChart.destroy();
-
-      window.trendChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: chartLabels,
-          datasets: [{
-            label: 'Daily Fee Collected (Rp)',
-            data: chartData,
-            borderColor: '#007bff',
-            backgroundColor: 'rgba(0, 123, 255, 0.1)',
-            tension: 0.3,
-            fill: true,
-          }]
-        },
-        options: {
-          scales: {
-            x: {
-              ticks: {
-                maxTicksLimit: 7,
-                callback: function(value, index) {
-                  return chartLabels[index].slice(5); // Show MM-DD
-                }
-              }
-            },
-            y: {
-              beginAtZero: true
-            }
-          },
-          plugins: {
-            legend: {
-              display: true,
-              position: 'top'
-            }
-          }
-        }
-      });
-    }
-
-    window.onload = () => {
-      calculateFinanceSummary();
-      drawTrendChart();
-    };
-  </script>
+//Check for an active session. If none exists, redirect to the login page.
+async function checkUserSession() {
+const { data: { session } } = await supabase.auth.getSession();
+if (!session) {
+window.location.href = 'index.html'; // Assuming 'index.html' is your login page
+}
+}
+checkUserSession(); // Run the check immediately on page load
+async function calculateFinanceSummary() {
+//Fetch all students and their total fees from the database
+const { data: students, error: studentsError } = await supabase.from('students').select('totalFee');
+//Fetch all fees collected from the database
+const { data: fees, error: feesError } = await supabase.from('fees').select('amount');
+if (studentsError || feesError) {
+console.error("Error fetching finance data:", studentsError || feesError);
+return;
+}
+const totalCollected = fees.reduce((sum, fee) => sum + Number(fee.amount || 0), 0);
+const totalExpected = students.reduce((sum, student) => sum + Number(student.totalFee || 0), 0);
+const totalPending = Math.max(totalExpected - totalCollected, 0);
+document.getElementById("totalIncome").textContent = "Rp" + totalCollected.toLocaleString();
+document.getElementById("expectedIncome").textContent = "Rp" + totalExpected.toLocaleString();
+document.getElementById("pendingIncome").textContent = "Rp" + totalPending.toLocaleString();
+drawChart(totalCollected, totalPending);
+}
+async function drawChart(collected, pending) {
+const ctx = document.getElementById("financeChart").getContext("2d");
+if (window.myChart) window.myChart.destroy();
+window.myChart = new Chart(ctx, {
+type: "pie",
+data: {
+labels: ["Collected", "Pending"],
+datasets: [{
+data: [collected, pending],
+backgroundColor: ["#28a745", "#ffc107"]
+}]
+},
+options: {
+responsive: true,
+plugins: {
+legend: {
+position: "bottom"
+}
+}
+}
+});
+}
+async function drawTrendChart() {
+const { data: fees, error } = await supabase.from('fees').select('amount, date');
+if (error) {
+console.error("Error fetching fees for trend chart:", error.message);
+return;
+}
+const today = new Date();
+const last30Days = [];
+for (let i = 29; i >= 0; i--) {
+const date = new Date();
+date.setDate(today.getDate() - i);
+const dateStr = date.toISOString().split("T")[0];
+last30Days.push(dateStr);
+}
+const dailyCollection = {};
+fees.forEach(fee => {
+const feeDate = fee.date?.split("T")[0] || "";
+if (last30Days.includes(feeDate)) {
+dailyCollection[feeDate] = (dailyCollection[feeDate] || 0) + Number(fee.amount || 0);
+}
+});
+const chartLabels = last30Days;
+const chartData = last30Days.map(date => dailyCollection[date] || 0);
+const ctx = document.getElementById("trendChart").getContext("2d");
+if (window.trendChart) window.trendChart.destroy();
+window.trendChart = new Chart(ctx, {
+type: 'line',
+data: {
+labels: chartLabels,
+datasets: [{
+label: 'Daily Fee Collected (Rp)',
+data: chartData,
+borderColor: '#007bff',
+backgroundColor: 'rgba(0, 123, 255, 0.1)',
+tension: 0.3,
+fill: true,
+}]
+},
+options: {
+scales: {
+x: {
+ticks: {
+maxTicksLimit: 7,
+callback: function(value, index) {
+return chartLabels[index].slice(5); // Show MM-DD
+}
+}
+},
+y: {
+beginAtZero: true
+}
+},
+plugins: {
+legend: {
+display: true,
+position: 'top'
+}
+}
+}
+});
+}
+window.onload = async () => {
+await calculateFinanceSummary();
+await drawTrendChart();
+};
+</script>
 </body>
 </html>

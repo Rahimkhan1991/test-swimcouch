@@ -1,302 +1,212 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Admin Panel - Swim Coach</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <style>
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      margin: 0;
-      padding: 0;
-      background: linear-gradient(to right, #e0f7fa, #f0f4f8);
-    }
-
-    h1 {
-      text-align: center;
-      color: #007bff;
-      padding: 20px;
-      margin: 0;
-    }
-
-    .container {
-      max-width: 500px;
-      margin: 0 auto;
-      padding: 20px;
-    }
-
-    .section {
-      background: white;
-      border-radius: 12px;
-      padding: 25px 20px;
-      margin-bottom: 30px;
-      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
-      text-align: center;
-    }
-
-    .section h2 {
-      margin-bottom: 20px;
-      color: #333;
-    }
-
-    button {
-      background: #007bff;
-      color: white;
-      border: none;
-      padding: 14px 20px;
-      border-radius: 10px;
-      font-size: 16px;
-      margin: 10px 0;
-      width: 100%;
-      cursor: pointer;
-      transition: background 0.3s;
-    }
-
-    button:hover {
-      background: #0056b3;
-    }
-
-    input[type="text"] {
-      width: 95%;
-      padding: 12px;
-      margin: 15px 0;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      font-size: 16px;
-    }
-
-    #driveScriptSection {
-      margin-top: 20px;
-    }
-
-    #driveBackupStatus {
-      margin-top: 10px;
-      font-size: 14px;
-      color: green;
-    }
-
-    #restoreFileInput {
-      display: none;
-    }
-
-    @media (max-width: 500px) {
-      .section {
-        padding: 20px 15px;
-      }
-
-      button {
-        font-size: 15px;
-      }
-    }
-  </style>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Admin Panel - Swim Coach</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+body {
+font-family: 'Segoe UI', sans-serif;
+margin: 0;
+padding: 0;
+background: linear-gradient(to right, #e0f7fa, #f0f4f8);
+}
+h1 {
+text-align: center;
+color: #007bff;
+padding: 20px;
+margin: 0;
+}
+.container {
+max-width: 500px;
+margin: 0 auto;
+padding: 20px;
+}
+.section {
+background: white;
+border-radius: 12px;
+padding: 25px 20px;
+margin-bottom: 30px;
+box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+text-align: center;
+}
+.section h2 {
+margin-bottom: 20px;
+color: #333;
+}
+button {
+background: #007bff;
+color: white;
+border: none;
+padding: 14px 20px;
+border-radius: 10px;
+font-size: 16px;
+margin: 10px 0;
+width: 100%;
+cursor: pointer;
+transition: background 0.3s;
+}
+button:hover {
+background: #0056b3;
+}
+input[type="text"] {
+width: 95%;
+padding: 12px;
+margin: 15px 0;
+border: 1px solid #ccc;
+border-radius: 8px;
+font-size: 16px;
+}
+#driveScriptSection {
+margin-top: 20px;
+}
+#driveBackupStatus {
+margin-top: 10px;
+font-size: 14px;
+color: green;
+}
+#restoreFileInput {
+display: none;
+}
+@media (max-width: 500px) {
+.section {
+padding: 20px 15px;
+}
+button {
+font-size: 15px;
+}
+}
+</style>
 </head>
 <body>
-  <h1><span class="material-icons" style="font-size: 60px; vertical-align: middle; margin-right: 6px;">
-  admin_panel_settings
+<h1><span class="material-icons" style="font-size: 60px; vertical-align: middle; margin-right: 6px;">
+admin_panel_settings
 </span>
 Admin Panel</h1>
-  <div class="container">
-
-    <div class="section">
-      <h2>️
+<div class="container">
+<div class="section">
+<h2>️
 <span class="material-icons" style="font-size: 30px; vertical-align: middle; margin-right: 6px;">
-  storage
+storage
 </span>
 Backup & Restore</h2>
-      <button onclick="backupData()"> <span class="material-icons" style="vertical-align: middle; margin-right: 6px;"
-      >backup
-      </span>
-      Backup</button>
-     <button onclick="triggerRestore()"><span class="material-icons" style="vertical-align: middle; margin-right: 6px;">settings_backup_restore
-      </span> Restore </button>
-      <input type="file" id="restoreFileInput" accept=".json" />
-
-      <div id="driveBackupStatus"></div>
-      </div>
-      
-      <div class="section">
-      <h2>☁️  Auto-Backup</h2>
-
-      <div id="driveScriptSection">
-        <input type="text" id="driveScriptUrl" placeholder="Paste your Google Script URL here">
-        <button onclick="saveScriptUrl()"><span class="material-icons" style="vertical-align: middle; margin-right: 6px;">
-    add_link
-  </span>Save URL</button>
-      </div>
-
-      <button onclick="backupToGoogleDrive()" style="padding: 10px 16px; font-weight: bold;">
-  <span class="material-icons" style="vertical-align: middle; margin-right: 6px;">
-  add_to_drive
-  </span>
-  Backup to Google Drive
-</button>
-
-      <button onclick="changeScriptUrl()"> <span class="material-icons" style="vertical-align: middle; margin-right: 6px;">
-    link
-  </span> Update  URL</button>
-    </div>
-
-   <div class="section">
-  <h2> <span class="material-icons" style="vertical-align: middle; margin-right: 6px;">
-    delete
-  </span> App Reset</h2>
-  <button onclick="confirmDataReset()" style="background: #dc3545; color: white; border: none; padding: 12px 20px; border-radius: 8px; font-size: 16px; margin: 10px 5px; cursor: pointer;">
-    <span class="material-icons" style="vertical-align: middle; margin-right: 6px;">
-    delete_forever
-  </span>️ Reset App
-  </button>
+<button onclick="backupData()"> <span class="material-icons" style="vertical-align: middle; margin-right: 6px;">
+backup
+</span>
+Backup</button>
+<button onclick="triggerRestore()"><span class="material-icons" style="vertical-align: middle; margin-right: 6px;">settings_backup_restore
+</span> Restore </button>
+<input type="file" id="restoreFileInput" accept=".json" />
+<div id="driveBackupStatus"></div>
 </div>
-
-
-  </div>
-    <div class="footer-buttons">
-   
-  <button class="btn-back" onclick="history.back()" 
-  style="width: 95%; ; margin: 15px auto; font-weight: bold; display: block;">
-  ◀ Back
+<div class="section">
+<h2>☁️  Auto-Backup</h2>
+<p>This functionality is not needed with Supabase's built-in cloud backups.</p>
+</div>
+<div class="section">
+<h2> <span class="material-icons" style="vertical-align: middle; margin-right: 6px;">
+delete
+</span> App Reset</h2>
+<button onclick="confirmDataReset()" style="background: #dc3545; color: white; border: none; padding: 12px 20px; border-radius: 8px; font-size: 16px; margin: 10px 5px; cursor: pointer;">
+<span class="material-icons" style="vertical-align: middle; margin-right: 6px;">
+delete_forever
+</span>️ Reset App
 </button>
-
-
-  </div>
-
-  <script>
-    const SUPABASE_URL = 'https://ndishfwnkzdedfcywcle.supabase.co';
+</div>
+</div>
+<div class="footer-buttons">
+<button class="btn-back" onclick="history.back()"
+style="width: 95%; ; margin: 15px auto; font-weight: bold; display: block;">
+◀ Back
+</button>
+</div>
+<script>
+const SUPABASE_URL = 'https://ndishfwnkzdedfcywcle.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5kaXNoZndua3pkZWRmY3l3Y2xlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYwOTk0MjcsImV4cCI6MjA3MTY3NTQyN30.CXQSfhR0MVLF40v2Tp-BcENBpHpPshG9Ys3zLYiBQaM';
 const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
- // Check for an active session. If none exists, redirect to the login page.
-    async function checkUserSession() {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        window.location.href = 'index.html'; // Assuming 'index.html' is your login page
-      }
-    }
-    checkUserSession(); // Run the check immediately on page load
-    
-    const BACKUP_INTERVAL_MINUTES = 30;
-
-    function backupData() {
-      const data = {};
-      for (let key in localStorage) {
-        if (localStorage.hasOwnProperty(key)) {
-          data[key] = localStorage.getItem(key);
-        }
-      }
-
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "swimcoach_backup_" + new Date().toISOString().split("T")[0] + ".json";
-      a.click();
-      URL.revokeObjectURL(url);
-    }
-
-    function triggerRestore() {
-      document.getElementById("restoreFileInput").click();
-    }
-
-    document.getElementById("restoreFileInput").addEventListener("change", function (event) {
-      const file = event.target.files[0];
-      if (!file) return;
-
-      const reader = new FileReader();
-      reader.onload = function (e) {
-        try {
-          const data = JSON.parse(e.target.result);
-          if (confirm("Restore this backup? It will overwrite current app data.")) {
-            for (let key in data) {
-              localStorage.setItem(key, data[key]);
-            }
-            alert("✅ Data restored. Please reload the app.");
-          }
-        } catch (err) {
-          alert("❌ Invalid file. Cannot restore.");
-        }
-      };
-      reader.readAsText(file);
-    });
-
-    function backupToGoogleDrive() {
-      const scriptUrl = localStorage.getItem("driveScriptUrl");
-      if (!scriptUrl) {
-        alert("❌ No Google Script URL set. Click 'Change Backup URL' first.");
-        return;
-      }
-
-      const backupData = {
-        students: localStorage.getItem('students'),
-        attendance: localStorage.getItem('attendance'),
-        fees: localStorage.getItem('fees')
-      };
-
-      const formData = new FormData();
-      formData.append('data', JSON.stringify(backupData));
-
-      fetch(scriptUrl, {
-        method: 'POST',
-        body: formData
-      })
-        .then(res => res.json())
-        .then(result => {
-          if (result.status === "success") {
-            document.getElementById("driveBackupStatus").innerText = "✅ Backup successful: " + new Date().toLocaleString();
-          } else {
-            throw new Error(result.message || "Unknown error");
-          }
-        })
-        .catch(err => {
-          document.getElementById("driveBackupStatus").innerText = "❌ Backup failed: " + err.message;
-        });
-    }
-
-    function changeScriptUrl() {
-      document.getElementById("driveScriptSection").style.display = "block";
-    }
-
-    function saveScriptUrl() {
-      const url = document.getElementById("driveScriptUrl").value.trim();
-      if (url) {
-        localStorage.setItem("driveScriptUrl", url);
-        document.getElementById("driveScriptSection").style.display = "none";
-        alert("✅ Script URL saved. Backup will auto-start.");
-        sendBackup();
-        setInterval(sendBackup, BACKUP_INTERVAL_MINUTES * 60 * 1000);
-      } else {
-        alert("❌ Please enter a valid URL.");
-      }
-    }
-
-    function sendBackup() {
-      const url = localStorage.getItem("driveScriptUrl");
-      if (url) {
-        backupToGoogleDrive();
-      }
-    }
-
-    window.onload = function () {
-      const savedUrl = localStorage.getItem("driveScriptUrl");
-      if (savedUrl) {
-        setInterval(sendBackup, BACKUP_INTERVAL_MINUTES * 60 * 1000);
-      }
-    }
-
-    function confirmDataReset() {
-      const password = prompt("Enter admin password to reset all app data:");
-      if (password === "admin123") {
-        const confirmReset = confirm("Are you sure? This will permanently erase all app data.");
-        if (confirmReset) {
-          localStorage.clear();
-          alert("All data erased. App has been reset.");
-          location.reload();
-        }
-      } else {
-        alert("❌ Incorrect password.");
-      }
-    }
-  </script>
+//Check for an active session. If none exists, redirect to the login page.
+async function checkUserSession() {
+const { data: { session } } = await supabase.auth.getSession();
+if (!session) {
+window.location.href = 'index.html'; // Assuming 'index.html' is your login page
+}
+}
+checkUserSession(); // Run the check immediately on page load
+// Backup function: Fetches data from Supabase and creates a downloadable JSON file.
+async function backupData() {
+const { data: students, error: studentsError } = await supabase.from('students').select('*');
+const { data: fees, error: feesError } = await supabase.from('fees').select('*');
+if (studentsError || feesError) {
+alert('Error fetching data for backup. Please check console.');
+console.error(studentsError || feesError);
+return;
+}
+const backup = {
+students: students,
+fees: fees,
+timestamp: new Date().toISOString()
+};
+const blob = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" });
+const url = URL.createObjectURL(blob);
+const a = document.createElement("a");
+a.href = url;
+a.download = "swimcoach_supabase_backup_" + new Date().toISOString().split("T")[0] + ".json";
+a.click();
+URL.revokeObjectURL(url);
+alert("✅ Data backup created!");
+}
+// Restore function: Reads a JSON file and restores data to Supabase.
+function triggerRestore() {
+document.getElementById("restoreFileInput").click();
+}
+document.getElementById("restoreFileInput").addEventListener("change", async function (event) {
+const file = event.target.files[0];
+if (!file) return;
+const reader = new FileReader();
+reader.onload = async function (e) {
+try {
+const data = JSON.parse(e.target.result);
+if (confirm("Restore this backup? This will overwrite existing data. NOTE: This is a complex operation and requires Admin RLS policies to work.")) {
+// Assuming 'students' and 'fees' have primary keys (e.g., 'id') for upsert to work.
+const { error: studentsError } = await supabase.from('students').upsert(data.students);
+const { error: feesError } = await supabase.from('fees').upsert(data.fees);
+if (studentsError || feesError) {
+console.error("Restore failed:", studentsError || feesError);
+alert("❌ Data restore failed. Check console for details.");
+} else {
+alert("✅ Data restored successfully! Please reload the app.");
+}
+}
+} catch (err) {
+alert("❌ Invalid file. Cannot restore.");
+}
+};
+reader.readAsText(file);
+});
+// App Reset function: Empties tables.
+async function confirmDataReset() {
+const { data: { user } } = await supabase.auth.getSession();
+// NOTE: This will only work if the logged-in user has 'Admin' privileges.
+// You must have an RLS policy that allows this.
+const { data: userProfile } = await supabase.from('users').select('role').eq('id', user.id).single();
+if (userProfile && userProfile.role === 'Admin') {
+if (confirm("Are you sure? This will permanently erase ALL student and fee data for your company.")) {
+const { error: studentsError } = await supabase.from('students').delete().neq('id', '0'); // Dummy condition to delete all
+const { error: feesError } = await supabase.from('fees').delete().neq('id', '0'); // Dummy condition
+if (studentsError || feesError) {
+alert("❌ Reset failed. Check your RLS policies.");
+} else {
+alert("✅ All data erased. App has been reset.");
+}
+}
+} else {
+alert("❌ You do not have permission to reset the app.");
+}
+}
+// Removed all old local storage and license key logic.
+// The Google Drive backup section has been marked as no longer needed as Supabase provides its own reliable backups.
+</script>
 </body>
 </html>
