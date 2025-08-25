@@ -1,194 +1,153 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Login - CoachTrack</title>
-  <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#3b82f6" />
-  <link rel="icon" href="icons/icon-192.png" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap" rel="stylesheet">
-  
-
+<meta charset="UTF-8" />
+<title>Login - CoachTrack</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#3b82f6" />
+<link rel="icon" href="icons/icon-192.png" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap" rel="stylesheet">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-    * {
-      box-sizing: border-box;
-    }
+* {
+ box-sizing: border-box;
+}
 
-    body {
-      font-family: 'Nunito', sans-serif;
-      background: linear-gradient(to right, #93c5fd, #e0f2fe);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      margin: 0;
-      padding: 20px;
-    }
+body {
+ font-family: 'Nunito', sans-serif;
+ background: linear-gradient(to right, #93c5fd, #e0f2fe);
+ display: flex;
+ justify-content: center;
+ align-items: center;
+ height: 100vh;
+ margin: 0;
+ padding: 20px;
+ }
 
-    .login-box {
-      background: #ffffff;
-      padding: 30px 25px;
-      border-radius: 20px;
-      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
-      width: 100%;
-      max-width: 380px;
-      text-align: center;
-      animation: fadeIn 0.6s ease-out;
-    }
+ .login-box {
+ background: #ffffff;
+ padding: 30px 25px;
+ border-radius: 20px;
+ box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
+ width: 100%;
+ max-width: 380px;
+ text-align: center;
+ animation: fadeIn 0.6s ease-out;
+ }
 
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
+ @keyframes fadeIn {
+from { opacity: 0; transform: translateY(10px); }
+ to { opacity: 1; transform: translateY(0); }
+ }
 
-    .login-box img.logo {
-      width: 80px;
-      height: auto;
-      margin-bottom: 20px;
-    }
+.login-box img.logo {
+ width: 80px;
+ height: auto;
+ margin-bottom: 20px;
+ }
+.login-box h2 {
+ color: #1d4ed8;
+ font-weight: 700;
+ margin-bottom: 20px;
+ }
 
-    .login-box h2 {
-      color: #1d4ed8;
-      font-weight: 700;
-      margin-bottom: 20px;
-    }
+input {
+ width: 100%;
+ padding: 12px 14px;
+ margin: 10px 0;
+ border: 1px solid #d1d5db;
+ border-radius: 12px;
+ font-size: 15px;
+ transition: 0.2s ease-in-out;
+ }
 
-    input {
-      width: 100%;
-      padding: 12px 14px;
-      margin: 10px 0;
-      border: 1px solid #d1d5db;
-      border-radius: 12px;
-      font-size: 15px;
-      transition: 0.2s ease-in-out;
-    }
+ input:focus {
+ outline: none;
+  border-color: #3b82f6;
+ box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+ }
 
-    input:focus {
-      outline: none;
-      border-color: #3b82f6;
-      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
-    }
+button {
+ width: 100%;
+ background-color: #3b82f6;
+ color: white;
+ border: none;
+ padding: 14px;
+ border-radius: 12px;
+ font-size: 16px;
+ margin-top: 10px;
+ cursor: pointer;
+ font-weight: 600;
+ transition: background-color 0.3s ease;
+ }
 
-    button {
-      width: 100%;
-      background-color: #3b82f6;
-      color: white;
-      border: none;
-      padding: 14px;
-      border-radius: 12px;
-      font-size: 16px;
-      margin-top: 10px;
-      cursor: pointer;
-      font-weight: 600;
-      transition: background-color 0.3s ease;
-    }
+ button:hover {
+ background-color: #2563eb;
+ }
 
-    button:hover {
-      background-color: #2563eb;
-    }
+ @media (max-width: 400px) {
+ .login-box {
+ padding: 25px 20px;
+ }
 
-    @media (max-width: 400px) {
-      .login-box {
-        padding: 25px 20px;
-      }
-
-      input, button {
-        font-size: 14px;
-      }
-    }
-  </style>
+ input, button {
+ font-size: 14px;
+ }
+ }
+</style>
 </head>
 
 <body>
-  <div class="login-box">
-    <img src="icons/icon-512.png" alt="CoachTrack Logo" class="logo" />
-    <h2>CoachTrack Login</h2>
-    
-    <input type="text" id="username" placeholder="Username" />
-    <input type="password" id="password" placeholder="Password" />
-    <button onclick="login()">Login</button>
+ <div class="login-box">
+ <img src="icons/icon-512.png" alt="CoachTrack Logo" class="logo" />
+ <h2>CoachTrack Login</h2>
+ 
+ <input type="email" id="email" placeholder="Email" />
+ <input type="password" id="password" placeholder="Password" />
+ <button onclick="login()">Login</button>
+ </div>
 
-    <input type="text" id="licenseKey" placeholder="Enter your license key" />
-    <button onclick="activateLicense()">Activate</button>
-  </div>
+ <script>
+ // Supabase Initialization
+ const SUPABASE_URL = 'https://ndishfwnkzdedfcywcle.supabase.co';
+ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5kaXNoZndua3pkZWRmY3l3Y2xlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYwOTk0MjcsImV4cCI6MjA3MTY3NTQyN30.CXQSfhR0MVLF40v2Tp-BcENBpHpPshG9Ys3zLYiBQaM';
+ const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  <script>
+ // The 'login' function now uses Supabase to authenticate the user
+ async function login() {
+ const email = document.getElementById("email").value;
+ const password = document.getElementById("password").value;
 
-    const SUPABASE_URL = 'https://ndishfwnkzdedfcywcle.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5kaXNoZndua3pkZWRmY3l3Y2xlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYwOTk0MjcsImV4cCI6MjA3MTY3NTQyN30.CXQSfhR0MVLF40v2Tp-BcENBpHpPshG9Ys3zLYiBQaM';
-    const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// Use the Supabase sign-in function
+ const { error } = await supabase.auth.signInWithPassword({
+ email: email,
+ password: password,
+ });
+ if (error) {
+ // Supabase handles the error message for incorrect credentials
+ alert(error.message);
+ } else {
+ // On successful login, redirect to the main app page
+ window.location.href = "home.html";
+ }
+ }
+ // Check for an active session on page load. If one exists, redirect the user to the home page.
+ async function checkSession() {
+ const { data: { session } } = await supabase.auth.getSession();
+ if (session) {
+ window.location.href = "home.html";
+ }
+ }
+ window.onload = checkSession;
 
-    const SHEET_URL = "https://script.google.com/macros/s/AKfycbwrg_ZS-hKi27mhbC3YC9vP9H4MNC4NX-2hbHSkW0932kS7fVj5RmAUXy6fbFduFrsa/exec";
-
-    function generateDeviceId() {
-      const id = "device-" + Math.random().toString(36).substr(2, 10);
-      localStorage.setItem("deviceId", id);
-      return id;
-    }
-
-    function activateLicense() {
-      const key = document.getElementById("licenseKey").value;
-      const user = localStorage.getItem("deviceId") || generateDeviceId();
-
-      fetch(`${SHEET_URL}?key=${key}&user=${user}`)
-        .then(res => res.json())
-        .then(data => {
-          if (data.success) {
-            alert(data.message);
-            localStorage.setItem("licenseKey", key);
-            localStorage.setItem("licenseExpires", data.expires);
-            window.location.href = "home.html";
-          } else {
-            alert(data.message);
-          }
-        });
-    }
-
-    function login() {
-      const username = document.getElementById("username").value;
-      const password = document.getElementById("password").value;
-
-      const licenseKey = localStorage.getItem("licenseKey");
-      const licenseExpires = new Date(localStorage.getItem("licenseExpires"));
-      const today = new Date();
-
-      if (username === "admin" && password === "1234") {
-        if (!licenseKey || !licenseExpires || today > licenseExpires) {
-          alert("Please activate your license key before login.");
-          return;
-        }
-
-        localStorage.setItem("isLoggedIn", "true");
-        localStorage.setItem("user", "admin");
-        window.location.href = "home.html";
-      } else {
-        alert("Incorrect username or password");
-      }
-    }
-
-    // On load redirect
-    window.onload = () => {
-      const expiry = new Date(localStorage.getItem("licenseExpires"));
-      const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
-      const today = new Date();
-
-      if (isLoggedIn && expiry && today <= expiry) {
-        window.location.href = "home.html";
-      }
-    };
-
-    // Service Worker registration
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js')
-        .then(() => console.log('Service Worker Registered'));
-    }
-
-    import { createClient } from '@supabase/supabase-js'
-
-
-  </script>
+ // Removed all old local storage and license key logic, as it's no longer needed.
+ // Service Worker registration (keep this as it is)
+if ('serviceWorker' in navigator) {
+ navigator.serviceWorker.register('sw.js')
+ .then(() => console.log('Service Worker Registered'));
+ }
+ </script>
 </body>
 </html>
