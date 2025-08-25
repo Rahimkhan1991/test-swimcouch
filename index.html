@@ -8,6 +8,7 @@
   <link rel="icon" href="icons/icon-192.png" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+  
 
   <style>
     * {
@@ -177,6 +178,13 @@
       navigator.serviceWorker.register('sw.js')
         .then(() => console.log('Service Worker Registered'));
     }
+
+    import { createClient } from '@supabase/supabase-js'
+
+const supabaseUrl = process.env.REACT_APP_SUPABASE_URL
+const supabaseAnonKey = process.env.REACT_APP_ANON_KEY
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey)
   </script>
 </body>
 </html>
