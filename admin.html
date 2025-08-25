@@ -101,10 +101,7 @@ Backup</button>
 <input type="file" id="restoreFileInput" accept=".json" />
 <div id="driveBackupStatus"></div>
 </div>
-<div class="section">
-<h2>☁️  Auto-Backup</h2>
-<p>This functionality is not needed with Supabase's built-in cloud backups.</p>
-</div>
+
 <div class="section">
 <h2> <span class="material-icons" style="vertical-align: middle; margin-right: 6px;">
 delete
@@ -130,53 +127,96 @@ const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 // All other functions are also globally accessible now
 // Backup function: Fetches data from Supabase and creates a downloadable JSON file.
 async function backupData() {
-const { data: students, error: studentsError } = await supabase.from('students').select('*');
-const { data: fees, error: feesError } = await supabase.from('fees').select('*');
-if (studentsError || feesError) {
-alert('Error fetching data for backup. Please check console.');
-console.error(studentsError || feesError);
-return;
-}
-const backup = {
-students: students,
-fees: fees,
-timestamp: new Date().toISOString()
-};
-const blob = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" });
-const url = URL.createObjectURL(blob);
-const a = document.createElement("a");
-a.href = url;
-a.download = "swimcoach_supabase_backup_" + new Date().toISOString().split("T")[0] + ".json";
-a.click();
-URL.revokeObjectURL(url);
-alert("✅ Data backup created!");
+  const { data: { user } } = await supabase.auth.getSession();
+  if (!user) {
+    alert('User session expired. Please log in again.');
+    return;
+  }
+  const { data: companyData, error: companyError } = await supabase
+    .from('users')
+    .select('company_id')
+    .eq('id', user.id)
+    .single();
+
+  if (companyError || !companyData) {
+    alert('Error fetching company info for backup.');
+    console.error(companyError);
+    return;
+  }
+  const company_id = companyData.company_id;
+
+  const { data: students, error: studentsError } = await supabase.from('students').select('*').eq('company_id', company_id);
+  const { data: fees, error: feesError } = await supabase.from('fees').select('*').eq('company_id', company_id);
+
+  if (studentsError || feesError) {
+    alert('Error fetching data for backup. Please check console.');
+    console.error(studentsError || feesError);
+    return;
+  }
+  const backup = {
+    students: students,
+    fees: fees,
+    timestamp: new Date().toISOString()
+  };
+  const blob = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `swimcoach_backup_company_${company_id}_${new Date().toISOString().split("T")[0]}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  alert("✅ Data backup created!");
 }
 // Restore function: Reads a JSON file and restores data to Supabase.
 function triggerRestore() {
 document.getElementById("restoreFileInput").click();
 }
 document.getElementById("restoreFileInput").addEventListener("change", async function (event) {
-const file = event.target.files[0];
-if (!file) return;
-const reader = new FileReader();
-reader.onload = async function (e) {
-try {
-const data = JSON.parse(e.target.result);
-if (confirm("Restore this backup? This will overwrite existing data. NOTE: This is a complex operation and requires Admin RLS policies to work.")) {
-const { error: studentsError } = await supabase.from('students').upsert(data.students);
-const { error: feesError } = await supabase.from('fees').upsert(data.fees);
-if (studentsError || feesError) {
-console.error("Restore failed:", studentsError || feesError);
-alert("❌ Data restore failed. Check console for details.");
-} else {
-alert("✅ Data restored successfully! Please reload the app.");
-}
-}
-} catch (err) {
-alert("❌ Invalid file. Cannot restore.");
-}
-};
-reader.readAsText(file);
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const { data: { user } } = await supabase.auth.getSession();
+  if (!user) {
+    alert('User session expired. Please log in again.');
+    return;
+  }
+  const { data: companyData, error: companyError } = await supabase
+    .from('users')
+    .select('company_id')
+    .eq('id', user.id)
+    .single();
+  
+  if (companyError || !companyData) {
+    alert('Error fetching company info for restore.');
+    console.error(companyError);
+    return;
+  }
+  const company_id = companyData.company_id;
+
+  const reader = new FileReader();
+  reader.onload = async function (e) {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (confirm("Restore this backup? This will overwrite existing data for your company.")) {
+        // Update each record with the correct company_id before restoring
+        const studentsToRestore = data.students.map(s => ({ ...s, company_id: company_id }));
+        const feesToRestore = data.fees.map(f => ({ ...f, company_id: company_id }));
+
+        const { error: studentsError } = await supabase.from('students').upsert(studentsToRestore);
+        const { error: feesError } = await supabase.from('fees').upsert(feesToRestore);
+
+        if (studentsError || feesError) {
+          console.error("Restore failed:", studentsError || feesError);
+          alert("❌ Data restore failed. Check console for details.");
+        } else {
+          alert("✅ Data restored successfully! Please reload the app.");
+        }
+      }
+    } catch (err) {
+      alert("❌ Invalid file. Cannot restore.");
+    }
+  };
+  reader.readAsText(file);
 });
 // App Reset function: Empties tables.
 async function confirmDataReset() {
