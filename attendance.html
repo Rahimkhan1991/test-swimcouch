@@ -198,7 +198,12 @@ document.querySelectorAll('.mark-present').forEach(cb => cb.checked = checked);
 async function saveAttendance() {
 try {
 const date = document.getElementById('attendanceDate').value;
-const { data: { user } } = await supabase.auth.getSession();
+const { data: { session } } = await supabase.auth.getSession();
+const user = session?.user; // Safely get the user object
+if (!user) {
+showMessage('Your session has expired. Please log in again.');
+return;
+}
 if (!date) return showMessage('Please select a date');
 // ✅ Get the user's company ID
 const { data: companyData, error: companyError } = await supabase
