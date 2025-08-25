@@ -103,30 +103,30 @@ const { createClient } = supabase;
 const client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 
-// The 'login' function now uses Supabase to authenticate the user
 async function login() {
-const email = document.getElementById("email").value;
-const password = document.getElementById("password").value;
-// Use the Supabase sign-in function
-const { error } = await supabase.auth.signInWithPassword({
-email: email,
-password: password,
-});
-if (error) {
-// Supabase handles the error message for incorrect credentials
-alert(error.message);
-} else {
-// On successful login, redirect to the main app page
-window.location.href = "home.html";
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+
+  const { data, error } = await client.auth.signInWithPassword({
+    email: email,
+    password: password,
+  });
+
+  if (error) {
+    alert(error.message);
+  } else {
+    // ✅ Redirect on successful login
+    window.location.href = "home.html";
+  }
 }
-}
-// Check for an active session on page load. If one exists, redirect the user to the home page.
+
 async function checkSession() {
-const { data: { session } } = await supabase.auth.getSession();
-if (session) {
-window.location.href = "home.html";
+  const { data: { session } } = await client.auth.getSession();
+  if (session) {
+    window.location.href = "home.html";
+  }
 }
-}
+
 window.onload = checkSession;
 // Service Worker registration (keep this as it is)
 if ('serviceWorker' in navigator) {
