@@ -200,6 +200,16 @@ try {
 const date = document.getElementById('attendanceDate').value;
 const { data: { user } } = await supabase.auth.getSession();
 if (!date) return showMessage('Please select a date');
+// ✅ Get the user's company ID
+const { data: companyData, error: companyError } = await supabase
+.from('users')
+.select('company_id')
+.eq('id', user.id)
+.single();
+if (companyError || !companyData) {
+throw new Error('Could not fetch company info for user.');
+}
+const company_id = companyData.company_id;
 const checkboxes = document.querySelectorAll('.mark-present');
 const recordsToSave = [];
 checkboxes.forEach(cb => {
@@ -208,13 +218,14 @@ recordsToSave.push({
 date: date,
 student_id: cb.dataset.id,
 status: 'Present',
-user_id: user.id
+user_id: user.id,
+company_id: company_id // ✅ Added company_id here
 });
 }
 });
 //Supabase handles upsert, which will either insert new records or update existing ones
 const { error } = await supabase.from('attendance').upsert(recordsToSave, {
-onConflict: 'date, student_id, user_id'
+onConflict: 'date, student_id, company_id' // ✅ Use company_id in onConflict
 });
 if (error) throw error;
 showMessage('Attendance saved successfully!');
