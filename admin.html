@@ -92,11 +92,11 @@ Admin Panel</h1>
 storage
 </span>
 Backup & Restore</h2>
-<button onclick="backupData()"> <span class="material-icons" style="vertical-align: middle; margin-right: 6px;">
+<button id="backupBtn"> <span class="material-icons" style="vertical-align: middle; margin-right: 6px;">
 backup
 </span>
 Backup</button>
-<button onclick="triggerRestore()"><span class="material-icons" style="vertical-align: middle; margin-right: 6px;">settings_backup_restore
+<button id="restoreBtn"><span class="material-icons" style="vertical-align: middle; margin-right: 6px;">settings_backup_restore
 </span> Restore </button>
 <input type="file" id="restoreFileInput" accept=".json" />
 <div id="driveBackupStatus"></div>
@@ -109,7 +109,7 @@ Backup</button>
 <h2> <span class="material-icons" style="vertical-align: middle; margin-right: 6px;">
 delete
 </span> App Reset</h2>
-<button onclick="confirmDataReset()" style="background: #dc3545; color: white; border: none; padding: 12px 20px; border-radius: 8px; font-size: 16px; margin: 10px 5px; cursor: pointer;">
+<button id="resetBtn" style="background: #dc3545; color: white; border: none; padding: 12px 20px; border-radius: 8px; font-size: 16px; margin: 10px 5px; cursor: pointer;">
 <span class="material-icons" style="vertical-align: middle; margin-right: 6px;">
 delete_forever
 </span>️ Reset App
@@ -123,18 +123,11 @@ style="width: 95%; ; margin: 15px auto; font-weight: bold; display: block;">
 </button>
 </div>
 <script>
-window.onload = function() {
+// Supabase client initialization (globally accessible)
 const SUPABASE_URL = 'https://ndishfwnkzdedfcywcle.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5kaXNoZndua3pkZWRmY3l3Y2xlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYwOTk0MjcsImV4cCI6MjA3MTY3NTQyN30.CXQSfhR0MVLF40v2Tp-BcENBpHpPshG9Ys3zLYiBQaM';
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-//Check for an active session. If none exists, redirect to the login page.
-async function checkUserSession() {
-const { data: { session } } = await supabase.auth.getSession();
-if (!session) {
-window.location.href = 'index.html'; // Assuming 'index.html' is your login page
-}
-}
-checkUserSession(); // Run the check immediately on page load
+const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// All other functions are also globally accessible now
 // Backup function: Fetches data from Supabase and creates a downloadable JSON file.
 async function backupData() {
 const { data: students, error: studentsError } = await supabase.from('students').select('*');
@@ -170,7 +163,6 @@ reader.onload = async function (e) {
 try {
 const data = JSON.parse(e.target.result);
 if (confirm("Restore this backup? This will overwrite existing data. NOTE: This is a complex operation and requires Admin RLS policies to work.")) {
-// Assuming 'students' and 'fees' have primary keys (e.g., 'id') for upsert to work.
 const { error: studentsError } = await supabase.from('students').upsert(data.students);
 const { error: feesError } = await supabase.from('fees').upsert(data.fees);
 if (studentsError || feesError) {
@@ -189,13 +181,11 @@ reader.readAsText(file);
 // App Reset function: Empties tables.
 async function confirmDataReset() {
 const { data: { user } } = await supabase.auth.getSession();
-// NOTE: This will only work if the logged-in user has 'Admin' privileges.
-// You must have an RLS policy that allows this.
 const { data: userProfile } = await supabase.from('users').select('role').eq('id', user.id).single();
 if (userProfile && userProfile.role === 'Admin') {
 if (confirm("Are you sure? This will permanently erase ALL student and fee data for your company.")) {
-const { error: studentsError } = await supabase.from('students').delete().neq('id', '0'); // Dummy condition to delete all
-const { error: feesError } = await supabase.from('fees').delete().neq('id', '0'); // Dummy condition
+const { error: studentsError } = await supabase.from('students').delete();
+const { error: feesError } = await supabase.from('fees').delete();
 if (studentsError || feesError) {
 alert("❌ Reset failed. Check your RLS policies.");
 } else {
@@ -206,9 +196,14 @@ alert("✅ All data erased. App has been reset.");
 alert("❌ You do not have permission to reset the app.");
 }
 }
-// Removed all old local storage and license key logic.
-// The Google Drive backup section has been marked as no longer needed as Supabase provides its own reliable backups.
+// Initial session check
+async function checkUserSession() {
+const { data: { session } } = await supabase.auth.getSession();
+if (!session) {
+window.location.href = 'index.html';
 }
+}
+checkUserSession();
 </script>
 </body>
 </html>
