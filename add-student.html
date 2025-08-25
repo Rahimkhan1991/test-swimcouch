@@ -140,120 +140,150 @@ padding: 16px;
 </div>
 <script>
 const SUPABASE_URL = 'https://ndishfwnkzdedfcywcle.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5kaXNoZndua3pkZWRmY3l3Y2xlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYwOTk0MjcsImV4cCI6MjA3MTY3NTQyN30.CXQSfhR0MVLF40v2Tp-BcENBpHpPshG9Ys3zLYiBQaM';
-const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-//Check for an active session. If none exists, redirect to the login page.
+const SUPABASE_ANON_KEY = 'YOUR-ANON-KEY-HERE';
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ✅ Redirect to login if not logged in
 async function checkUserSession() {
-const { data: { session } } = await supabase.auth.getSession();
-if (!session) {
-window.location.href = 'index.html'; // Assuming 'index.html' is your login page
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) {
+    window.location.href = 'index.html';
+  }
 }
-}
-checkUserSession(); // Run the check immediately on page load
+checkUserSession();
+
 const totalFeeInput = document.getElementById("totalFee");
 const initialPaymentInput = document.getElementById("initialPayment");
 const balanceFeeInput = document.getElementById("balanceFee");
+
 totalFeeInput.addEventListener('input', calculateBalance);
 initialPaymentInput.addEventListener('input', calculateBalance);
+
 function calculateBalance() {
-const total = parseFloat(totalFeeInput.value) || 0;
-const paid = parseFloat(initialPaymentInput.value) || 0;
-const balance = total - paid;
-balanceFeeInput.value = balance >= 0 ? balance : 0;
+  const total = parseFloat(totalFeeInput.value) || 0;
+  const paid = parseFloat(initialPaymentInput.value) || 0;
+  const balance = total - paid;
+  balanceFeeInput.value = balance >= 0 ? balance : 0;
 }
+
 function toggleDropdown() {
-const container = document.getElementById("dayDropdown");
-container.classList.toggle("active");
-updateDropdownLabel();
+  const container = document.getElementById("dayDropdown");
+  container.classList.toggle("active");
+  updateDropdownLabel();
 }
+
 function getSelectedDays() {
-const checkboxes = document.querySelectorAll(".dropdown-content input[type='checkbox']");
-const selected = [];
-checkboxes.forEach(cb => {
-if (cb.checked) selected.push(cb.value);
-});
-return selected;
+  const checkboxes = document.querySelectorAll(".dropdown-content input[type='checkbox']");
+  return Array.from(checkboxes).filter(cb => cb.checked).map(cb => cb.value);
 }
+
 function updateDropdownLabel() {
-const selected = getSelectedDays();
-const btn = document.querySelector(".dropdown-btn");
-btn.textContent = selected.length > 0 ? selected.join(", ") : "Select Day(s)";
+  const selected = getSelectedDays();
+  const btn = document.querySelector(".dropdown-btn");
+  btn.textContent = selected.length > 0 ? selected.join(", ") : "Select Day(s)";
 }
+
 async function addStudent() {
-const { data: { user } } = await supabase.auth.getSession();
-if (!user) {
-alert('You must be logged in to add a student.');
-return;
+  const { data: { session } } = await supabase.auth.getSession();
+  const user = session?.user;
+  if (!user) {
+    alert('You must be logged in to add a student.');
+    return;
+  }
+
+  const name = document.getElementById("name").value.trim();
+  const phone = document.getElementById("phone").value.trim();
+  const selectedDays = getSelectedDays();
+  const totalFee = parseFloat(document.getElementById("totalFee").value) || 0;
+  const initialPayment = parseFloat(document.getElementById("initialPayment").value) || 0;
+  const balanceFee = totalFee - initialPayment;
+
+  if (!name || !phone || selectedDays.length === 0) {
+    alert("Please fill required fields");
+    return;
+  }
+  if (initialPayment > totalFee) {
+    alert("Initial payment cannot exceed total fee.");
+    return;
+  }
+
+  // ✅ Get user's company_id
+  const { data: companyData, error: companyError } = await supabase
+    .from('users')
+    .select('company_id')
+    .eq('id', user.id)
+    .single();
+
+  if (companyError || !companyData) {
+    alert("Could not fetch company info.");
+    return;
+  }
+  const company_id = companyData.company_id;
+
+  // ✅ Check duplicates
+  const { data: existingStudents, error: fetchError } = await supabase
+    .from('students')
+    .select('name, phone')
+    .eq('company_id', company_id);
+
+  if (fetchError) {
+    alert('Error checking for duplicates: ' + fetchError.message);
+    return;
+  }
+  if (existingStudents.some(s => s.name.toLowerCase() === name.toLowerCase())) {
+    alert("A student with this name already exists.");
+    return;
+  }
+  if (existingStudents.some(s => s.phone === phone)) {
+    alert("A student with this phone number already exists.");
+    return;
+  }
+
+  // ✅ Save student
+  const { data: studentData, error: studentError } = await supabase
+    .from('students')
+    .insert([{
+      name,
+      phone,
+      day: selectedDays,
+      totalFee,
+      initialPayment,
+      balanceFee,
+      user_id: user.id,
+      company_id: company_id
+    }])
+    .select();
+
+  if (studentError) {
+    alert('Error adding student: ' + studentError.message);
+    return;
+  }
+
+  // ✅ Save fee record
+  const { error: feeError } = await supabase.from('fees').insert([{
+    studentId: studentData[0].id,
+    amount: initialPayment,
+    date: new Date().toISOString().split("T")[0],
+    user_id: user.id
+  }]);
+
+  if (feeError) {
+    alert('Error saving fee record: ' + feeError.message);
+    return;
+  }
+
+  alert("Student added!");
+  window.location.href = "view-students.html";
 }
-const name = document.getElementById("name").value.trim();
-const phone = document.getElementById("phone").value.trim();
-const selectedDays = getSelectedDays();
-const totalFee = parseFloat(document.getElementById("totalFee").value) || 0;
-const initialPayment = parseFloat(document.getElementById("initialPayment").value) || 0;
-const balanceFee = totalFee - initialPayment;
-if (!name || !phone || selectedDays.length === 0) {
-alert("Please fill required fields");
-return;
-}
-if (initialPayment > totalFee) {
-alert("Initial payment cannot exceed total fee.");
-return;
-}
-// Check for duplicates in the database instead of local storage
-const { data: existingStudents, error: fetchError } = await supabase
-.from('students')
-.select('name, phone')
-.eq('company_id', (await supabase.from('users').select('company_id').eq('id', user.id)).data[0].company_id);
-if (fetchError) {
-console.error('Error checking for duplicates:', fetchError.message);
-alert('An error occurred. Please try again.');
-return;
-}
-const trimmedName = name.trim();
-const trimmedPhone = phone.trim();
-if (existingStudents.some(s => s.name.toLowerCase() === trimmedName.toLowerCase())) {
-alert("A student with this name already exists.");
-return;
-}
-if (existingStudents.some(s => s.phone === trimmedPhone)) {
-alert("A student with this phone number already exists.");
-return;
-}
-const student = {
-name,
-phone,
-day: selectedDays,
-totalFee,
-initialPayment,
-balanceFee,
-user_id: user.id
-};
-// Save student record to Supabase
-const { data: studentData, error: studentError } = await supabase.from('students').insert([student]);
-if (studentError) {
-alert('Error adding student: ' + studentError.message);
-return;
-}
-// Save fee record to Supabase
-const { error: feeError } = await supabase.from('fees').insert([{
-studentId: studentData[0].id, // Use the new student's ID from the database
-amount: student.initialPayment,
-date: new Date().toISOString().split("T")[0],
-user_id: user.id
-}]);
-if (feeError) {
-alert('Error saving fee record: ' + feeError.message);
-return;
-}
-alert("Student added!");
-window.location.href = "view-students.html";
-}
+
+// ✅ Close dropdown when clicking outside
 document.addEventListener("click", function (e) {
-const dropdown = document.getElementById("dayDropdown");
-if (!dropdown.contains(e.target)) {
-dropdown.classList.remove("active");
-}
+  const dropdown = document.getElementById("dayDropdown");
+  if (!dropdown.contains(e.target)) {
+    dropdown.classList.remove("active");
+  }
 });
 </script>
+
 </body>
 </html>
