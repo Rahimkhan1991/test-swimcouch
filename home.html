@@ -172,11 +172,17 @@ async function loadDynamicHeader() {
     }
 
     // Update the header with the fetched data
-    headerTitle.textContent = data.companies.company_name || 'coaching classes management';
-    if (data.companies.logo_url) {
-        headerLogo.src = data.companies.logo_url;
-        headerLogo.style.display = 'inline-block';
-    }
+    headerTitle.textContent = data.companies.display_name || 'coaching classes management';
+    // ... (fetch the logoUrl from Supabase)
+
+if (data.companies.logo_url) {
+    headerLogo.src = data.companies.logo_url;
+    headerLogo.style.display = 'inline-block'; // Or 'block'
+} else {
+    // This is important for when no logo is set
+    headerLogo.src = ''; 
+    headerLogo.style.display = 'none';
+}
 }
 
 // Add event listeners and load data on page load
