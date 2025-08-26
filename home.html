@@ -172,7 +172,7 @@ async function loadDynamicHeader() {
     }
 
     // Update the header with the fetched data
-    headerTitle.textContent = data.companies.company_name || 'Swim Class Manager';
+    headerTitle.textContent = data.companies.company_name || 'coaching classes management';
     if (data.companies.logo_url) {
         headerLogo.src = data.companies.logo_url;
         headerLogo.style.display = 'inline-block';
