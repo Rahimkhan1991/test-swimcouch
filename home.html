@@ -146,43 +146,41 @@ async function logout() {
 
 // Function to load and display dynamic header content
 async function loadDynamicHeader() {
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-    if (sessionError || !session) {
-        window.location.href = 'index.html'; // Redirect to login if no session
-        return;
-    }
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    if (sessionError || !session) {
+        window.location.href = 'index.html'; // Redirect to login if no session
+        return;
+    }
 
-    const user = session.user;
+    const user = session.user;
 
-    // Fetch the user's company information using a join
-    const { data, error } = await supabase
-        .from('users')
-        .select('company_id, companies(display_name, logo_url)')
-        .eq('id', user.id)
-        .single();
+    // Fetch the user's company information using a join
+    const { data, error } = await supabase
+        .from('users')
+        .select('company_id, companies(display_name, logo_url)')
+        .eq('id', user.id)
+        .single();
 
-    const headerTitle = document.getElementById('headerTitle');
-    const headerLogo = document.getElementById('headerLogo');
+    const headerTitle = document.getElementById('headerTitle');
+    const headerLogo = document.getElementById('headerLogo');
 
-    if (error || !data || !data.companies) {
-        console.error('Error fetching company data:', error?.message);
-        headerTitle.textContent = 'Swim Class Manager'; // Fallback
-        headerLogo.style.display = 'none';
-        return;
-    }
+    if (error || !data || !data.companies) {
+        console.error('Error fetching company data:', error?.message);
+        headerTitle.textContent = 'Coaching Classes Management'; // Fallback
+        headerLogo.style.display = 'none';
+        return;
+    }
 
-    // Update the header with the fetched data
-    headerTitle.textContent = data.companies.display_name || 'coaching classes management';
-    // ... (fetch the logoUrl from Supabase)
+    // Corrected line: Use data.companies.display_name
+    headerTitle.textContent = data.companies.display_name || 'Coaching Classes Management';
 
-if (data.companies.logo_url) {
-    headerLogo.src = data.companies.logo_url;
-    headerLogo.style.display = 'inline-block'; // Or 'block'
-} else {
-    // This is important for when no logo is set
-    headerLogo.src = ''; 
-    headerLogo.style.display = 'none';
-}
+    if (data.companies.logo_url) {
+        headerLogo.src = data.companies.logo_url;
+        headerLogo.style.display = 'inline-block';
+    } else {
+        headerLogo.src = ''; 
+        headerLogo.style.display = 'none';
+    }
 }
 
 // Add event listeners and load data on page load
