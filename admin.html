@@ -15,24 +15,24 @@ background: linear-gradient(to right, #e0f7fa, #f0f4f8);
 }
 /* New style for the dynamic header */
 .dynamic-header {
-text-align: center;
-padding: 20px;
-margin-bottom: 20px;
+    text-align: center;
+    padding: 20px;
+    margin-bottom: 20px;
 }
 .dynamic-header h1 {
-display: inline-block;
-vertical-align: middle;
-color: #007bff;
-margin: 0;
+    display: inline-block;
+    vertical-align: middle;
+    color: #007bff;
+    margin: 0;
 }
 .dynamic-header img {
-height: 50px;
-margin-right: 15px;
-vertical-align: middle;
-display: none;
+    height: 50px;
+    margin-right: 15px;
+    vertical-align: middle;
+    display: none;
 }
 .container {
-max-width: 500px;
+max-width: 800px;
 margin: 0 auto;
 padding: 20px;
 }
@@ -90,47 +90,47 @@ button {
 font-size: 15px;
 }
 }
+.user-list {
+    text-align: left;
+}
+.user-card {
+    border: 1px solid #ccc;
+    padding: 15px;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    background: #f9f9f9;
+}
+.user-card label {
+    font-weight: bold;
+    display: block;
+    margin-top: 10px;
+}
 </style>
 </head>
 <body>
 <header class="dynamic-header">
-<img id="headerLogo" src="" alt="Company Logo">
-<h1 id="headerTitle">Admin Panel</h1>
+    <img id="headerLogo" src="" alt="Company Logo">
+    <h1 id="headerTitle">Admin Panel</h1>
 </header>
 <div class="container">
 <div class="section">
-<h2>🎨 Customize Home Page</h2>
-<label for="companyNameInput">Company Name:</label>
-<input type="text" id="companyNameInput" placeholder="e.g., Aquaman Swim Club">
-<label for="logoUrlInput">Logo URL:</label>
-<input type="text" id="logoUrlInput" placeholder="e.g., https://example.com/logo.png">
-<button id="saveCustomizationBtn">Save Changes</button>
+    <h2>🎨 Customize Home Page</h2>
+    <label for="companyNameInput">Company Name:</label>
+    <input type="text" id="companyNameInput" placeholder="e.g., Aquaman Swim Club">
+    <label for="logoUrlInput">Logo URL:</label>
+    <input type="text" id="logoUrlInput" placeholder="e.g., https://example.com/logo.png">
+    <button id="saveCustomizationBtn">Save Changes</button>
 </div>
+
 <div class="section">
-<h2>️
-<span class="material-icons" style="font-size: 30px; vertical-align: middle; margin-right: 6px;">
-storage
-</span>
-Backup & Restore</h2>
-<button id="backupBtn"> <span class="material-icons" style="vertical-align: middle; margin-right: 6px;">
-backup
-</span>
-Backup</button>
-<button id="restoreBtn"><span class="material-icons" style="vertical-align: middle; margin-right: 6px;">settings_backup_restore
-</span> Restore </button>
-<input type="file" id="restoreFileInput" accept=".json" />
-<div id="driveBackupStatus"></div>
+    <h2>
+        <span class="material-icons" style="vertical-align: middle; margin-right: 6px;">group</span>
+        User Management
+    </h2>
+    <div id="userList" class="user-list">
+        </div>
 </div>
-<div class="section">
-<h2> <span class="material-icons" style="vertical-align: middle; margin-right: 6px;">
-delete
-</span> App Reset</h2>
-<button id="resetBtn" style="background: #dc3545; color: white; border: none; padding: 12px 20px; border-radius: 8px; font-size: 16px; margin: 10px 5px; cursor: pointer;">
-<span class="material-icons" style="vertical-align: middle; margin-right: 6px;">
-delete_forever
-</span>️ Reset App
-</button>
-</div>
+
 </div>
 <div class="footer-buttons">
 <button class="btn-back" onclick="history.back()"
@@ -139,178 +139,154 @@ style="width: 95%; ; margin: 15px auto; font-weight: bold; display: block;">
 </button>
 </div>
 <script>
-// Supabase client initialization (globally accessible)
+// Supabase client initialization
 const SUPABASE_URL = 'https://ndishfwnkzdedfcywcle.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5kaXNoZndua3pkZWRmY3l3Y2xlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYwOTk0MjcsImV4cCI6MjA3MTY3NTQyN30.CXQSfhR0MVLF40v2Tp-BcENBpHpPshG9Ys3zLYiBQaM';
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let currentCompanyId = null;
+
 // Function to load and display dynamic header content
 async function loadDynamicHeader() {
-const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-if (sessionError || !session) {
-window.location.href = 'index.html';
-return;
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    if (sessionError || !session) {
+        window.location.href = 'index.html';
+        return;
+    }
+
+    const user = session.user;
+    const { data, error } = await supabase
+        .from('users')
+        .select('company_id, companies(display_name, logo_url)')
+        .eq('id', user.id)
+        .single();
+
+    const headerTitle = document.getElementById('headerTitle');
+    const headerLogo = document.getElementById('headerLogo');
+
+    if (error || !data || !data.companies) {
+        console.error('Error fetching company data:', error?.message);
+        return;
+    }
+    
+    currentCompanyId = data.company_id; // Store company ID for later use
+
+    headerTitle.textContent = data.companies.display_name || 'Admin Panel';
+    if (data.companies.logo_url) {
+        headerLogo.src = data.companies.logo_url;
+        headerLogo.style.display = 'inline-block';
+    }
+
+    // Set input fields to current values
+    document.getElementById('companyNameInput').value = data.companies.display_name || '';
+    document.getElementById('logoUrlInput').value = data.companies.logo_url || '';
 }
-const user = session.user;
-const { data, error } = await supabase
-.from('users')
-.select('companies(company_name, logo_url)')
-.eq('id', user.id)
-.single();
-const headerTitle = document.getElementById('headerTitle');
-const headerLogo = document.getElementById('headerLogo');
-if (error || !data || !data.companies) {
-console.error('Error fetching company data:', error?.message);
-return;
-}
-headerTitle.textContent = data.companies.company_name || 'Admin Panel';
-if (data.companies.logo_url) {
-headerLogo.src = data.companies.logo_url;
-headerLogo.style.display = 'inline-block';
-}
-}
+
 // Function to save customization data
 document.getElementById('saveCustomizationBtn').addEventListener('click', async () => {
-const { data: { user } } = await supabase.auth.getSession();
-if (!user) {
-alert('Please log in again.');
-return;
-}
-const { data: companyData, error: companyError } = await supabase
-.from('users')
-.select('company_id')
-.eq('id', user.id)
-.single();
-if (companyError || !companyData) {
-console.error('Error fetching company info:', companyError?.message);
-alert('Failed to get company information.');
-return;
-}
-const company_id = companyData.company_id;
-const companyName = document.getElementById('companyNameInput').value;
-const logoUrl = document.getElementById('logoUrlInput').value;
-const { error } = await supabase
-.from('companies')
-.update({ company_name: companyName, logo_url: logoUrl })
-.eq('id', company_id);
-if (error) {
-console.error('Error saving customization:', error);
-alert('Failed to save changes.');
-} else {
-alert('Changes saved successfully!');
-loadDynamicHeader();
-}
+    if (!currentCompanyId) {
+        alert('Could not determine company ID. Please reload the page.');
+        return;
+    }
+
+    const companyName = document.getElementById('companyNameInput').value;
+    const logoUrl = document.getElementById('logoUrlInput').value;
+
+    const { error } = await supabase
+        .from('companies')
+        .update({ display_name: companyName, logo_url: logoUrl })
+        .eq('id', currentCompanyId); // Correctly update using the company ID
+
+    if (error) {
+        console.error('Error saving customization:', error);
+        alert('Failed to save changes.');
+    } else {
+        alert('Changes saved successfully!');
+        loadDynamicHeader();
+    }
 });
-// Backup function: Fetches data from Supabase and creates a downloadable JSON file.
-async function backupData() {
-const { data: { user } } = await supabase.auth.getSession();
-if (!user) {
-alert('User session expired. Please log in again.');
-return;
+
+// Function to load all users and display them
+async function loadUsers() {
+    if (!currentCompanyId) {
+        console.error('Company ID not available.');
+        return;
+    }
+
+    const { data: users, error } = await supabase
+        .from('users')
+        .select('id, email, role')
+        .eq('company_id', currentCompanyId);
+
+    if (error) {
+        console.error('Error fetching users:', error);
+        return;
+    }
+
+    const userList = document.getElementById('userList');
+    userList.innerHTML = ''; // Clear previous list
+
+    users.forEach(user => {
+        const userCard = document.createElement('div');
+        userCard.className = 'user-card';
+        userCard.innerHTML = `
+            <div><strong>Role:</strong> ${user.role}</div>
+            <label for="email-${user.id}">Email:</label>
+            <input type="text" id="email-${user.id}" value="${user.email}" />
+            <label for="password-${user.id}">Change Password (leave blank if no change):</label>
+            <input type="text" id="password-${user.id}" placeholder="New Password" />
+            <button onclick="updateUser('${user.id}')">Update User</button>
+        `;
+        userList.appendChild(userCard);
+    });
 }
-const { data: companyData, error: companyError } = await supabase
-.from('users')
-.select('company_id')
-.eq('id', user.id)
-.single();
-if (companyError || !companyData) {
-alert('Error fetching company info for backup.');
-console.error(companyError);
-return;
+
+// Function to update a user's email or password
+async function updateUser(userId) {
+    const newEmail = document.getElementById(`email-${userId}`).value;
+    const newPassword = document.getElementById(`password-${userId}`).value;
+
+    if (newPassword) {
+        // Update both email and password if a new password is provided
+        const { error } = await supabase.auth.admin.updateUserById(
+            userId, { email: newEmail, password: newPassword }
+        );
+        if (error) {
+            console.error('Update failed:', error);
+            alert('Failed to update user. Check permissions.');
+            return;
+        }
+    } else {
+        // Only update the email
+        const { error } = await supabase.auth.admin.updateUserById(
+            userId, { email: newEmail }
+        );
+        if (error) {
+            console.error('Update failed:', error);
+            alert('Failed to update user. Check permissions.');
+            return;
+        }
+    }
+
+    alert('User updated successfully!');
+    // Reload the user list to show changes
+    loadUsers();
 }
-const company_id = companyData.company_id;
-const { data: students, error: studentsError } = await supabase.from('students').select('*').eq('company_id', company_id);
-const { data: fees, error: feesError } = await supabase.from('fees').select('*').eq('company_id', company_id);
-if (studentsError || feesError) {
-alert('Error fetching data for backup. Please check console.');
-console.error(studentsError || feesError);
-return;
-}
-const backup = {
-students: students,
-fees: fees,
-timestamp: new Date().toISOString()
-};
-const blob = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" });
-const url = URL.createObjectURL(blob);
-const a = document.createElement("a");
-a.href = url;
-a.download = `swimcoach_backup_company_${company_id}_${new Date().toISOString().split("T")[0]}.json`;
-a.click();
-URL.revokeObjectURL(url);
-alert("✅ Data backup created!");
-}
-// Restore function: Reads a JSON file and restores data to Supabase.
-function triggerRestore() {
-document.getElementById("restoreFileInput").click();
-}
-document.getElementById("restoreFileInput").addEventListener("change", async function (event) {
-const file = event.target.files[0];
-if (!file) return;
-const { data: { user } } = await supabase.auth.getSession();
-if (!user) {
-alert('User session expired. Please log in again.');
-return;
-}
-const { data: companyData, error: companyError } = await supabase
-.from('users')
-.select('company_id')
-.eq('id', user.id)
-.single();
-if (companyError || !companyData) {
-alert('Error fetching company info for restore.');
-console.error(companyError);
-return;
-}
-const company_id = companyData.company_id;
-const reader = new FileReader();
-reader.onload = async function (e) {
-try {
-const data = JSON.parse(e.target.result);
-if (confirm("Restore this backup? This will overwrite existing data for your company.")) {
-const studentsToRestore = data.students.map(s => ({ ...s, company_id: company_id }));
-const feesToRestore = data.fees.map(f => ({ ...f, company_id: company_id }));
-const { error: studentsError } = await supabase.from('students').upsert(studentsToRestore);
-const { error: feesError } = await supabase.from('fees').upsert(feesToRestore);
-if (studentsError || feesError) {
-console.error("Restore failed:", studentsError || feesError);
-alert("❌ Data restore failed. Check console for details.");
-} else {
-alert("✅ Data restored successfully! Please reload the app.");
-}
-}
-} catch (err) {
-alert("❌ Invalid file. Cannot restore.");
-}
-};
-reader.readAsText(file);
-});
-// App Reset function: Empties tables.
-async function confirmDataReset() {
-const { data: { user } } = await supabase.auth.getSession();
-const { data: userProfile } = await supabase.from('users').select('role').eq('id', user.id).single();
-if (userProfile && userProfile.role === 'Admin') {
-if (confirm("Are you sure? This will permanently erase ALL student and fee data for your company.")) {
-const { error: studentsError } = await supabase.from('students').delete();
-const { error: feesError } = await supabase.from('fees').delete();
-if (studentsError || feesError) {
-alert("❌ Reset failed. Check your RLS policies.");
-} else {
-alert("✅ All data erased. App has been reset.");
-}
-}
-} else {
-alert("❌ You do not have permission to reset the app.");
-}
-}
+
 // Initial session check
 async function checkUserSession() {
-const { data: { session } } = await supabase.auth.getSession();
-if (!session) {
-window.location.href = 'index.html';
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+        window.location.href = 'index.html';
+    }
 }
-}
-checkUserSession();
-window.onload = loadDynamicHeader;
+
+// Wait for dynamic header to load before loading users
+window.onload = async () => {
+    await checkUserSession();
+    await loadDynamicHeader();
+    await loadUsers();
+};
 </script>
 </body>
 </html>
