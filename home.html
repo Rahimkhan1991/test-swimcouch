@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Swim Coach - Home</title>
+<title>Coaching Classes Management - Home</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 body {
@@ -157,7 +157,7 @@ async function loadDynamicHeader() {
     // Fetch the user's company information using a join
     const { data, error } = await supabase
         .from('users')
-        .select('company_id, companies(company_name, logo_url)')
+        .select('company_id, companies(display_name, logo_url)')
         .eq('id', user.id)
         .single();
 
