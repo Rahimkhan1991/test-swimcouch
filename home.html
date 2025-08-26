@@ -90,7 +90,10 @@ display: block;
 </style>
 </head>
 <body>
-<h1>🏊 Swim Class Manager</h1>
+<header id="dynamic-header" style="text-align: center; margin-bottom: 30px;">
+    <img id="headerLogo" src="" alt="Company Logo" style="height: 50px; margin-right: 15px; vertical-align: middle; display: none;">
+    <h1 id="headerTitle" style="display: inline-block; vertical-align: middle; color: #007bff; margin: 0;"></h1>
+</header>
 <div class="grid">
 <a class="card" href="add-student.html">
 <span>👨‍🎓</span> Student Management
@@ -126,32 +129,59 @@ class="whatsapp-float">
 <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp" class="whatsapp-icon">
 </a>
 <script>
+// Supabase client initialization
 const SUPABASE_URL = 'https://ndishfwnkzdedfcywcle.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5kaXNoZndua3pkZWRmY3l3Y2xlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYwOTk0MjcsImV4cCI6MjA3MTY3NTQyN30.CXQSfhR0MVLF40v2Tp-BcENBpHpPshG9Ys3zLYiBQaM';
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-// Check for an active session. If none exists, redirect to the login page.
-async function checkUserSession() {
-const { data: { session } } = await supabase.auth.getSession();
-if (!session) {
-window.location.href = 'index.html'; // Assuming 'index.html' is your login page
-}
-}
-checkUserSession(); // Run the check immediately on page load
-// The logout function now uses Supabase to sign the user out.
-// The logout function now uses Supabase to sign the user out.
+
+// Logout function
 async function logout() {
-const { error } = await supabase.auth.signOut();
-if (error) {
-console.error("Logout error:", error);
-} else {
-// Only redirect after the sign-out is successful
-window.location.href = "index.html";
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+        console.error("Logout error:", error);
+    } else {
+        window.location.href = "index.html";
+    }
 }
+
+// Function to load and display dynamic header content
+async function loadDynamicHeader() {
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    if (sessionError || !session) {
+        window.location.href = 'index.html'; // Redirect to login if no session
+        return;
+    }
+
+    const user = session.user;
+
+    // Fetch the user's company information using a join
+    const { data, error } = await supabase
+        .from('users')
+        .select('company_id, companies(company_name, logo_url)')
+        .eq('id', user.id)
+        .single();
+
+    const headerTitle = document.getElementById('headerTitle');
+    const headerLogo = document.getElementById('headerLogo');
+
+    if (error || !data || !data.companies) {
+        console.error('Error fetching company data:', error?.message);
+        headerTitle.textContent = 'Swim Class Manager'; // Fallback
+        headerLogo.style.display = 'none';
+        return;
+    }
+
+    // Update the header with the fetched data
+    headerTitle.textContent = data.companies.company_name || 'Swim Class Manager';
+    if (data.companies.logo_url) {
+        headerLogo.src = data.companies.logo_url;
+        headerLogo.style.display = 'inline-block';
+    }
 }
-// Listen for the click event on the button
+
+// Add event listeners and load data on page load
 document.getElementById('logoutButton').addEventListener('click', logout);
-// The confirmDataReset function has been removed from this page.
-// It is now on the admin.html page.
+window.onload = loadDynamicHeader;
 </script>
 </body>
 </html>
