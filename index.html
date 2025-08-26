@@ -97,13 +97,6 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 // DOM elements
 const emailInput = document.getElementById('email');
 const loginLogo = document.getElementById('loginLogo');
-// Function to check for an active session and redirect
-async function checkSession() {
-const { data } = await supabase.auth.getSession();
-if (data.session) {
-window.location.href = "home.html";
-}
-}
 // Function to handle user login
 async function login() {
 const email = emailInput.value;
@@ -143,8 +136,13 @@ loginLogo.style.display = 'none';
 // Event listeners
 document.getElementById("loginBtn").addEventListener("click", login);
 emailInput.addEventListener('input', loadLogo);
-// Check session on page load
-window.onload = checkSession;
+// Check session and load logo on page load
+window.onload = async () => {
+const { data } = await supabase.auth.getSession();
+if (data.session) {
+window.location.href = "home.html";
+}
+};
 // Service Worker registration
 if ("serviceWorker" in navigator) {
 navigator.serviceWorker.register("sw.js")
