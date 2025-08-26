@@ -1,137 +1,155 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Login - CoachTrack</title>
-  <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#3b82f6" />
-  <link rel="icon" href="icons/icon-192.png" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap" rel="stylesheet">
-  <script src="https://unpkg.com/@supabase/supabase-js"></script>
-  <style>
-    * { box-sizing: border-box; }
-    body {
-      font-family: 'Nunito', sans-serif;
-      background: linear-gradient(to right, #93c5fd, #e0f2fe);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      margin: 0;
-      padding: 20px;
-    }
-    .login-box {
-      background: #ffffff;
-      padding: 30px 25px;
-      border-radius: 20px;
-      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
-      width: 100%;
-      max-width: 380px;
-      text-align: center;
-      animation: fadeIn 0.6s ease-out;
-    }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    .login-box img.logo {
-      width: 80px;
-      height: auto;
-      margin-bottom: 20px;
-    }
-    .login-box h2 {
-      color: #1d4ed8;
-      font-weight: 700;
-      margin-bottom: 20px;
-    }
-    input {
-      width: 100%;
-      padding: 12px 14px;
-      margin: 10px 0;
-      border: 1px solid #d1d5db;
-      border-radius: 12px;
-      font-size: 15px;
-      transition: 0.2s ease-in-out;
-    }
-    input:focus {
-      outline: none;
-      border-color: #3b82f6;
-      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
-    }
-    button {
-      width: 100%;
-      background-color: #3b82f6;
-      color: white;
-      border: none;
-      padding: 14px;
-      border-radius: 12px;
-      font-size: 16px;
-      margin-top: 10px;
-      cursor: pointer;
-      font-weight: 600;
-      transition: background-color 0.3s ease;
-    }
-    button:hover {
-      background-color: #2563eb;
-    }
-    @media (max-width: 400px) {
-      .login-box { padding: 25px 20px; }
-      input, button { font-size: 14px; }
-    }
-  </style>
+<meta charset="UTF-8" />
+<title>Login - CoachTrack</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#3b82f6" />
+<link rel="icon" href="icons/icon-192.png" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/@supabase/supabase-js"></script>
+<style>
+* { box-sizing: border-box; }
+body {
+font-family: 'Nunito', sans-serif;
+background: linear-gradient(to right, #93c5fd, #e0f2fe);
+display: flex;
+justify-content: center;
+align-items: center;
+height: 100vh;
+margin: 0;
+padding: 20px;
+}
+.login-box {
+background: #ffffff;
+padding: 30px 25px;
+border-radius: 20px;
+box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
+width: 100%;
+max-width: 380px;
+text-align: center;
+animation: fadeIn 0.6s ease-out;
+}
+@keyframes fadeIn {
+from { opacity: 0; transform: translateY(10px); }
+to { opacity: 1; transform: translateY(0); }
+}
+.login-box img.logo {
+width: 80px;
+height: auto;
+margin-bottom: 20px;
+}
+.login-box h2 {
+color: #1d4ed8;
+font-weight: 700;
+margin-bottom: 20px;
+}
+input {
+width: 100%;
+padding: 12px 14px;
+margin: 10px 0;
+border: 1px solid #d1d5db;
+border-radius: 12px;
+font-size: 15px;
+transition: 0.2s ease-in-out;
+}
+input:focus {
+outline: none;
+border-color: #3b82f6;
+box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+button {
+width: 100%;
+background-color: #3b82f6;
+color: white;
+border: none;
+padding: 14px;
+border-radius: 12px;
+font-size: 16px;
+margin-top: 10px;
+cursor: pointer;
+font-weight: 600;
+transition: background-color 0.3s ease;
+}
+button:hover {
+background-color: #2563eb;
+}
+@media (max-width: 400px) {
+.login-box { padding: 25px 20px; }
+input, button { font-size: 14px; }
+}
+</style>
 </head>
 <body>
-  <div class="login-box">
-    <img id="loginLogo" src="" alt="Company Logo" style="display: none; height: 100px; margin-bottom: 20px;">
-    <h2>CoachTrack Login</h2>
-    <input type="email" id="email" placeholder="Email" />
-    <input type="password" id="password" placeholder="Password" />
-    <button id="loginBtn">Login</button>
-  </div>
-
-  <script>
-    // ✅ Supabase Initialization (correct way for CDN)
-    const SUPABASE_URL = "https://ndishfwnkzdedfcywcle.supabase.co";
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5kaXNoZndua3pkZWRmY3l3Y2xlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYwOTk0MjcsImV4cCI6MjA3MTY3NTQyN30.CXQSfhR0MVLF40v2Tp-BcENBpHpPshG9Ys3zLYiBQaM";
-
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-    // ✅ Login function
-    async function login() {
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
-
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) {
-        alert("Login failed: " + error.message);
-      } else {
-        // Redirect on success
-        window.location.href = "home.html";
-      }
-    }
-
-    // ✅ Auto check active session
-    async function checkSession() {
-      const { data } = await supabase.auth.getSession();
-      if (data.session) {
-        window.location.href = "home.html";
-      }
-    }
-    window.onload = checkSession;
-
-    // ✅ Attach event listener
-    document.getElementById("loginBtn").addEventListener("click", login);
-
-    // ✅ Service Worker registration
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("sw.js")
-        .then(() => console.log("Service Worker Registered"));
-    }
-  </script>
+<div class="login-box">
+<img id="loginLogo" src="" alt="Company Logo" style="display: none; height: 100px; margin-bottom: 20px;">
+<h2>CoachTrack Login</h2>
+<input type="email" id="email" placeholder="Email" />
+<input type="password" id="password" placeholder="Password" />
+<button id="loginBtn">Login</button>
+</div>
+<script>
+// Supabase Initialization
+const SUPABASE_URL = "https://ndishfwnkzdedfcywcle.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5kaXNoZndua3pkZWRmY3l3Y2xlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYwOTk0MjcsImV4cCI6MjA3MTY3NTQyN30.CXQSfhR0MVLF40v2Tp-BcENBpHpPshG9Ys3zLYiBQaM";
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// DOM elements
+const emailInput = document.getElementById('email');
+const loginLogo = document.getElementById('loginLogo');
+// Function to check for an active session and redirect
+async function checkSession() {
+const { data } = await supabase.auth.getSession();
+if (data.session) {
+window.location.href = "home.html";
+}
+}
+// Function to handle user login
+async function login() {
+const email = emailInput.value;
+const password = document.getElementById("password").value;
+const { data, error } = await supabase.auth.signInWithPassword({
+email,
+password,
+});
+if (error) {
+alert("Login failed: " + error.message);
+} else {
+window.location.href = "home.html";
+}
+}
+// Function to dynamically load logo based on email
+async function loadLogo() {
+const email = emailInput.value;
+if (!email) {
+loginLogo.src = '';
+loginLogo.style.display = 'none';
+return;
+}
+const { data: userData, error } = await supabase
+.from('users')
+.select('companies(logo_url)')
+.eq('email', email)
+.single();
+if (userData && userData.companies && userData.companies.logo_url) {
+loginLogo.src = userData.companies.logo_url;
+loginLogo.style.display = 'block';
+} else {
+// Fallback to a default logo or hide it if not found
+loginLogo.src = '';
+loginLogo.style.display = 'none';
+}
+}
+// Event listeners
+document.getElementById("loginBtn").addEventListener("click", login);
+emailInput.addEventListener('input', loadLogo);
+// Check session on page load
+window.onload = checkSession;
+// Service Worker registration
+if ("serviceWorker" in navigator) {
+navigator.serviceWorker.register("sw.js")
+.then(() => console.log("Service Worker Registered"));
+}
+</script>
 </body>
 </html>
