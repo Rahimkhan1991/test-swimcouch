@@ -7,191 +7,140 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
-
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+        
         :root {
-            --dark-background: #0d1117;
-            --card-color: rgba(255, 255, 255, 0.08);
-            --border-color: rgba(255, 255, 255, 0.1);
-            --text-color: #f0f6fc;
-            --primary-glow: #00ffc0;
-            --secondary-glow: #ff0080;
+            --primary-bg: #1A1A2E;
+            --secondary-bg: #16203D;
+            --primary-accent: #E94560;
+            --secondary-accent: #0F3460;
+            --text-light: #F8F8F8;
+            --text-muted: #B0B0B0;
         }
 
         body {
-            font-family: 'Poppins', sans-serif;
+            font-family: 'Roboto', sans-serif;
             margin: 0;
             padding: 0;
-            background-color: var(--dark-background);
-            color: var(--text-color);
+            background: linear-gradient(-45deg, var(--primary-bg), var(--secondary-bg), var(--primary-bg));
+            background-size: 400% 400%;
+            animation: gradient-animation 15s ease infinite;
+            color: var(--text-light);
             min-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            overflow-x: hidden;
-            position: relative;
+            justify-content: flex-start;
         }
         
-        body::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: radial-gradient(circle, rgba(160, 25, 255, 0.1) 0%, transparent 50%),
-                        radial-gradient(circle, rgba(255, 0, 150, 0.1) 0%, transparent 50%);
-            background-size: 100% 100%;
-            background-position: top left, bottom right;
-            opacity: 0.5;
-            z-index: -1;
+        @keyframes gradient-animation {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
         }
 
         .container {
             width: 90%;
             max-width: 600px;
             padding: 20px;
-            z-index: 1;
+            z-index: 10;
         }
 
-        .glass-card {
-            background-color: var(--card-color);
-            backdrop-filter: blur(10px);
-            border: 1px solid var(--border-color);
-            border-radius: 20px;
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
-            padding: 25px;
-            margin-bottom: 25px;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .glass-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
+        header {
             width: 100%;
-            height: 100%;
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0));
-            z-index: -1;
+            padding: 20px 0;
+            margin-bottom: 30px;
+            text-align: center;
         }
 
-        .header-section {
+        .header-info-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
         }
 
         #userWelcome {
             font-size: 1.2rem;
-            font-weight: 600;
-            color: #fff;
+            font-weight: bold;
+            color: var(--text-light);
             margin: 0;
-        }
-        
-        .header-info-box {
-            text-align: right;
+            text-align: left;
         }
 
         #headerLogo {
-            height: 40px;
-            width: 40px;
+            height: 45px;
+            width: 45px;
             border-radius: 50%;
             object-fit: cover;
-            display: none;
-            border: 2px solid var(--primary-glow);
-            box-shadow: 0 0 10px var(--primary-glow);
+            border: 2px solid var(--primary-accent);
+            box-shadow: 0 0 10px rgba(233, 69, 96, 0.5);
         }
 
-        #companyNameDisplay {
+        #companyNameDisplay, #dateTime {
             font-size: 0.9rem;
-            color: rgba(255, 255, 255, 0.7);
-            margin: 0;
-        }
-        
-        #dateTime {
-            font-size: 0.8rem;
-            color: rgba(255, 255, 255, 0.5);
-            margin: 0;
-        }
-        
-        .chart-placeholder {
-            height: 200px;
-            background: linear-gradient(45deg, rgba(0, 255, 192, 0.1), rgba(0, 255, 192, 0.2)),
-                        linear-gradient(135deg, rgba(255, 0, 128, 0.1), rgba(255, 0, 128, 0.2));
-            border-radius: 15px;
-            margin-top: 20px;
-            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
+            color: var(--text-muted);
+            margin: 5px 0 0 0;
         }
 
-        .navigation-grid {
+        .grid-container {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
             gap: 15px;
-            margin-top: 25px;
+            width: 100%;
         }
 
-        .nav-card {
+        .card {
+            background-color: var(--secondary-bg);
+            color: var(--text-light);
+            border-radius: 12px;
+            padding: 25px 15px;
+            text-align: center;
+            text-decoration: none;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transition: transform 0.2s, box-shadow 0.2s;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 20px;
-            border-radius: 15px;
-            text-decoration: none;
-            color: var(--text-color);
-            text-align: center;
-            transition: all 0.3s ease-in-out;
-            background-color: var(--card-color);
-            border: 1px solid var(--border-color);
-            backdrop-filter: blur(10px);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            position: relative;
+            min-height: 120px;
+            border: 1px solid var(--secondary-bg);
         }
 
-        .nav-card:hover {
-            transform: translateY(-8px) scale(1.05);
-            box-shadow: 0 12px 25px rgba(0, 0, 0, 0.3);
-            border-color: var(--primary-glow);
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3), 0 0 15px var(--primary-accent);
+            border: 1px solid var(--primary-accent);
         }
 
-        .nav-card .icon {
-            font-size: 2.2rem;
+        .card .icon {
+            font-size: 2.5rem;
             margin-bottom: 10px;
-            color: var(--primary-glow);
-            transition: color 0.3s ease-in-out;
-            text-shadow: 0 0 10px var(--primary-glow);
+            color: var(--primary-accent);
         }
 
-        .nav-card:hover .icon {
-            color: var(--secondary-glow);
-            text-shadow: 0 0 15px var(--secondary-glow);
-        }
-        
-        .nav-card span {
+        .card span {
             font-size: 0.9rem;
             font-weight: 500;
         }
-        
+
         #logoutButton {
-            background-color: transparent;
-            border: 1px solid #ff4d4d;
-            color: #ff4d4d;
-            margin-top: 20px;
+            background-color: var(--primary-accent);
+            color: white;
+            border: none;
             cursor: pointer;
-            padding: 12px 20px;
-            border-radius: 10px;
+            padding: 15px 20px;
+            border-radius: 12px;
             font-size: 1rem;
-            transition: background-color 0.3s, color 0.3s;
+            font-weight: bold;
+            margin-top: 30px;
+            transition: background-color 0.2s, transform 0.2s;
             width: 100%;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
         }
 
         #logoutButton:hover {
-            background-color: #ff4d4d;
-            color: white;
+            background-color: #C0392B;
+            transform: translateY(-2px);
         }
 
         .whatsapp-float {
@@ -217,49 +166,50 @@
 </head>
 <body>
     <div class="container">
-        <header class="glass-card">
-            <div class="header-top">
-                <span id="userWelcome">Welcome, User</span>
-                <img id="headerLogo" src="" alt="Company Logo">
+        <header>
+            <div class="header-info-row">
+                <div style="display:flex; align-items:center;">
+                    <img id="headerLogo" src="" alt="Company Logo" style="display: none;">
+                    <div style="margin-left:10px;">
+                        <span id="userWelcome">Welcome, User</span>
+                        <br>
+                        <span id="companyNameDisplay"></span>
+                    </div>
+                </div>
+                <span id="dateTime" style="text-align: right;"></span>
             </div>
-            <div class="header-info-box">
-                <span id="companyNameDisplay"></span>
-                <br>
-                <span id="dateTime"></span>
-            </div>
-            <div class="chart-placeholder"></div>
         </header>
 
-        <div class="navigation-grid">
-            <a class="nav-card" href="add-student.html">
+        <div class="grid-container">
+            <a class="card" href="add-student.html">
                 <span class="icon"><i class="fas fa-user-plus"></i></span>
                 <span>Student Management</span>
             </a>
-            <a class="nav-card" href="view-students.html">
+            <a class="card" href="view-students.html">
                 <span class="icon"><i class="fas fa-clipboard-list"></i></span>
                 <span>View Students</span>
             </a>
-            <a class="nav-card" href="attendance.html">
+            <a class="card" href="attendance.html">
                 <span class="icon"><i class="fas fa-calendar-check"></i></span>
                 <span>Attendance</span>
             </a>
-            <a class="nav-card" href="fee.html">
+            <a class="card" href="fee.html">
                 <span class="icon"><i class="fas fa-wallet"></i></span>
                 <span>Fee Collection</span>
             </a>
-            <a class="nav-card" href="attendance_report.html">
+            <a class="card" href="attendance_report.html">
                 <span class="icon"><i class="fas fa-chart-line"></i></span>
                 <span>Attendance Report</span>
             </a>
-            <a class="nav-card" href="finance_report.html">
+            <a class="card" href="finance_report.html">
                 <span class="icon"><i class="fas fa-chart-bar"></i></span>
                 <span>Finance Summary</span>
             </a>
-            <a class="nav-card" href="sms.html">
+            <a class="card" href="sms.html">
                 <span class="icon"><i class="fas fa-envelope"></i></span>
                 <span>SMS Alerts</span>
             </a>
-            <a class="nav-card" href="admin.html">
+            <a class="card" href="admin.html">
                 <span class="icon"><i class="fas fa-user-shield"></i></span>
                 <span>Admin Panel</span>
             </a>
@@ -269,7 +219,7 @@
             <i class="fas fa-sign-out-alt"></i> Logout
         </button>
     </div>
-    
+
     <a href="https://wa.me/6285739677818?text=Hi%20I%20have%20an%20issue%20with%20Coach%20App.%20Here%20are%20the%20details..."
        target="_blank"
        class="whatsapp-float">
