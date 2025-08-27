@@ -1,269 +1,404 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Add Student</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<style>
-* {
-box-sizing: border-box;
-}
-body {
-font-family: 'Segoe UI', sans-serif;
-background: #f2f2f2;
-padding: 20px;
-}
-.container {
-max-width: 480px;
-margin: auto;
-background: white;
-padding: 20px;
-border-radius: 16px;
-box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-}
-h2 {
-text-align: center;
-color: #007bff;
-margin-bottom: 16px;
-}
-input, select, .dropdown-btn {
-width: 100%;
-padding: 10px;
-margin-bottom: 12px;
-border-radius: 8px;
-border: 1px solid #ccc;
-box-sizing: border-box;
-}
-label { font-weight: 500; }
-button {
-width: 100%;
-background-color: #007bff;
-color: white;
-padding: 12px;
-font-size: 16px;
-border: none;
-border-radius: 10px;
-cursor: pointer;
-}
-button:hover {
-background-color: #0056b3;
-}
-.dropdown-container {
-position: relative;
-margin-bottom: 12px;
-}
-.dropdown-btn {
-background-color: white;
-text-align: left;
-padding: 10px 12px;
-border: 1px solid #ccc;
-border-radius: 8px;
-cursor: pointer;
-display: flex;
-justify-content: space-between;
-align-items: center;
-}
-.dropdown-btn::after {
-content: "▾";
-font-size: 16px;
-color: #777;
-}
-.dropdown-content {
-display: none;
-position: absolute;
-background-color: white;
-border: 1px solid #ccc;
-width: 100%;
-max-height: 240px;
-overflow-y: auto;
-border-radius: 10px;
-box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-margin-top: 4px;
-z-index: 10;
-}
-.dropdown-content label {
-display: flex;
-align-items: center;
-padding: 12px;
-font-size: 15px;
-cursor: pointer;
-border-bottom: 1px solid #eee;
-}
-.dropdown-content label:last-child {
-border-bottom: none;
-}
-.dropdown-content input[type="checkbox"] {
-accent-color: #007bff;
-width: 18px;
-height: 18px;
-margin-right: 10px;
-}
-.dropdown-container.active .dropdown-content {
-display: block;
-}
-@media (max-width: 500px) {
-.container {
-padding: 16px;
-}
-}
-</style>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Add Student</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #007bff;
+            --background-color: #f0f4f8;
+            --card-background: #ffffff;
+            --text-color: #333;
+            --shadow-light: 0 4px 8px rgba(0, 0, 0, 0.05);
+            --shadow-hover: 0 8px 16px rgba(0, 0, 0, 0.1);
+            --input-background: #f7f7f7;
+            --input-border: #ddd;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .form-card {
+            background-color: var(--card-background);
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: var(--shadow-light);
+        }
+
+        h2 {
+            text-align: center;
+            color: var(--primary-color);
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-size: 1.75rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        input, select, .dropdown-btn {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 16px;
+            border-radius: 8px;
+            border: 1px solid var(--input-border);
+            background-color: var(--input-background);
+            color: var(--text-color);
+            box-sizing: border-box;
+        }
+        
+        input:focus, select:focus, .dropdown-btn:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+        }
+
+        #balanceFee {
+            background-color: var(--input-background) !important;
+        }
+
+        button {
+            width: 100%;
+            background-color: var(--primary-color);
+            color: white;
+            padding: 12px;
+            font-size: 16px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .dropdown-container {
+            position: relative;
+            margin-bottom: 16px;
+        }
+        .dropdown-btn {
+            background-color: var(--input-background);
+            text-align: left;
+            padding: 12px;
+            border: 1px solid var(--input-border);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .dropdown-btn::after {
+            content: "▾";
+            font-size: 16px;
+            color: #777;
+        }
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: var(--card-background);
+            border: 1px solid var(--input-border);
+            width: 100%;
+            max-height: 240px;
+            overflow-y: auto;
+            border-radius: 10px;
+            box-shadow: var(--shadow-light);
+            margin-top: 4px;
+            z-index: 10;
+        }
+        .dropdown-content label {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            font-size: 15px;
+            cursor: pointer;
+            border-bottom: 1px solid var(--input-border);
+        }
+        .dropdown-content label:last-child {
+            border-bottom: none;
+        }
+        .dropdown-content input[type="checkbox"],
+        .dropdown-content input[type="radio"] {
+            accent-color: var(--primary-color);
+            width: 18px;
+            height: 18px;
+            margin-right: 10px;
+        }
+        .dropdown-container.active .dropdown-content {
+            display: block;
+        }
+
+        /* MEDIA QUERIES FOR MOBILE OPTIMIZATION */
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+            .container {
+                max-width: 100%;
+            }
+        }
+    </style>
 </head>
 <body>
-<div class="container">
-<h2>Add Student</h2>
-<label>Name *</label>
-<input type="text" id="name" placeholder="Student name" required>
-<label>Phone *</label>
-<input type="tel" id="phone" placeholder="+62.........." required>
-<label>Day Assigned</label>
-<div class="dropdown-container" id="dayDropdown">
-<div class="dropdown-btn" onclick="toggleDropdown()">Select Day(s)</div>
-<div class="dropdown-content">
-<label><input type="checkbox" value="Monday"> Monday</label>
-<label><input type="checkbox" value="Tuesday"> Tuesday</label>
-<label><input type="checkbox" value="Wednesday"> Wednesday</label>
-<label><input type="checkbox" value="Thursday"> Thursday</label>
-<label><input type="checkbox" value="Friday"> Friday</label>
-<label><input type="checkbox" value="Saturday"> Saturday</label>
-<label><input type="checkbox" value="Sunday"> Sunday</label>
-</div>
-</div>
-<label>Total Fee *</label>
-<input type="number" id="totalFee" placeholder="Total Fee" required>
-<label>Initial Payment</label>
-<input type="number" id="initialPayment" placeholder="Initial Payment" required>
-<label>Balance Fee</label>
-<input type="number" id="balanceFee" readonly style="background: #eeeeee;">
-<button onclick="addStudent()">Add Student</button>
-<button onclick="history.back()" style="margin-top: 12px;">⬅️ Back</button>
-</div>
-<script>
-const SUPABASE_URL = 'https://ndishfwnkzdedfcywcle.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5kaXNoZndua3pkZWRmY3l3Y2xlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYwOTk0MjcsImV4cCI6MjA3MTY3NTQyN30.CXQSfhR0MVLF40v2Tp-BcENBpHpPshG9Ys3zLYiBQaM';
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-// ✅ Redirect to login if not logged in
-async function checkUserSession() {
-const { data: { session } } = await supabase.auth.getSession();
-if (!session) {
-window.location.href = 'index.html';
+    <div class="container">
+        <div class="form-card">
+            <h2><span class="card-icon"><i class="fa-solid fa-user-plus"></i></span> Add Student</h2>
+            <label>Name *</label>
+            <input type="text" id="name" placeholder="Student name" required>
+            <label>Phone *</label>
+            <input type="tel" id="phone" placeholder="+62.........." required>
+            <label>Day Assigned</label>
+            <div class="dropdown-container" id="dayDropdown">
+                <div class="dropdown-btn" onclick="toggleDropdown('dayDropdown')">Select Day(s)</div>
+                <div class="dropdown-content">
+                    <label><input type="checkbox" value="Monday"> Monday</label>
+                    <label><input type="checkbox" value="Tuesday"> Tuesday</label>
+                    <label><input type="checkbox" value="Wednesday"> Wednesday</label>
+                    <label><input type="checkbox" value="Thursday"> Thursday</label>
+                    <label><input type="checkbox" value="Friday"> Friday</label>
+                    <label><input type="checkbox" value="Saturday"> Saturday</label>
+                    <label><input type="checkbox" value="Sunday"> Sunday</label>
+                </div>
+            </div>
+            <label>Total Fee *</label>
+            <input type="number" id="totalFee" placeholder="Total Fee" required>
+            <label>Initial Payment *</label>
+            <input type="number" id="initialPayment" placeholder="Initial Payment" required>
+            <label>Balance Fee</label>
+            <input type="number" id="balanceFee" readonly>
+            
+            <label>Select Class *</label>
+            <div class="dropdown-container" id="classDropdown">
+                <div class="dropdown-btn" onclick="toggleDropdown('classDropdown')">Select Class</div>
+                <div class="dropdown-content" id="classDropdownContent">
+                    </div>
+            </div>
+
+            <button onclick="addStudent()">Add Student</button>
+            <button onclick="history.back()" style="margin-top: 16px;"><i class="fa-solid fa-arrow-left"></i> Back</button>
+        </div>
+    </div>
+    
+    <script>
+        const SUPABASE_URL = 'https://ndishfwnkzdedfcywcle.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5kaXNoZndua3pkZWRmY3l3Y2xlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYwOTk0MjcsImV4cCI6MjA3MTY3NTQyN30.CXQSfhR0MVLF40v2Tp-BcENBpHpPshG9Ys3zLYiBQaM';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        async function checkUserSession() {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) {
+                window.location.href = 'index.html';
+            }
+        }
+        
+        const totalFeeInput = document.getElementById("totalFee");
+        const initialPaymentInput = document.getElementById("initialPayment");
+        const balanceFeeInput = document.getElementById("balanceFee");
+
+        totalFeeInput.addEventListener('input', calculateBalance);
+        initialPaymentInput.addEventListener('input', calculateBalance);
+
+      function calculateBalance() {
+    const total = parseFloat(totalFeeInput.value) || 0;
+    const paid = parseFloat(initialPaymentInput.value) || 0;
+    const balance = total - paid;
+    balanceFeeInput.value = balance >= 0 ? Math.round(balance) : 0;
 }
-}
-checkUserSession();
-const totalFeeInput = document.getElementById("totalFee");
-const initialPaymentInput = document.getElementById("initialPayment");
-const balanceFeeInput = document.getElementById("balanceFee");
-totalFeeInput.addEventListener('input', calculateBalance);
-initialPaymentInput.addEventListener('input', calculateBalance);
-function calculateBalance() {
-const total = parseFloat(totalFeeInput.value) || 0;
-const paid = parseFloat(initialPaymentInput.value) || 0;
-const balance = total - paid;
-balanceFeeInput.value = balance >= 0 ? balance : 0;
-}
-function toggleDropdown() {
-const container = document.getElementById("dayDropdown");
-container.classList.toggle("active");
-updateDropdownLabel();
-}
-function getSelectedDays() {
-const checkboxes = document.querySelectorAll(".dropdown-content input[type='checkbox']");
-return Array.from(checkboxes).filter(cb => cb.checked).map(cb => cb.value);
-}
-function updateDropdownLabel() {
-const selected = getSelectedDays();
-const btn = document.querySelector(".dropdown-btn");
-btn.textContent = selected.length > 0 ? selected.join(", ") : "Select Day(s)";
-}
-async function addStudent() {
-const { data: { session } } = await supabase.auth.getSession();
-const user = session?.user;
-if (!user) {
-alert('You must be logged in to add a student.');
-return;
-}
-const name = document.getElementById("name").value.trim();
-const phone = document.getElementById("phone").value.trim();
-const selectedDays = getSelectedDays();
-const totalFee = parseFloat(document.getElementById("totalFee").value) || 0;
-const initialPayment = parseFloat(document.getElementById("initialPayment").value) || 0;
-const balanceFee = totalFee - initialPayment;
-if (!name || !phone || selectedDays.length === 0) {
-alert("Please fill required fields");
-return;
-}
-if (initialPayment > totalFee) {
-alert("Initial payment cannot exceed total fee.");
-return;
-}
-// ✅ Get user's company_id
-const { data: companyData, error: companyError } = await supabase
-.from('users')
-.select('company_id')
-.eq('id', user.id)
-.single();
-if (companyError || !companyData) {
-alert("Could not fetch company info.");
-return;
-}
-const company_id = companyData.company_id;
-// ✅ Check duplicates
-const { data: existingStudents, error: fetchError } = await supabase
-.from('students')
-.select('name, phone')
-.eq('company_id', company_id);
-if (fetchError) {
-alert('Error checking for duplicates: ' + fetchError.message);
-return;
-}
-if (existingStudents.some(s => s.name.toLowerCase() === name.toLowerCase())) {
-alert("A student with this name already exists.");
-return;
-}
-if (existingStudents.some(s => s.phone === phone)) {
-alert("A student with this phone number already exists.");
-return;
-}
-// ✅ Save student
-const { data: studentData, error: studentError } = await supabase
-.from('students')
-.insert([{
-name,
-phone,
-day: selectedDays,
-totalFee,
-initialPayment,
-balanceFee,
-user_id: user.id,
-company_id: company_id
-}])
-.select();
-if (studentError) {
-alert('Error adding student: ' + studentError.message);
-return;
-}
-// ✅ Save fee record with the company_id
-const { error: feeError } = await supabase.from('fees').insert([{
-student_id: studentData[0].id,
-amount: initialPayment,
-date: new Date().toISOString().split("T")[0],
-user_id: user.id,
-company_id: company_id // ✅ Added company_id here
-}]);
-if (feeError) {
-alert('Error saving fee record: ' + feeError.message);
-return;
-}
-alert("Student added!");
-window.location.href = "view-students.html";
-}
-// ✅ Close dropdown when clicking outside
-document.addEventListener("click", function (e) {
-const dropdown = document.getElementById("dayDropdown");
-if (!dropdown.contains(e.target)) {
-dropdown.classList.remove("active");
-}
-});
-</script>
+
+        // Modified toggleDropdown to handle both dropdowns
+        function toggleDropdown(id) {
+            const container = document.getElementById(id);
+            container.classList.toggle("active");
+            if (id === 'dayDropdown') {
+                updateDropdownLabel('dayDropdown');
+            } else if (id === 'classDropdown') {
+                updateDropdownLabel('classDropdown');
+            }
+        }
+
+        function getSelectedDays() {
+            const checkboxes = document.querySelectorAll("#dayDropdown .dropdown-content input[type='checkbox']");
+            return Array.from(checkboxes).filter(cb => cb.checked).map(cb => cb.value);
+        }
+
+        function getSelectedClass() {
+            const radio = document.querySelector("#classDropdown .dropdown-content input[type='radio']:checked");
+            return radio ? radio.value : null;
+        }
+
+        function updateDropdownLabel(id) {
+            const btn = document.getElementById(id).querySelector(".dropdown-btn");
+            if (id === 'dayDropdown') {
+                const selected = getSelectedDays();
+                btn.textContent = selected.length > 0 ? selected.join(", ") : "Select Day(s)";
+            } else if (id === 'classDropdown') {
+                const selected = getSelectedClass();
+                btn.textContent = selected ? selected : "Select Class";
+            }
+        }
+        
+        // New function to fetch and populate classes
+        async function fetchClasses() {
+            const { data, error } = await supabase
+                .from('classes')
+                .select('id, name');
+
+            if (error) {
+                console.error('Error fetching classes:', error.message);
+                return;
+            }
+
+            const classDropdownContent = document.getElementById('classDropdownContent');
+            classDropdownContent.innerHTML = ''; // Clear existing options
+            
+            data.forEach(cls => {
+                const label = document.createElement('label');
+                label.innerHTML = `<input type="radio" name="class" value="${cls.id}" data-name="${cls.name}"> ${cls.name}`;
+                label.addEventListener('click', () => {
+                    setTimeout(() => {
+                        updateDropdownLabel('classDropdown');
+                        document.getElementById('classDropdown').classList.remove('active');
+                    }, 10);
+                });
+                classDropdownContent.appendChild(label);
+            });
+        }
+
+        async function addStudent() {
+            const { data: { session } } = await supabase.auth.getSession();
+            const user = session?.user;
+
+            if (!user) {
+                alert('You must be logged in to add a student.');
+                return;
+            }
+
+            const name = document.getElementById("name").value.trim();
+            const phone = document.getElementById("phone").value.trim();
+            const selectedDays = getSelectedDays();
+            const totalFee = parseFloat(document.getElementById("totalFee").value) || 0;
+            const initialPayment = parseFloat(document.getElementById("initialPayment").value) || 0;
+            const balanceFee = totalFee - initialPayment;
+            const selectedClassId = getSelectedClass();
+
+            if (!name || !phone || selectedDays.length === 0 || !selectedClassId) {
+                alert("Please fill all required fields.");
+                return;
+            }
+
+            if (initialPayment > totalFee) {
+                alert("Initial payment cannot exceed total fee.");
+                return;
+            }
+
+            const { data: companyData, error: companyError } = await supabase
+                .from('users')
+                .select('company_id')
+                .eq('id', user.id)
+                .single();
+
+            if (companyError || !companyData) {
+                alert("Could not fetch company info.");
+                return;
+            }
+            const company_id = companyData.company_id;
+
+            const { data: existingStudents, error: fetchError } = await supabase
+                .from('students')
+                .select('name, phone')
+                .eq('company_id', company_id);
+
+            if (fetchError) {
+                alert('Error checking for duplicates: ' + fetchError.message);
+                return;
+            }
+
+            if (existingStudents.some(s => s.name.toLowerCase() === name.toLowerCase())) {
+                alert("A student with this name already exists.");
+                return;
+            }
+
+            if (existingStudents.some(s => s.phone === phone)) {
+                alert("A student with this phone number already exists.");
+                return;
+            }
+
+            const { data: studentData, error: studentError } = await supabase
+                .from('students')
+                .insert([{
+                    name,
+                    phone,
+                    day: selectedDays,
+                    totalFee,
+                    initialPayment,
+                    balanceFee,
+                    class_id: selectedClassId, // New field
+                    user_id: user.id,
+                    company_id: company_id
+                }])
+                .select();
+
+            if (studentError) {
+                alert('Error adding student: ' + studentError.message);
+                return;
+            }
+
+            const { error: feeError } = await supabase.from('fees').insert([{
+                student_id: studentData[0].id,
+                amount: initialPayment,
+                date: new Date().toISOString().split("T")[0],
+                user_id: user.id,
+                company_id: company_id
+            }]);
+
+            if (feeError) {
+                alert('Error saving fee record: ' + feeError.message);
+                return;
+            }
+
+            alert("Student added!");
+            window.location.href = "view-students.html";
+        }
+
+        document.addEventListener("click", function (e) {
+            const dayDropdown = document.getElementById("dayDropdown");
+            const classDropdown = document.getElementById("classDropdown");
+            if (!dayDropdown.contains(e.target)) {
+                dayDropdown.classList.remove("active");
+            }
+            if (!classDropdown.contains(e.target)) {
+                classDropdown.classList.remove("active");
+            }
+        });
+
+        window.onload = async () => {
+            await checkUserSession();
+            await fetchClasses();
+        };
+    </script>
 </body>
 </html>
