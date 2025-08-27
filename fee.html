@@ -4,7 +4,9 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Collect Fee</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         :root {
@@ -16,9 +18,19 @@
             --shadow-hover: 0 8px 16px rgba(0, 0, 0, 0.1);
             --input-background: #f7f7f7;
             --input-border: #ddd;
+            --success-bg: #d4edda;
+            --success-text: #155724;
+            --danger: #ef5350;
+            --danger-hover: #d64545;
+            --btn-radius: 10px;
         }
+
+        * {
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: 'Segoe UI', sans-serif;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
             margin: 0;
             padding: 20px;
             background-color: var(--background-color);
@@ -28,10 +40,12 @@
             align-items: center;
             min-height: 100vh;
         }
+
         .container {
             width: 100%;
             max-width: 600px;
         }
+
         .company-header-box {
             display: flex;
             align-items: center;
@@ -44,6 +58,7 @@
             margin-bottom: 25px;
             width: 100%;
         }
+
         #headerLogo {
             height: 50px;
             width: 50px;
@@ -51,12 +66,12 @@
             object-fit: cover;
             display: none;
         }
+
         #companyNameDisplay {
             font-size: 1.5rem;
             font-weight: 600;
             color: var(--primary-color);
             margin: 0;
-            text-align: center;
         }
 
         .search-container {
@@ -64,6 +79,7 @@
             width: 100%;
             margin-bottom: 20px;
         }
+
         .search-container input {
             width: 100%;
             padding: 12px 40px 12px 15px;
@@ -71,8 +87,8 @@
             border: 1px solid #ccc;
             font-size: 1rem;
             box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.06);
-            box-sizing: border-box;
         }
+
         .search-container .fa-search {
             position: absolute;
             right: 15px;
@@ -80,6 +96,7 @@
             transform: translateY(-50%);
             color: #777;
         }
+
         .class-filter-container {
             width: 100%;
             overflow-x: auto;
@@ -88,9 +105,11 @@
             margin-bottom: 15px;
             -webkit-overflow-scrolling: touch;
         }
+
         .class-filter-container::-webkit-scrollbar {
             display: none;
         }
+
         .class-filter-btn {
             background-color: var(--card-background);
             border: 1px solid #ccc;
@@ -103,6 +122,7 @@
             display: inline-block;
             color: var(--text-color);
         }
+
         .class-filter-btn.active, .class-filter-btn:hover {
             background-color: var(--primary-color);
             color: white;
@@ -119,14 +139,17 @@
             transition: transform 0.2s, box-shadow 0.2s;
             cursor: pointer;
         }
+
         .student-card:hover {
             transform: translateY(-2px);
             box-shadow: var(--shadow-hover);
         }
+
         .student-name {
             font-weight: 600;
             font-size: 1.1rem;
         }
+
         .student-details-summary {
             font-size: 0.9rem;
             color: #777;
@@ -135,372 +158,578 @@
         .modal {
             display: none;
             position: fixed;
-            z-index: 1;
-            left: 0;
-            top: 0;
+            z-index: 10;
+            inset: 0;
             width: 100%;
             height: 100%;
-            overflow: auto;
-            background-color: rgba(0,0,0,0.6);
+            background-color: rgba(0, 0, 0, 0.6);
             backdrop-filter: blur(5px);
             justify-content: center;
             align-items: center;
+            padding: 16px;
         }
+
         .modal-content {
             background-color: var(--card-background);
             padding: 25px;
             border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
             width: 90%;
-            max-width: 450px;
+            max-width: 480px;
+            outline: none;
         }
+
         .modal-header {
             text-align: center;
             margin-bottom: 20px;
         }
+
         .modal-header h3 {
             margin: 0;
             color: var(--primary-color);
         }
+
         .modal-details {
             margin-bottom: 20px;
         }
+
         .modal-details p {
             margin: 0 0 8px;
             font-size: 1rem;
         }
+
         .modal-details p strong {
             color: var(--primary-color);
         }
+
         #feeHistoryList {
             list-style: none;
             padding: 0;
             margin: 0;
         }
+
         #feeHistoryList li {
             background-color: var(--input-background);
             padding: 8px 12px;
             border-radius: 8px;
             margin-bottom: 8px;
             font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
         }
+
+        .history-amount {
+            font-weight: 600;
+        }
+
+        .history-new {
+            outline: 2px solid var(--primary-color);
+        }
+
         .fee-form {
             margin-top: 20px;
         }
+
         .fee-form label {
             display: block;
             font-weight: 500;
             margin-bottom: 8px;
         }
+
         .fee-form input[type="number"] {
             width: 100%;
             padding: 12px;
             border-radius: 8px;
             border: 1px solid var(--input-border);
             background-color: var(--input-background);
-            box-sizing: border-box;
-            margin-bottom: 16px;
-        }
-        .fee-form button {
-            width: 100%;
-            padding: 12px;
-            background-color: #28a745;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-        .fee-form button:hover {
-            background-color: #218838;
+            margin-bottom: 12px;
         }
 
-        .back-button {
+        .btn {
             width: 100%;
-            background-color: var(--primary-color);
-            color: white;
             padding: 12px;
-            font-size: 16px;
             border: none;
-            border-radius: 10px;
+            border-radius: var(--btn-radius);
             cursor: pointer;
-            transition: background-color 0.2s;
-            display: flex;
+            transition: background-color 0.2s, opacity 0.2s;
+            display: inline-flex;
+            gap: 8px;
             align-items: center;
             justify-content: center;
-            gap: 8px;
-            margin-top: 20px;
+            font-weight: 600;
         }
-        .back-button:hover {
+
+        .btn[disabled] {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: #fff;
+        }
+
+        .btn-primary:hover {
             background-color: #0056b3;
         }
 
+        .btn-success {
+            background-color: #28a745;
+            color: #fff;
+        }
+
+        .btn-success:hover {
+            background-color: #218838;
+        }
+
+        .btn-danger {
+            background-color: var(--danger);
+            color: #fff;
+        }
+
+        .btn-danger:hover {
+            background-color: var(--danger-hover);
+        }
+
+        .back-button {
+            margin-top: 20px;
+        }
+
         .status-message {
-            background-color: #d4edda;
-            color: #155724;
-            padding: 10px;
+            position: fixed;
+            left: 50%;
+            transform: translateX(-50%);
+            bottom: 20px;
+            background-color: var(--success-bg);
+            color: var(--success-text);
+            padding: 10px 14px;
             border-radius: 8px;
             text-align: center;
-            margin-top: 20px;
+            z-index: 20;
+            min-width: 260px;
+            box-shadow: var(--shadow-light);
+        }
+
+        .status-message.error {
+            background-color: #fdecea;
+            color: #611a15;
+        }
+
+        /* Receipt Template - Hidden by default */
+        #receipt-template {
+            width: 350px;
+            padding: 20px;
+            background-color: #fff;
+            border: 1px dashed #ccc;
+            font-family: 'Courier New', Courier, monospace;
+            display: none;
+        }
+
+        #receipt-template h4 {
+            text-align: center;
+            font-size: 1.2rem;
+            margin: 0 0 10px;
+        }
+
+        #receipt-template p {
+            margin: 5px 0;
+            font-size: 0.9rem;
+        }
+
+        .receipt-line {
+            border-top: 1px dashed #ccc;
+            margin: 10px 0;
+        }
+
+        /* Utility */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 1px, 1px);
+            border: 0;
+        }
+
+        .center {
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="company-header-box">
-            <img id="headerLogo" src="" alt="Company Logo">
-            <h1 id="companyNameDisplay">Collect Fee</h1>
-        </div>
-
-        <div class="search-container">
-            <input type="text" id="searchInput" placeholder="Search by name...">
-            <i class="fa-solid fa-search"></i>
-        </div>
-
-        <div class="class-filter-container" id="classFilterContainer">
-            </div>
-
-        <div id="studentList">
-            </div>
-
-        <button onclick="history.back()" class="back-button"><i class="fa-solid fa-arrow-left"></i> Back</button>
+<div class="container">
+    <div class="company-header-box" style="width: 93%;">
+        <img id="headerLogo" src="" alt="Company Logo">
+        <h1 id="companyNameDisplay">Collect Fee</h1>
     </div>
 
-    <div id="feeModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 id="modalStudentName"></h3>
-            </div>
-            <div id="modalDetails" class="modal-details">
-                </div>
-            <div class="fee-form">
-                <label for="amount">Enter Amount to Collect:</label>
-                <input type="number" id="amount" placeholder="Enter amount">
-                <button onclick="collectFee()"><i class="fa-solid fa-dollar-sign"></i> Collect Fee</button>
-            </div>
-            <div style="margin-top: 20px; text-align: center;">
-                <button onclick="closeModal()" class="back-button" style="width: auto;"><i class="fa-solid fa-xmark"></i> Close</button>
-            </div>
+    <div class="search-container">
+        <label class="sr-only" for="searchInput">Search by student name</label>
+        <input type="text" id="searchInput" placeholder="Search by name..." aria-label="Search by student name">
+        <i class="fa-solid fa-search" aria-hidden="true"></i>
+    </div>
+
+    <div id="classFilterContainer" class="class-filter-container" aria-label="Class filters"></div>
+
+    <div id="studentList" aria-live="polite" aria-busy="false"></div>
+
+    <button onclick="history.back()" class="btn btn-primary back-button" aria-label="Go back">
+        <i class="fa-solid fa-arrow-left"></i> Back
+    </button>
+</div>
+
+<div id="feeModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modalStudentName">
+    <div class="modal-content" tabindex="-1">
+        <div class="modal-header">
+            <h3 id="modalStudentName"></h3>
+        </div>
+
+        <div id="modalDetails" class="modal-details"></div>
+
+        <div class="fee-form">
+            <label for="amount">Enter Amount to Collect:</label>
+            <input type="number" id="amount" placeholder="Enter amount" min="1" inputmode="decimal" step="0.01" aria-label="Amount to collect">
+            <button id="collectBtn" class="btn btn-success">
+                <i class="fa-solid fa-dollar-sign"></i> Collect Fee
+            </button>
+
+            <button id="generateReceiptBtn" class="btn btn-danger" disabled>
+                <i class="fa-solid fa-file-pdf"></i> Generate Receipt
+            </button>
+        </div>
+
+        <div class="center" style="margin-top: 16px;">
+            <button id="closeModalBtn" class="btn btn-primary" style="width: auto;">
+                <i class="fa-solid fa-xmark"></i> Close
+            </button>
         </div>
     </div>
-    
-    <script>
-        const SUPABASE_URL = 'https://ndishfwnkzdedfcywcle.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5kaXNoZndua3pkZWRmY3l3Y2xlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYwOTk0MjcsImV4cCI6MjA3MTY3NTQyN30.CXQSfhR0MVLF40v2Tp-BcENBpHpPshG9Ys3zLYiBQaM';
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+</div>
 
-        let currentStudentId = null;
-        let selectedClassId = null;
-        let debounceTimer = null;
+<div id="receipt-template" aria-hidden="true">
+    <div id="receiptCompany"></div>
+    <p class="receipt-line"></p>
+    <p><strong>Receipt Date:</strong> <span id="receiptDate"></span></p>
+    <p><strong>Student:</strong> <span id="receiptStudentName"></span></p>
+    <p><strong>Amount Paid:</strong> $<span id="receiptAmount"></span></p>
+    <p class="receipt-line"></p>
+    <p style="text-align: center;">Thank You!</p>
+</div>
 
-        async function loadDynamicHeader() {
-            const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-            if (sessionError || !session) {
-                window.location.href = 'index.html';
-                return;
+<script>
+    // ========= Config =========
+    // ⚠️ In production, load these from environment (e.g., injected at build) and enforce RLS.
+    const SUPABASE_URL = 'https://ndishfwnkzdedfcywcle.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5kaXNoZndua3pkZWRmY3l3Y2xlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYwOTk0MjcsImV4cCI6MjA3MTY3NTQyN30.CXQSfhR0MVLF40v2Tp-BcENBpHpPshG9Ys3zLYiBQaM';
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // ========= State =========
+    let currentStudentId = null;
+    let selectedClassId = null;
+    let debounceTimer = null;
+    let currentCompanyName = '';
+    let lastInsertedFeeId = null; // used for receipt generation
+
+    // ========= Helpers =========
+    function toast(msg, type = 'success') {
+        const el = document.createElement('div');
+        el.className = `status-message ${type === 'error' ? 'error' : ''}`;
+        el.textContent = msg;
+        document.body.appendChild(el);
+        setTimeout(() => el.remove(), 3000);
+    }
+
+    function onEnterOrSpace(el, handler) {
+        el.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                handler();
             }
-            const user = session.user;
-            const { data, error } = await supabase
-                .from('users')
-                .select('company_id, companies(display_name, logo_url)')
-                .eq('id', user.id)
-                .single();
-            const headerTitle = document.getElementById('companyNameDisplay');
-            const headerLogo = document.getElementById('headerLogo');
-            if (error || !data || !data.companies) {
-                console.error('Error fetching company data:', error?.message);
-                return;
-            }
-            
+        });
+    }
+
+    function setAriaBusy(el, busy) {
+        el.setAttribute('aria-busy', busy ? 'true' : 'false');
+    }
+
+    function setLoading(btn, loading) {
+        if (!btn) return;
+        btn.disabled = loading;
+        if (loading) {
+            btn.dataset.originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
+        } else if (btn.dataset.originalText) {
+            btn.innerHTML = btn.dataset.originalText;
+            delete btn.dataset.originalText;
+        }
+    }
+
+    // ========= Header =========
+    async function loadDynamicHeader() {
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        if (sessionError || !session) {
+            window.location.href = 'index.html';
+            return;
+        }
+        const user = session.user;
+        const { data, error } = await supabase
+            .from('users')
+            .select('company_id, companies(display_name, logo_url)')
+            .eq('id', user.id)
+            .single();
+
+        const headerTitle = document.getElementById('companyNameDisplay');
+        const headerLogo = document.getElementById('headerLogo');
+
+        if (error || !data || !data.companies) {
+            console.error('Error fetching company data:', error?.message);
+            return;
+        }
+        currentCompanyName = data.companies.display_name || '';
+        headerTitle.textContent = currentCompanyName || 'Collect Fee';
+        if (data.companies.logo_url) {
+            headerLogo.src = data.companies.logo_url;
+            headerLogo.style.display = 'inline-block';
+        }
+    }
+
+    // ========= Students =========
+    async function renderStudents(searchQuery = '', classFilterId = null, { limit = 50 } = {}) {
+        const studentList = document.getElementById('studentList');
+        studentList.innerHTML = '';
+        setAriaBusy(studentList, true);
+
+        let query = supabase
+            .from('students')
+            .select('id, name, classes(name), class_id')
+            .order('name', { ascending: true })
+            .limit(limit);
+
+        if (searchQuery) query = query.ilike('name', `%${searchQuery}%`);
+        if (classFilterId) query = query.eq('class_id', classFilterId);
+
+        const { data: students, error } = await query;
+        if (error) {
+            toast('Error loading students.', 'error');
+            setAriaBusy(studentList, false);
+            return;
         }
 
-        async function renderStudents(searchQuery = '', classFilterId = null) {
-            const studentList = document.getElementById('studentList');
-            studentList.innerHTML = '';
-
-            let query = supabase
-                .from('students')
-                .select('id, name, classes(name)')
-                .order('name', { ascending: true });
-
-            if (searchQuery) {
-                query = query.ilike('name', `%${searchQuery}%`);
-            }
-            if (classFilterId) {
-                query = query.eq('class_id', classFilterId);
-            }
-
-            const { data: students, error } = await query;
-            if (error) {
-                console.error('Error fetching students:', error.message);
-                studentList.innerHTML = '<p>Error loading students.</p>';
-                return;
-            }
-
-            if (students.length === 0) {
-                studentList.innerHTML = '<p>No students found.</p>';
-                return;
-            }
-
-            students.forEach(student => {
-                const card = document.createElement('div');
-                card.className = 'student-card';
-                card.innerHTML = `
-                    <div class="student-name">${student.name}</div>
-                    <div class="student-details-summary">${student.classes ? student.classes.name : 'N/A'}</div>
-                `;
-                card.onclick = () => openFeeModal(student.id);
-                studentList.appendChild(card);
-            });
-        }
-        
-        async function renderClassFilters() {
-            const classFilterContainer = document.getElementById('classFilterContainer');
-            const { data: classes, error } = await supabase.from('classes').select('id, name');
-            if (error) {
-                console.error('Error fetching classes:', error.message);
-                return;
-            }
-
-            const allBtn = document.createElement('button');
-            allBtn.className = 'class-filter-btn active';
-            allBtn.textContent = 'All Students';
-            allBtn.onclick = () => {
-                selectedClassId = null;
-                document.querySelectorAll('.class-filter-btn').forEach(btn => btn.classList.remove('active'));
-                allBtn.classList.add('active');
-                renderStudents(document.getElementById('searchInput').value);
-            };
-            classFilterContainer.appendChild(allBtn);
-
-            classes.forEach(cls => {
-                const btn = document.createElement('button');
-                btn.className = 'class-filter-btn';
-                btn.textContent = cls.name;
-                btn.onclick = () => {
-                    selectedClassId = cls.id;
-                    document.querySelectorAll('.class-filter-btn').forEach(btn => btn.classList.remove('active'));
-                    btn.classList.add('active');
-                    renderStudents(document.getElementById('searchInput').value, selectedClassId);
-                };
-                classFilterContainer.appendChild(btn);
-            });
+        if (students.length === 0) {
+            studentList.innerHTML = '<p style="text-align: center;">No students found.</p>';
+            setAriaBusy(studentList, false);
+            return;
         }
 
-        async function openFeeModal(studentId) {
-            currentStudentId = studentId;
-            const modal = document.getElementById('feeModal');
-            const modalStudentName = document.getElementById('modalStudentName');
-            const modalDetails = document.getElementById('modalDetails');
-            const amountInput = document.getElementById('amount');
-            amountInput.value = '';
-
-            const { data: student, error: studentError } = await supabase
-                .from('students')
-                .select('name, totalFee, initialPayment, balanceFee')
-                .eq('id', studentId)
-                .single();
-
-            const { data: fees, error: feesError } = await supabase
-                .from('fees')
-                .select('amount, date')
-                .eq('student_id', studentId)
-                .order('date', { ascending: false });
-
-            if (studentError || feesError) {
-                showMessage('Error fetching student details.');
-                return;
-            }
-
-            const totalPaid = fees.reduce((sum, f) => sum + f.amount, 0);
-            const pending = Math.round(student.totalFee - totalPaid);
-
-            modalStudentName.textContent = student.name;
-            modalDetails.innerHTML = `
-                <p><strong>Total Fee:</strong> ${student.totalFee}</p>
-                <p><strong>Total Paid:</strong> ${totalPaid}</p>
-                <p><strong>Balance:</strong> ${pending}</p>
-                <p><strong>Recent Payments:</strong></p>
-                <ul id="feeHistoryList">
-                    ${fees.length > 0 ? fees.map(f => `<li>${f.date}: $${f.amount}</li>`).join('') : '<li>No recent payments.</li>'}
-                </ul>
+        students.forEach(student => {
+            const card = document.createElement('div');
+            card.className = 'student-card';
+            card.innerHTML = `
+                <div class="student-name">${student.name}</div>
+                <div class="student-details-summary">${student.classes ? student.classes.name : 'N/A'}</div>
             `;
-            modal.style.display = 'flex';
-        }
-
-        function closeModal() {
-            document.getElementById('feeModal').style.display = 'none';
-        }
-
-        async function collectFee() {
-            const amount = parseFloat(document.getElementById('amount').value);
-            const studentId = currentStudentId;
-
-            if (!studentId || isNaN(amount) || amount <= 0) {
-                showMessage("Please enter a valid amount.");
-                return;
-            }
-
-            const { data: { session } } = await supabase.auth.getSession();
-            const user = session?.user;
-            if (!user) {
-                showMessage("Your session has expired. Please log in again.");
-                return;
-            }
-
-            const { data: companyData, error: companyError } = await supabase
-                .from('users')
-                .select('company_id')
-                .eq('id', user.id)
-                .single();
-            if (companyError || !companyData) {
-                showMessage("Error fetching company info.");
-                return;
-            }
-            const company_id = companyData.company_id;
-
-            const { error } = await supabase.from('fees').insert([{
-                student_id: studentId,
-                amount: amount,
-                date: new Date().toISOString().split("T")[0],
-                user_id: user.id,
-                company_id: company_id
-            }]);
-
-            if (error) {
-                showMessage("Failed to collect fee: " + error.message);
-            } else {
-                showMessage("Fee collected successfully!");
-                document.getElementById('amount').value = '';
-                openFeeModal(studentId);
-            }
-        }
-
-        function showMessage(msg) {
-            const el = document.createElement('div');
-            el.className = 'status-message';
-            el.textContent = msg;
-            document.body.appendChild(el);
-            setTimeout(() => el.remove(), 3000);
-        }
-
-        document.getElementById('searchInput').addEventListener('input', (e) => {
-            clearTimeout(debounceTimer);
-            debounceTimer = setTimeout(() => {
-                renderStudents(e.target.value, selectedClassId);
-            }, 300);
+            card.onclick = () => openFeeModal(student.id);
+            card.setAttribute('role', 'button');
+            card.setAttribute('tabindex', '0');
+            card.setAttribute('aria-label', `View fee details for ${student.name}`);
+            onEnterOrSpace(card, () => openFeeModal(student.id));
+            studentList.appendChild(card);
         });
 
-        window.onload = async () => {
-            const { data: { session } } = await supabase.auth.getSession();
-            if (!session) {
-                window.location.href = 'index.html';
-                return;
-            }
-            await loadDynamicHeader();
-            await renderClassFilters();
-            await renderStudents();
+        setAriaBusy(studentList, false);
+    }
+
+    // ========= Class Filters =========
+    async function renderClassFilters() {
+        const classFilterContainer = document.getElementById('classFilterContainer');
+        const { data: classes, error } = await supabase.from('classes').select('id, name').order('name', { ascending: true });
+
+        if (error) {
+            console.error('Error fetching classes:', error.message);
+            return;
+        }
+
+        const allBtn = document.createElement('button');
+        allBtn.className = 'class-filter-btn active';
+        allBtn.textContent = 'All Students';
+        allBtn.onclick = () => {
+            selectedClassId = null;
+            document.querySelectorAll('.class-filter-btn').forEach(btn => btn.classList.remove('active'));
+            allBtn.classList.add('active');
+            renderStudents(document.getElementById('searchInput').value);
         };
-    </script>
+        classFilterContainer.appendChild(allBtn);
+
+        classes.forEach(cls => {
+            const btn = document.createElement('button');
+            btn.className = 'class-filter-btn';
+            btn.textContent = cls.name;
+            btn.onclick = () => {
+                selectedClassId = cls.id;
+                document.querySelectorAll('.class-filter-btn').forEach(btn => btn.classList.remove('active'));
+                btn.classList.add('active');
+                renderStudents(document.getElementById('searchInput').value, selectedClassId);
+            };
+            classFilterContainer.appendChild(btn);
+        });
+    }
+
+    // ========= Modals and Actions =========
+    async function openFeeModal(studentId) {
+        currentStudentId = studentId;
+        const modal = document.getElementById('feeModal');
+        const modalContent = document.getElementById('modalDetails');
+        const amountInput = document.getElementById('amount');
+        const modalStudentName = document.getElementById('modalStudentName');
+        const collectBtn = document.getElementById('collectBtn');
+
+        setLoading(collectBtn, true);
+        modalContent.innerHTML = '<p style="text-align:center;"><i class="fa-solid fa-spinner fa-spin"></i> Loading details...</p>';
+
+        const { data: student, error: studentError } = await supabase
+            .from('students')
+            .select('name, totalFee')
+            .eq('id', studentId)
+            .single();
+
+        const { data: fees, error: feesError } = await supabase
+            .from('fees')
+            .select('amount, date')
+            .eq('student_id', studentId)
+            .order('date', { ascending: false });
+
+        if (studentError || feesError) {
+            toast('Error fetching student details.', 'error');
+            setLoading(collectBtn, false);
+            return;
+        }
+        
+        const totalPaid = fees.reduce((sum, f) => sum + f.amount, 0);
+        const pending = Math.round(student.totalFee - totalPaid);
+
+        modalStudentName.textContent = student.name;
+        modalContent.innerHTML = `
+            <p><strong>Total Fee:</strong> ${student.totalFee}</p>
+            <p><strong>Total Paid:</strong> ${totalPaid}</p>
+            <p><strong>Balance:</strong> ${pending}</p>
+            <p><strong>Recent Payments:</strong></p>
+            <ul id="feeHistoryList">
+                ${fees.length > 0 ? fees.map(f => `<li>${f.date}: $${f.amount}</li>`).join('') : '<li>No recent payments.</li>'}
+            </ul>
+        `;
+        amountInput.value = pending > 0 ? pending : '';
+        setLoading(collectBtn, false);
+        modal.style.display = 'flex';
+        modal.querySelector('.modal-content').focus();
+    }
+
+    function closeModal() {
+        document.getElementById('feeModal').style.display = 'none';
+    }
+    
+    document.getElementById('collectBtn').addEventListener('click', collectFee);
+    document.getElementById('closeModalBtn').addEventListener('click', closeModal);
+
+    async function collectFee() {
+        const amountInput = document.getElementById('amount');
+        const amount = parseFloat(amountInput.value);
+        const studentId = currentStudentId;
+        const collectBtn = document.getElementById('collectBtn');
+        setLoading(collectBtn, true);
+
+        if (!studentId || isNaN(amount) || amount <= 0) {
+            toast("Please enter a valid amount.", 'error');
+            setLoading(collectBtn, false);
+            return;
+        }
+
+        const { data: { session } } = await supabase.auth.getSession();
+        const user = session?.user;
+        if (!user) {
+            toast("Your session has expired. Please log in again.", 'error');
+            setLoading(collectBtn, false);
+            return;
+        }
+
+        const { data: companyData, error: companyError } = await supabase
+            .from('users')
+            .select('company_id')
+            .eq('id', user.id)
+            .single();
+        if (companyError || !companyData) {
+            toast("Error fetching company info.", 'error');
+            setLoading(collectBtn, false);
+            return;
+        }
+        const company_id = companyData.company_id;
+
+        const { data: student, error: studentError } = await supabase
+            .from('students')
+            .select('totalFee')
+            .eq('id', studentId)
+            .single();
+
+        const { data: fees, error: feesError } = await supabase
+            .from('fees')
+            .select('amount')
+            .eq('student_id', studentId);
+
+        if (studentError || feesError) {
+            toast("Error fetching student/fee data.", 'error');
+            setLoading(collectBtn, false);
+            return;
+        }
+
+        const totalPaid = fees.reduce((sum, f) => sum + f.amount, 0);
+        const pending = student.totalFee - totalPaid;
+
+        if (amount > pending) {
+            toast(`Payment exceeds pending fee. Remaining: ${pending}`, 'error');
+            setLoading(collectBtn, false);
+            return;
+        }
+
+        const { error } = await supabase.from('fees').insert([{
+            student_id: studentId,
+            amount: amount,
+            date: new Date().toISOString().split("T")[0],
+            user_id: user.id,
+            company_id: company_id
+        }]);
+
+        if (error) {
+            toast("Failed to collect fee: " + error.message, 'error');
+            setLoading(collectBtn, false);
+        } else {
+            toast("Fee collected successfully!");
+            amountInput.value = '';
+            openFeeModal(studentId); // Re-render modal to show new fee
+            setLoading(collectBtn, false);
+        }
+    }
+    
+    document.getElementById('searchInput').addEventListener('input', (e) => {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => {
+            renderStudents(e.target.value, selectedClassId);
+        }, 300);
+    });
+
+    window.onload = async () => {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+            window.location.href = 'index.html';
+            return;
+        }
+        await loadDynamicHeader();
+        await renderClassFilters();
+        await renderStudents();
+    };
+</script>
 </body>
 </html>
