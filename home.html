@@ -12,7 +12,7 @@
         :root {
             --primary: #6d28d9;
             --secondary: #9333ea;
-            --bg-gradient: linear-gradient(135deg, #6d28d9, #9333ea);
+            --bg-gradient: linear-gradient(135deg, #a8edea, #fed6e3);
             --white: #fff;
             --dark: #111827;
             --gray: #6b7280;
@@ -35,25 +35,35 @@
         header {
             padding: 28px 20px;
             color: var(--white);
-            text-align: center;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        header h1 {
-            font-size: 1.4rem;
-            font-weight: 600;
-            margin-bottom: 6px;
-        }
-        header p {
-            font-size: 0.9rem;
-            opacity: 0.9;
-        }
-        .header-logo-container {
+            position: relative; /* Container for absolute positioning */
+            width: 100%;
+            box-sizing: border-box;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-top: 10px;
+            flex-direction: column;
+        }
+
+        /* The glass-glow block itself */
+        .header-glass-glow {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            box-shadow: 0 0 20px rgba(147, 51, 234, 0.5), inset 0 0 10px rgba(255, 255, 255, 0.2);
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: calc(100% - 40px); /* Adjust for body padding */
+            max-width: 480px;
+            margin: 0 auto;
+        }
+        
+        /* Inner container for logo and text */
+        .header-logo-container {
+            display: flex;
+            align-items: center;
         }
         #headerLogo {
             height: 40px;
@@ -64,7 +74,69 @@
             border: 2px solid var(--white);
             display: none;
         }
+        #companyNameDisplay {
+            font-size: 1rem;
+            font-weight: 600;
+        }
 
+        /* User Icon - positioned absolutely */
+        #userIcon {
+            position: absolute;
+            top: 28px;
+            right: 20px;
+            font-size: 2.5rem;
+            color: var(--white);
+            cursor: pointer;
+            transition: transform 0.2s, color 0.2s;
+            z-index: 101;
+            background: radial-gradient(circle at center, rgba(255, 255, 255, 0.2) 0%, transparent 70%);
+            border-radius: 50%;
+            padding: 5px;
+        }
+        #userIcon:hover {
+            transform: scale(1.1);
+            color: var(--secondary);
+        }
+
+        /* User Details Pop-up */
+        .glass-glow-popup {
+            position: absolute;
+            top: 80px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            box-shadow: 0 6px 25px rgba(0, 0, 0, 0.4);
+            padding: 15px 20px;
+            display: none;
+            flex-direction: column;
+            z-index: 1000;
+            color: var(--white);
+            text-align: left;
+            min-width: 200px;
+        }
+        .glass-glow-popup p {
+            margin: 5px 0;
+            font-size: 0.9rem;
+        }
+        .glass-glow-popup #logoutPopupBtn {
+            background-color: var(--primary);
+            color: var(--white);
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            margin-top: 10px;
+            border: none;
+            cursor: pointer;
+            transition: background 0.2s ease, transform 0.2s ease;
+            align-self: flex-start;
+        }
+        .glass-glow-popup #logoutPopupBtn:hover {
+            background-color: var(--secondary);
+            transform: translateY(-2px);
+        }
+        
         /* DASHBOARD GRID */
         .dashboard {
             padding: 20px;
@@ -93,14 +165,12 @@
             transform: translateY(-6px);
             box-shadow: 0 12px 32px rgba(0,0,0,0.3);
         }
-
-        /* Animated gradient background */
         .card::before {
             content: "";
             position: absolute;
             top: 0; left: 0; right: 0; bottom: 0;
             border-radius: var(--radius);
-            background: linear-gradient(135deg, #6d28d9, #9333ea, #3b82f6, #ec4899);
+            background: linear-gradient(135deg, #6d28d9, #2BC0E4, #4481eb, #6d28d9);
             background-size: 300% 300%;
             animation: gradientMove 6s ease infinite;
             z-index: 0;
@@ -110,8 +180,6 @@
             50% { background-position: 100% 50%; }
             100% { background-position: 0% 50%; }
         }
-
-        /* Card content */
         .card i, .card span, .card small {
             position: relative;
             z-index: 1;
@@ -131,33 +199,8 @@
             opacity: 0.85;
         }
 
-        /* LOGOUT BUTTON */
-        #logoutButton {
-            background-color: var(--white);
-            color: var(--primary);
-            border: none;
-            cursor: pointer;
-            padding: 15px 20px;
-            border-radius: 40px;
-            font-size: 1rem;
-            font-weight: 600;
-            margin: 20px auto 0;
-            width: 90%;
-            max-width: 250px;
-            box-shadow: var(--shadow);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: background 0.25s ease;
-        }
-        #logoutButton:hover {
-            background: var(--primary);
-            color: var(--white);
-        }
-        #logoutButton i {
-            margin-right: 8px;
-            font-size: 1.2rem;
-        }
+        /* LOGOUT BUTTON - this will now be in the popup */
+        #logoutButton { display: none; }
         
         /* FLOATING ACTION BUTTON */
         .fab {
@@ -246,93 +289,26 @@
             width: 34px;
             height: 34px;
         }
-        /* New Header Styles */
-.header-glass-glow {
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 20px;
-    box-shadow: 0 0 20px rgba(147, 51, 234, 0.5), inset 0 0 10px rgba(255, 255, 255, 0.2);
-    padding: 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    position: relative;
-    color: var(--white);
-    margin-bottom: 25px;
-}
-.header-logo-container {
-    margin-top: 0;
-    justify-content: flex-start;
-}
-#companyNameDisplay {
-    font-size: 1rem;
-    font-weight: 600;
-}
-#userIcon {
-    font-size: 1.8rem;
-    color: var(--white);
-    cursor: pointer;
-    transition: transform 0.2s;
-}
-#userIcon:hover {
-    transform: scale(1.1);
-    color: var(--secondary);
-}
-/* User Details Pop-up */
-.glass-glow-popup {
-    position: absolute;
-    top: 90px;
-    right: 20px;
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(15px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-    padding: 15px;
-    display: none;
-    flex-direction: column;
-    z-index: 100;
-    color: var(--white);
-    text-align: left;
-}
-.glass-glow-popup p {
-    margin: 5px 0;
-    font-size: 0.9rem;
-}
-.glass-glow-popup #logoutPopupBtn {
-    background-color: var(--primary);
-    color: var(--white);
-    padding: 10px 15px;
-    border-radius: 8px;
-    font-size: 0.9rem;
-    margin-top: 10px;
-    border: none;
-    cursor: pointer;
-    transition: background 0.2s ease;
-}
-.glass-glow-popup #logoutPopupBtn:hover {
-    background-color: var(--secondary);
-}
     </style>
 </head>
 <body>
     <header>
-    <div class="header-glass-glow">
-        <div class="header-logo-container">
-            <img id="headerLogo" src="" alt="Company Logo">
-            <p id="companyNameDisplay">Loading company...</p>
+        <div class="header-glass-glow">
+            <div class="header-logo-container">
+                <img id="headerLogo" src="" alt="Company Logo">
+                <p id="companyNameDisplay">Loading company...</p>
+            </div>
         </div>
+        
         <i id="userIcon" class="fas fa-user-circle"></i>
-    </div>
-    
-    <div id="user-details-popup" class="glass-glow-popup">
-        <p>Welcome, <strong id="userName"></strong></p>
-        <p>Role: <strong id="userRole"></strong></p>
-        <p>Time: <span id="dateTime"></span></p>
-        <button id="logoutPopupBtn">Logout</button>
-    </div>
-</header>
+        
+        <div id="user-details-popup" class="glass-glow-popup">
+            <p id="userWelcome">Welcome, <strong id="userName"></strong></p>
+            <p>Role: <strong id="userRole"></strong></p>
+            <p>Time: <span id="dateTime"></span></p>
+            <button id="logoutPopupBtn">Logout</button>
+        </div>
+    </header>
 
     <main class="dashboard">
         <a href="view-students.html" class="card"><i class="fas fa-users"></i><span>Students</span><small>Manage all students</small></a>
@@ -344,7 +320,7 @@
         <a href="admin.html" class="card"><i class="fas fa-user-shield"></i><span>Admin</span><small>Settings & control</small></a>
     </main>
 
-    <button id="logoutButton">
+    <button id="logoutButton" style="display:none;">
         <i class="fas fa-sign-out-alt"></i> Logout
     </button>
     
@@ -361,7 +337,6 @@
         <a href="fee.html"><i class="fas fa-wallet"></i></a>
         <a href="admin.html"><i class="fas fa-cog"></i></a>
     </nav>
-
     <script>
         const SUPABASE_URL = "https://ndishfwnkzdedfcywcle.supabase.co";
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5kaXNoZndua3pkZWRmY3l3Y2xlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYwOTk0MjcsImV4cCI6MjA3MTY3NTQyN30.CXQSfhR0MVLF40v2Tp-BcENBpHpPshG9Ys3zLYiBQaM";
@@ -379,16 +354,17 @@
             // Fetch company details
             const { data: userData, error } = await supabase
                 .from('users')
-                .select('companies(display_name, logo_url)')
+                .select('role, companies(display_name, logo_url)')
                 .eq('id', user.id)
                 .single();
 
             const companyName = userData?.companies?.display_name || 'Coaching Classes Management';
             const companyLogo = userData?.companies?.logo_url || '';
             
-            document.getElementById("userWelcome").textContent = `Welcome, ${user.email.split("@")[0]} 👋`;
             document.getElementById("companyNameDisplay").textContent = companyName;
-
+            document.getElementById("userName").textContent = user.email.split("@")[0];
+            document.getElementById("userRole").textContent = userData?.role || 'User';
+            
             if (companyLogo) {
                 const logoEl = document.getElementById("headerLogo");
                 logoEl.src = companyLogo;
@@ -417,87 +393,22 @@
             }
         }
         
-        // Add event listener for logout button
-        document.getElementById('logoutButton').addEventListener('click', (event) => {
-            event.preventDefault();
-            logout();
-        });
+        // Function to toggle the user details popup
+        function toggleUserPopup() {
+            const popup = document.getElementById('user-details-popup');
+            popup.style.display = popup.style.display === 'flex' ? 'none' : 'flex';
+        }
 
+        // Add event listeners
+        document.getElementById('userIcon').addEventListener('click', toggleUserPopup);
+        document.getElementById('logoutPopupBtn').addEventListener('click', logout);
+        
         // Load data on page load
         window.onload = () => {
             loadUserAndCompany();
             updateDateTime();
             setInterval(updateDateTime, 60000);
         };
-        
-  
-    // Function to load user and company details
-    async function loadUserAndCompany() {
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-        if (sessionError || !session) {
-            window.location.href = "index.html";
-            return;
-        }
-        const user = session.user;
-        
-        // Fetch company details
-        const { data: userData, error } = await supabase
-            .from('users')
-            .select('role, companies(display_name, logo_url)')
-            .eq('id', user.id)
-            .single();
-
-        const companyName = userData?.companies?.display_name || 'Coaching Classes Management';
-        const companyLogo = userData?.companies?.logo_url || '';
-        
-        document.getElementById("companyNameDisplay").textContent = companyName;
-        document.getElementById("userName").textContent = user.email.split("@")[0];
-        document.getElementById("userRole").textContent = userData?.role || 'User';
-        
-        if (companyLogo) {
-            const logoEl = document.getElementById("headerLogo");
-            logoEl.src = companyLogo;
-            logoEl.style.display = 'block';
-        }
-    }
-
-    // Function to update date and time
-    function updateDateTime() {
-        const now = new Date();
-        document.getElementById("dateTime").textContent = now.toLocaleString("id-ID", {
-            weekday: "long", month: "long", day: "numeric",
-            hour: "2-digit", minute: "2-digit",
-            hour12: false
-        });
-    }
-    
-    // Logout function
-    async function logout() {
-        const { error } = await supabase.auth.signOut();
-        if (!error) {
-            window.location.href = "index.html";
-        } else {
-            console.error("Logout failed:", error);
-            alert("Logout failed. Please try again.");
-        }
-    }
-    
-    // Function to toggle the user details popup
-    function toggleUserPopup() {
-        const popup = document.getElementById('user-details-popup');
-        popup.style.display = popup.style.display === 'flex' ? 'none' : 'flex';
-    }
-
-    // Add event listeners
-    document.getElementById('userIcon').addEventListener('click', toggleUserPopup);
-    document.getElementById('logoutPopupBtn').addEventListener('click', logout);
-    
-    // Load data on page load
-    window.onload = () => {
-        loadUserAndCompany();
-        updateDateTime();
-        setInterval(updateDateTime, 60000);
-    };
-</script>
+    </script>
 </body>
 </html>
