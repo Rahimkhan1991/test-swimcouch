@@ -246,17 +246,93 @@
             width: 34px;
             height: 34px;
         }
+        /* New Header Styles */
+.header-glass-glow {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 20px;
+    box-shadow: 0 0 20px rgba(147, 51, 234, 0.5), inset 0 0 10px rgba(255, 255, 255, 0.2);
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    color: var(--white);
+    margin-bottom: 25px;
+}
+.header-logo-container {
+    margin-top: 0;
+    justify-content: flex-start;
+}
+#companyNameDisplay {
+    font-size: 1rem;
+    font-weight: 600;
+}
+#userIcon {
+    font-size: 1.8rem;
+    color: var(--white);
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+#userIcon:hover {
+    transform: scale(1.1);
+    color: var(--secondary);
+}
+/* User Details Pop-up */
+.glass-glow-popup {
+    position: absolute;
+    top: 90px;
+    right: 20px;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    padding: 15px;
+    display: none;
+    flex-direction: column;
+    z-index: 100;
+    color: var(--white);
+    text-align: left;
+}
+.glass-glow-popup p {
+    margin: 5px 0;
+    font-size: 0.9rem;
+}
+.glass-glow-popup #logoutPopupBtn {
+    background-color: var(--primary);
+    color: var(--white);
+    padding: 10px 15px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    margin-top: 10px;
+    border: none;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+.glass-glow-popup #logoutPopupBtn:hover {
+    background-color: var(--secondary);
+}
     </style>
 </head>
 <body>
     <header>
-        <h1 id="userWelcome">Welcome, User 👋</h1>
+    <div class="header-glass-glow">
         <div class="header-logo-container">
             <img id="headerLogo" src="" alt="Company Logo">
             <p id="companyNameDisplay">Loading company...</p>
         </div>
-        <p id="dateTime">Loading...</p>
-    </header>
+        <i id="userIcon" class="fas fa-user-circle"></i>
+    </div>
+    
+    <div id="user-details-popup" class="glass-glow-popup">
+        <p>Welcome, <strong id="userName"></strong></p>
+        <p>Role: <strong id="userRole"></strong></p>
+        <p>Time: <span id="dateTime"></span></p>
+        <button id="logoutPopupBtn">Logout</button>
+    </div>
+</header>
 
     <main class="dashboard">
         <a href="view-students.html" class="card"><i class="fas fa-users"></i><span>Students</span><small>Manage all students</small></a>
@@ -353,6 +429,75 @@
             updateDateTime();
             setInterval(updateDateTime, 60000);
         };
-    </script>
+        
+  
+    // Function to load user and company details
+    async function loadUserAndCompany() {
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        if (sessionError || !session) {
+            window.location.href = "index.html";
+            return;
+        }
+        const user = session.user;
+        
+        // Fetch company details
+        const { data: userData, error } = await supabase
+            .from('users')
+            .select('role, companies(display_name, logo_url)')
+            .eq('id', user.id)
+            .single();
+
+        const companyName = userData?.companies?.display_name || 'Coaching Classes Management';
+        const companyLogo = userData?.companies?.logo_url || '';
+        
+        document.getElementById("companyNameDisplay").textContent = companyName;
+        document.getElementById("userName").textContent = user.email.split("@")[0];
+        document.getElementById("userRole").textContent = userData?.role || 'User';
+        
+        if (companyLogo) {
+            const logoEl = document.getElementById("headerLogo");
+            logoEl.src = companyLogo;
+            logoEl.style.display = 'block';
+        }
+    }
+
+    // Function to update date and time
+    function updateDateTime() {
+        const now = new Date();
+        document.getElementById("dateTime").textContent = now.toLocaleString("id-ID", {
+            weekday: "long", month: "long", day: "numeric",
+            hour: "2-digit", minute: "2-digit",
+            hour12: false
+        });
+    }
+    
+    // Logout function
+    async function logout() {
+        const { error } = await supabase.auth.signOut();
+        if (!error) {
+            window.location.href = "index.html";
+        } else {
+            console.error("Logout failed:", error);
+            alert("Logout failed. Please try again.");
+        }
+    }
+    
+    // Function to toggle the user details popup
+    function toggleUserPopup() {
+        const popup = document.getElementById('user-details-popup');
+        popup.style.display = popup.style.display === 'flex' ? 'none' : 'flex';
+    }
+
+    // Add event listeners
+    document.getElementById('userIcon').addEventListener('click', toggleUserPopup);
+    document.getElementById('logoutPopupBtn').addEventListener('click', logout);
+    
+    // Load data on page load
+    window.onload = () => {
+        loadUserAndCompany();
+        updateDateTime();
+        setInterval(updateDateTime, 60000);
+    };
+</script>
 </body>
 </html>
