@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Collect Fee</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         :root {
@@ -243,6 +245,30 @@
             text-align: center;
             margin-top: 20px;
         }
+        
+        /* Receipt Template - Hidden by default */
+        #receipt-template {
+            width: 350px;
+            padding: 20px;
+            background-color: white;
+            border: 1px dashed #ccc;
+            box-sizing: border-box;
+            font-family: 'Courier New', Courier, monospace;
+            display: none; /* Hide until needed */
+        }
+        #receipt-template h4 {
+            text-align: center;
+            font-size: 1.2rem;
+            margin: 0 0 10px;
+        }
+        #receipt-template p {
+            margin: 5px 0;
+            font-size: 0.9rem;
+        }
+        .receipt-line {
+            border-top: 1px dashed #ccc;
+            margin: 10px 0;
+        }
     </style>
 </head>
 <body>
@@ -284,6 +310,16 @@
         </div>
     </div>
     
+    <div id="receipt-template">
+        <div id="receiptCompany"></div>
+        <p class="receipt-line"></p>
+        <p><strong>Receipt Date:</strong> <span id="receiptDate"></span></p>
+        <p><strong>Student:</strong> <span id="receiptStudentName"></span></p>
+        <p><strong>Amount Paid:</strong> $<span id="receiptAmount"></span></p>
+        <p class="receipt-line"></p>
+        <p style="text-align: center;">Thank You!</p>
+    </div>
+
     <script>
         const SUPABASE_URL = 'https://ndishfwnkzdedfcywcle.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5kaXNoZndua3pkZWRmY3l3Y2xlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYwOTk0MjcsImV4cCI6MjA3MTY3NTQyN30.CXQSfhR0MVLF40v2Tp-BcENBpHpPshG9Ys3zLYiBQaM';
@@ -292,6 +328,7 @@
         let currentStudentId = null;
         let selectedClassId = null;
         let debounceTimer = null;
+        let currentCompanyName = '';
 
         async function loadDynamicHeader() {
             const { data: { session }, error: sessionError } = await supabase.auth.getSession();
@@ -311,7 +348,12 @@
                 console.error('Error fetching company data:', error?.message);
                 return;
             }
-            
+            currentCompanyName = data.companies.display_name;
+            headerTitle.textContent = currentCompanyName || 'Collect Fee';
+            if (data.companies.logo_url) {
+                headerLogo.src = data.companies.logo_url;
+                headerLogo.style.display = 'inline-block';
+            }
         }
 
         async function renderStudents(searchQuery = '', classFilterId = null) {
@@ -472,8 +514,46 @@
             } else {
                 showMessage("Fee collected successfully!");
                 document.getElementById('amount').value = '';
+                // Update modal with new fee info and add receipt button
                 openFeeModal(studentId);
+                
+                const receiptButton = document.createElement('button');
+                receiptButton.innerHTML = '<i class="fa-solid fa-file-pdf"></i> Generate Receipt';
+                receiptButton.style.cssText = 'width: 100%; margin-top: 15px; background-color: #ef5350; color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer;';
+                receiptButton.onclick = () => generateReceipt(studentId, amount);
+                document.querySelector('.fee-form').appendChild(receiptButton);
             }
+        }
+        
+        async function generateReceipt(studentId, amount) {
+            // Wait for jsPDF to load
+            const { jsPDF } = window.jspdf;
+
+            const receiptTemplate = document.getElementById('receipt-template');
+            
+            // Populate the template
+            document.getElementById('receiptCompany').innerHTML = `<h4>${currentCompanyName}</h4>`;
+            document.getElementById('receiptDate').textContent = new Date().toLocaleDateString();
+            
+            const { data: student, error } = await supabase.from('students').select('name').eq('id', studentId).single();
+            if (error) {
+                console.error('Error fetching student for receipt:', error.message);
+                return;
+            }
+            document.getElementById('receiptStudentName').textContent = student.name;
+            document.getElementById('receiptAmount').textContent = amount;
+
+            // Generate PDF from the HTML template
+            html2canvas(receiptTemplate, { scale: 2 }).then(canvas => {
+                const imgData = canvas.toDataURL('image/png');
+                const doc = new jsPDF('p', 'mm', 'a5'); // Portrait, mm, A5 size
+                const imgProps= doc.getImageProperties(imgData);
+                const pdfWidth = doc.internal.pageSize.getWidth();
+                const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+
+                doc.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+                doc.save(`receipt_${student.name}.pdf`);
+            });
         }
 
         function showMessage(msg) {
