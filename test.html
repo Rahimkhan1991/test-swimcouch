@@ -71,7 +71,7 @@
     .print-btn:hover {
       background: #0056b3;
     }
-    /* Receipt popup for printing */
+    /* Hidden print template */
     #printArea {
       display: none;
     }
@@ -83,10 +83,13 @@
         visibility: visible;
       }
       #printArea {
+        display: block !important;
         position: absolute;
         left: 0;
         top: 0;
         width: 100%;
+        background: #fff;
+        padding: 20px;
       }
     }
   </style>
@@ -134,7 +137,7 @@
       <p><strong>Class:</strong> <span id="printClass"></span></p>
       <p><strong>Amount Paid:</strong> $<span id="printAmount"></span></p>
       <p><strong>Date:</strong> <span id="printDate"></span></p>
-      <p><strong>Receipt ID:</strong> <span id="printId"></span></p>
+      <p><strong>Receipt No:</strong> <span id="printId"></span></p>
     </div>
     <div style="text-align:center; margin-top:20px; font-size:0.9rem; color:#555;">
       Thank you for your payment!
@@ -143,7 +146,7 @@
 
   <script>
     const SUPABASE_URL = "https://ndishfwnkzdedfcywcle.supabase.co";
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5kaXNoZndua3pkZWRmY3l3Y2xlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYwOTk0MjcsImV4cCI6MjA3MTY3NTQyN30.CXQSfhR0MVLF40v2Tp-BcENBpHpPshG9Ys3zLYiBQaM"; 
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5kaXNoZndua3pkZWRmY3l3Y2xlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYwOTk0MjcsImV4cCI6MjA3MTY3NTQyN30.CXQSfhR0MVLF40v2Tp-BcENBpHpPshG9Ys3zLYiBQaM"; // ⚠️ Replace with secure method
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     async function loadClasses() {
@@ -183,18 +186,22 @@
         .from("fees")
         .select("id, amount, date, students(name, classes(name)), companies(display_name,logo_url)")
         .eq("student_id", studentId)
-        .order("date", { ascending: false });
+        .order("date", { ascending: true });
 
       if (error || fees.length === 0) {
         tbody.innerHTML = `<tr><td colspan="3">No payments found.</td></tr>`;
         return;
       }
-      fees.forEach(fee => {
+
+      fees.forEach((fee, index) => {
+        // Generate sequential receipt numbers
+        const receiptNo = "RCPT-" + String(index + 1).padStart(3, "0");
+
         const tr = document.createElement("tr");
         tr.innerHTML = `
           <td>${fee.date}</td>
           <td>$${fee.amount}</td>
-          <td><button class="print-btn" onclick='printReceipt(${JSON.stringify(JSON.stringify(fee))})'>Print</button></td>
+          <td><button class="print-btn" onclick='printReceipt(${JSON.stringify(JSON.stringify({...fee, receipt_no: receiptNo}))})'>Print</button></td>
         `;
         tbody.appendChild(tr);
       });
@@ -206,7 +213,7 @@
       document.getElementById("printClass").textContent = fee.students?.classes?.name || "N/A";
       document.getElementById("printAmount").textContent = fee.amount;
       document.getElementById("printDate").textContent = fee.date;
-      document.getElementById("printId").textContent = fee.id;
+      document.getElementById("printId").textContent = fee.receipt_no || ("RCPT-" + fee.id);
 
       document.getElementById("companyName").textContent = fee.companies?.display_name || "Company";
       if (fee.companies?.logo_url) {
@@ -215,7 +222,10 @@
         logo.style.display = "inline";
       }
 
-      window.print();
+      // Small delay ensures content is rendered before print
+      setTimeout(() => {
+        window.print();
+      }, 200);
     }
 
     // Event listeners
