@@ -525,36 +525,35 @@
             }
         }
         
-        async function generateReceipt(studentId, amount) {
-            // Wait for jsPDF to load
-            const { jsPDF } = window.jspdf;
+      async function generateReceipt(studentId, amount) {
+    const { jsPDF } = window.jspdf;
+    const receiptTemplate = document.getElementById('receipt-template');
+    
+    // Populate the template with the correct company name
+    document.getElementById('receiptCompany').innerHTML = `<h4>${currentCompanyName}</h4>`;
+    document.getElementById('receiptDate').textContent = new Date().toLocaleDateString();
+    
+    const { data: student, error } = await supabase.from('students').select('name').eq('id', studentId).single();
+    if (error) {
+        console.error('Error fetching student for receipt:', error.message);
+        return;
+    }
+    document.getElementById('receiptStudentName').textContent = student.name;
+    document.getElementById('receiptAmount').textContent = amount;
 
-            const receiptTemplate = document.getElementById('receipt-template');
-            
-            // Populate the template
-            document.getElementById('receiptCompany').innerHTML = `<h4>${currentCompanyName}</h4>`;
-            document.getElementById('receiptDate').textContent = new Date().toLocaleDateString();
-            
-            const { data: student, error } = await supabase.from('students').select('name').eq('id', studentId).single();
-            if (error) {
-                console.error('Error fetching student for receipt:', error.message);
-                return;
-            }
-            document.getElementById('receiptStudentName').textContent = student.name;
-            document.getElementById('receiptAmount').textContent = amount;
-
-            // Generate PDF from the HTML template
-            html2canvas(receiptTemplate, { scale: 2 }).then(canvas => {
-                const imgData = canvas.toDataURL('image/png');
-                const doc = new jsPDF('p', 'mm', 'a5'); // Portrait, mm, A5 size
-                const imgProps= doc.getImageProperties(imgData);
-                const pdfWidth = doc.internal.pageSize.getWidth();
-                const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-
-                doc.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-                doc.save(`receipt_${student.name}.pdf`);
-            });
-        }
+    // Generate PDF from the HTML template
+    html2canvas(receiptTemplate, { scale: 2 }).then(canvas => {
+        const imgData = canvas.toDataURL('image/png');
+        const doc = new jsPDF('p', 'mm', 'a5');
+        const imgProps = doc.getImageProperties(imgData);
+        const pdfWidth = doc.internal.pageSize.getWidth();
+        const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+        
+        // Corrected line: Explicitly specify format 'PNG'
+        doc.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+        doc.save(`receipt_${student.name}.pdf`);
+    });
+}
 
         function showMessage(msg) {
             const el = document.createElement('div');
