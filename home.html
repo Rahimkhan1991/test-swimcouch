@@ -7,28 +7,28 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
 
         :root {
-            --dark-blue: #0A0D15;
-            --light-blue: #3E80B5;
-            --purple: #624388;
-            --accent-glow: #00eaff;
-            --accent-glow-secondary: #f06292;
-            --text-light: #f0f6fc;
+            --dark-background: #0d1117;
+            --card-color: rgba(255, 255, 255, 0.08);
+            --border-color: rgba(255, 255, 255, 0.1);
+            --text-color: #f0f6fc;
+            --primary-glow: #00ffc0;
+            --secondary-glow: #ff0080;
         }
 
         body {
-            font-family: 'Montserrat', sans-serif;
+            font-family: 'Poppins', sans-serif;
             margin: 0;
             padding: 0;
-            background-color: var(--dark-blue);
-            color: var(--text-light);
+            background-color: var(--dark-background);
+            color: var(--text-color);
             min-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: flex-start;
+            justify-content: center;
             overflow-x: hidden;
             position: relative;
         }
@@ -40,16 +40,12 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: radial-gradient(circle at 20% 80%, rgba(62, 128, 181, 0.2), transparent 50%),
-                        radial-gradient(circle at 80% 20%, rgba(98, 67, 136, 0.2), transparent 50%);
+            background: radial-gradient(circle, rgba(160, 25, 255, 0.1) 0%, transparent 50%),
+                        radial-gradient(circle, rgba(255, 0, 150, 0.1) 0%, transparent 50%);
+            background-size: 100% 100%;
+            background-position: top left, bottom right;
+            opacity: 0.5;
             z-index: -1;
-            animation: pulse-bg 15s infinite ease-in-out;
-        }
-
-        @keyframes pulse-bg {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-            100% { transform: scale(1); }
         }
 
         .container {
@@ -59,129 +55,145 @@
             z-index: 1;
         }
 
-        .header-fluid {
+        .glass-card {
+            background-color: var(--card-color);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+            padding: 25px;
+            margin-bottom: 25px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .glass-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
             width: 100%;
-            padding: 25px 0;
-            text-align: center;
-            margin-bottom: 40px;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0));
+            z-index: -1;
         }
 
-        .user-welcome {
-            font-size: 1.5rem;
+        .header-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        #userWelcome {
+            font-size: 1.2rem;
             font-weight: 600;
+            color: #fff;
             margin: 0;
         }
-
-        #companyInfo {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-top: 10px;
-            text-shadow: 0 0 5px var(--accent-glow);
+        
+        .header-info-box {
+            text-align: right;
         }
 
         #headerLogo {
-            height: 50px;
-            width: 50px;
+            height: 40px;
+            width: 40px;
             border-radius: 50%;
             object-fit: cover;
-            margin-right: 10px;
-            border: 2px solid var(--accent-glow);
-            box-shadow: 0 0 15px var(--accent-glow);
             display: none;
+            border: 2px solid var(--primary-glow);
+            box-shadow: 0 0 10px var(--primary-glow);
         }
 
         #companyNameDisplay {
-            font-size: 1.2rem;
-            font-weight: 700;
-            color: var(--text-light);
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.7);
+            margin: 0;
         }
         
         #dateTime {
             font-size: 0.8rem;
-            color: rgba(255, 255, 255, 0.7);
-            margin-top: 5px;
+            color: rgba(255, 255, 255, 0.5);
+            margin: 0;
         }
         
-        .floating-orb {
+        .chart-placeholder {
+            height: 200px;
+            background: linear-gradient(45deg, rgba(0, 255, 192, 0.1), rgba(0, 255, 192, 0.2)),
+                        linear-gradient(135deg, rgba(255, 0, 128, 0.1), rgba(255, 0, 128, 0.2));
+            border-radius: 15px;
+            margin-top: 20px;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .navigation-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        .nav-card {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            width: 140px;
-            height: 140px;
-            border-radius: 50%;
-            background-color: rgba(62, 128, 181, 0.3);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 0 20px rgba(0, 230, 255, 0.2);
-            backdrop-filter: blur(8px);
-            transition: all 0.3s ease-in-out;
-            position: absolute;
+            padding: 20px;
+            border-radius: 15px;
             text-decoration: none;
-            color: var(--text-light);
+            color: var(--text-color);
             text-align: center;
-        }
-        
-        .floating-orb::before {
-            content: '';
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            top: 0;
-            left: 0;
-            border-radius: 50%;
-            box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease-in-out;
+            background-color: var(--card-color);
+            border: 1px solid var(--border-color);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            position: relative;
         }
 
-        .floating-orb:hover {
-            transform: scale(1.1) translateY(-15px);
-            box-shadow: 0 0 30px rgba(0, 230, 255, 0.5), 0 0 50px rgba(255, 0, 150, 0.5);
-            background-color: rgba(62, 128, 181, 0.4);
-        }
-        
-        .orb-icon {
-            font-size: 2.5rem;
-            margin-bottom: 5px;
-            text-shadow: 0 0 10px var(--accent-glow);
+        .nav-card:hover {
+            transform: translateY(-8px) scale(1.05);
+            box-shadow: 0 12px 25px rgba(0, 0, 0, 0.3);
+            border-color: var(--primary-glow);
         }
 
-        .orb-label {
-            font-size: 0.8rem;
+        .nav-card .icon {
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+            color: var(--primary-glow);
+            transition: color 0.3s ease-in-out;
+            text-shadow: 0 0 10px var(--primary-glow);
+        }
+
+        .nav-card:hover .icon {
+            color: var(--secondary-glow);
+            text-shadow: 0 0 15px var(--secondary-glow);
+        }
+        
+        .nav-card span {
+            font-size: 0.9rem;
             font-weight: 500;
         }
         
-        /* Specific Orb Positioning - Feel free to adjust */
-        .orb-1 { top: 15%; left: 5%; }
-        .orb-2 { top: 30%; right: 10%; }
-        .orb-3 { top: 45%; left: 20%; }
-        .orb-4 { top: 60%; right: 5%; }
-        .orb-5 { top: 75%; left: 15%; }
-        .orb-6 { top: 90%; right: 20%; }
-        .orb-7 { top: 20%; right: 35%; }
-        .orb-8 { top: 5%; left: 40%; }
-        
         #logoutButton {
-            background-color: rgba(255, 0, 0, 0.3);
+            background-color: transparent;
             border: 1px solid #ff4d4d;
             color: #ff4d4d;
+            margin-top: 20px;
             cursor: pointer;
             padding: 12px 20px;
             border-radius: 10px;
             font-size: 1rem;
-            margin-top: 25px;
             transition: background-color 0.3s, color 0.3s;
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 10;
+            width: 100%;
         }
 
         #logoutButton:hover {
             background-color: #ff4d4d;
             color: white;
         }
-        
+
         .whatsapp-float {
             position: fixed;
             bottom: 20px;
@@ -205,50 +217,56 @@
 </head>
 <body>
     <div class="container">
-        <header class="header-fluid">
-            <span class="user-welcome" id="userWelcome">Welcome, User</span>
-            <div id="companyInfo">
-                <img id="headerLogo" src="" alt="Company Logo" style="display: none;">
-                <span id="companyNameDisplay"></span>
+        <header class="glass-card">
+            <div class="header-top">
+                <span id="userWelcome">Welcome, User</span>
+                <img id="headerLogo" src="" alt="Company Logo">
             </div>
-            <span id="dateTime"></span>
+            <div class="header-info-box">
+                <span id="companyNameDisplay"></span>
+                <br>
+                <span id="dateTime"></span>
+            </div>
+            <div class="chart-placeholder"></div>
         </header>
 
-        <a class="floating-orb orb-1" href="add-student.html">
-            <span class="orb-icon"><i class="fas fa-user-plus"></i></span>
-            <span class="orb-label">Add Student</span>
-        </a>
-        <a class="floating-orb orb-2" href="view-students.html">
-            <span class="orb-icon"><i class="fas fa-clipboard-list"></i></span>
-            <span class="orb-label">View Students</span>
-        </a>
-        <a class="floating-orb orb-3" href="attendance.html">
-            <span class="orb-icon"><i class="fas fa-calendar-check"></i></span>
-            <span class="orb-label">Attendance</span>
-        </a>
-        <a class="floating-orb orb-4" href="fee.html">
-            <span class="orb-icon"><i class="fas fa-wallet"></i></span>
-            <span class="orb-label">Fee Collection</span>
-        </a>
-        <a class="floating-orb orb-5" href="attendance_report.html">
-            <span class="orb-icon"><i class="fas fa-chart-line"></i></span>
-            <span class="orb-label">Attendance Report</span>
-        </a>
-        <a class="floating-orb orb-6" href="finance_report.html">
-            <span class="orb-icon"><i class="fas fa-chart-bar"></i></span>
-            <span class="orb-label">Finance Summary</span>
-        </a>
-        <a class="floating-orb orb-7" href="sms.html">
-            <span class="orb-icon"><i class="fas fa-envelope"></i></span>
-            <span class="orb-label">SMS Alerts</span>
-        </a>
-        <a class="floating-orb orb-8" href="admin.html">
-            <span class="orb-icon"><i class="fas fa-user-shield"></i></span>
-            <span class="orb-label">Admin Panel</span>
-        </a>
-
+        <div class="navigation-grid">
+            <a class="nav-card" href="add-student.html">
+                <span class="icon"><i class="fas fa-user-plus"></i></span>
+                <span>Student Management</span>
+            </a>
+            <a class="nav-card" href="view-students.html">
+                <span class="icon"><i class="fas fa-clipboard-list"></i></span>
+                <span>View Students</span>
+            </a>
+            <a class="nav-card" href="attendance.html">
+                <span class="icon"><i class="fas fa-calendar-check"></i></span>
+                <span>Attendance</span>
+            </a>
+            <a class="nav-card" href="fee.html">
+                <span class="icon"><i class="fas fa-wallet"></i></span>
+                <span>Fee Collection</span>
+            </a>
+            <a class="nav-card" href="attendance_report.html">
+                <span class="icon"><i class="fas fa-chart-line"></i></span>
+                <span>Attendance Report</span>
+            </a>
+            <a class="nav-card" href="finance_report.html">
+                <span class="icon"><i class="fas fa-chart-bar"></i></span>
+                <span>Finance Summary</span>
+            </a>
+            <a class="nav-card" href="sms.html">
+                <span class="icon"><i class="fas fa-envelope"></i></span>
+                <span>SMS Alerts</span>
+            </a>
+            <a class="nav-card" href="admin.html">
+                <span class="icon"><i class="fas fa-user-shield"></i></span>
+                <span>Admin Panel</span>
+            </a>
+        </div>
+        
         <button id="logoutButton">
-            Logout
+            <i class="fas fa-sign-out-alt"></i> Logout
         </button>
     </div>
     
@@ -294,7 +312,7 @@
             const userName = user.email ? user.email.split('@')[0] : 'User';
             const userRole = data?.role || 'User';
 
-            userWelcomeElement.textContent = `Welcome, ${userName}`;
+            userWelcomeElement.textContent = `Welcome, ${userName} (${userRole})`;
 
             if (error || !data || !data.companies) {
                 console.error('Error fetching company data:', error?.message);
