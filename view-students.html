@@ -1,300 +1,505 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>View Students</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<style>
-body {
-font-family: sans-serif;
-margin: 0;
-padding: 1rem;
-background: #f4f4f4;
-}
-h2 {
-text-align: center;
-color: #007bff;
-}
-.student-card {
-background: #fff;
-border-radius: 10px;
-padding: 1rem;
-margin: 1rem 0;
-box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-display: flex;
-align-items: center;
-justify-content: space-between;
-flex-wrap: wrap;
-}
-.student-info {
-flex: 1;
-min-width: 200px;
-}
-.student-photo {
-width: 60px;
-height: 60px;
-border-radius: 50%;
-object-fit: cover;
-margin-right: 1rem;
-border: 2px solid #ccc;
-}
-.student-header {
-display: flex;
-align-items: center;
-margin-bottom: 0.5rem;
-}
-.pill {
-background: #d1ecf1;
-color: #0c5460;
-padding: 4px 10px;
-border-radius: 20px;
-margin: 2px 4px 2px 0;
-font-size: 0.8rem;
-}
-.buttons {
-margin-top: 0.5rem;
-}
-.buttons button {
-margin-right: 8px;
-padding: 5px 10px;
-border: none;
-border-radius: 6px;
-cursor: pointer;
-}
-.edit-btn {
-background-color: #ffc107;
-color: #000;
-}
-.delete-btn {
-background-color: #dc3545;
-color: #fff;
-}
-/* Modal styles */
-.modal {
-display: none;
-position: fixed;
-top: 0; left: 0;
-width: 100%; height: 100%;
-background: rgba(0,0,0,0.5);
-justify-content: center;
-align-items: center;
-}
-.modal-content {
-background: white;
-padding: 1rem;
-border-radius: 10px;
-width: 80%;
-max-width: 400px;
-}
-.modal-content input {
-width: 90%;
-margin: 0.5rem 0;
-padding: 6px;
-}
-.days-checkboxes label {
-display: inline-block;
-margin: 4px;
-}
-.modal-buttons {
-margin-top: 1rem;
-text-align: right;
-}
-.modal-buttons button {
-margin-left: 0.5rem;
-padding: 5px 10px;
-}
-.close-btn {
-background: #ccc;
-}
-.save-btn {
-background: #28a745;
-color: white;
-}
-</style>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>View Students</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #007bff;
+            --background-color: #f0f4f8;
+            --card-background: #ffffff;
+            --text-color: #333;
+            --shadow-light: 0 4px 8px rgba(0, 0, 0, 0.05);
+            --shadow-hover: 0 8px 16px rgba(0, 0, 0, 0.1);
+            --input-background: #f7f7f7;
+            --input-border: #ddd;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .header {
+            width: 100%;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        h2 {
+            text-align: center;
+            color: var(--primary-color);
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-size: 1.75rem;
+        }
+
+        .student-card {
+            background-color: var(--card-background);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: var(--shadow-light);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .student-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .student-info {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .student-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .student-photo {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-right: 15px;
+            border: 2px solid var(--primary-color);
+        }
+
+        .student-name {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .student-phone {
+            font-size: 0.9rem;
+            color: #777;
+        }
+        
+        .student-details {
+            margin-top: 10px;
+            font-size: 0.9rem;
+        }
+        
+        .pill-container {
+            margin-top: 8px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+
+        .pill {
+            background-color: var(--background-color);
+            color: var(--text-color);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+        
+        .actions {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+            width: 100%;
+            justify-content: flex-end;
+        }
+
+        .actions button {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .edit-btn {
+            background-color: #ffc107;
+            color: #333;
+        }
+        .edit-btn:hover { background-color: #e0a800; }
+
+        .delete-btn {
+            background-color: #dc3545;
+            color: #fff;
+        }
+        .delete-btn:hover { background-color: #c82333; }
+        
+        .back-button {
+            width: 100%;
+            background-color: var(--primary-color);
+            color: white;
+            padding: 12px;
+            font-size: 16px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 20px;
+        }
+
+        .back-button:hover {
+            background-color: #0056b3;
+        }
+
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(5px);
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+        
+        .modal-content {
+            background-color: var(--card-background);
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: var(--shadow-hover);
+            width: 90%;
+            max-width: 450px;
+            transition: background-color 0.3s;
+        }
+
+        .modal-content h3 {
+            text-align: center;
+            color: var(--primary-color);
+            margin-top: 0;
+            margin-bottom: 20px;
+        }
+
+        .modal-content label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .modal-content input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 16px;
+            border-radius: 8px;
+            border: 1px solid var(--input-border);
+            background-color: var(--input-background);
+            color: var(--text-color);
+            box-sizing: border-box;
+        }
+        
+        .days-checkboxes {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .days-checkboxes label {
+            background-color: var(--input-background);
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .days-checkboxes input[type="checkbox"] {
+            margin: 0;
+            width: 18px;
+            height: 18px;
+            accent-color: var(--primary-color);
+        }
+
+        .modal-buttons {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 20px;
+            gap: 10px;
+        }
+
+        .modal-buttons button {
+            padding: 10px 20px;
+            font-size: 1rem;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+        }
+
+        .close-btn {
+            background-color: #ccc;
+            color: #333;
+        }
+
+        .save-btn {
+            background-color: #28a745;
+            color: white;
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+            .container {
+                max-width: 100%;
+            }
+            .student-card {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .actions {
+                width: 100%;
+                justify-content: flex-start;
+                margin-top: 15px;
+            }
+        }
+    </style>
 </head>
 <body>
-<h2>All Students</h2>
-<div id="studentList"></div>
-<div id="editModal" class="modal">
-<div class="modal-content">
-<h3>Edit Student</h3>
-<input type="text" id="editName" placeholder="Name">
-<input type="text" id="editPhone" placeholder="Phone">
-<input type="number" id="editTotalFee" placeholder="Total Fee">
-<input type="number" id="editInitialPayment" placeholder="Initial Payment">
-<div class="days-checkboxes">
-<label><input type="checkbox" value="Monday"> Mon</label>
-<label><input type="checkbox" value="Tuesday"> Tue</label>
-<label><input type="checkbox" value="Wednesday"> Wed</label>
-<label><input type="checkbox" value="Thursday"> Thu</label>
-<label><input type="checkbox" value="Friday"> Fri</label>
-<label><input type="checkbox" value="Saturday"> Sat</label>
-<label><input type="checkbox" value="Sunday"> Sun</label>
-</div>
-<div class="modal-buttons">
-<button class="close-btn" onclick="closeModal()">Cancel</button>
-<button class="save-btn" onclick="saveEdit()">Save</button>
-</div>
-</div>
-</div>
-<script>
-const SUPABASE_URL = 'https://ndishfwnkzdedfcywcle.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5kaXNoZndua3pkZWRmY3l3Y2xlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYwOTk0MjcsImV4cCI6MjA3MTY3NTQyN30.CXQSfhR0MVLF40v2Tp-BcENBpHpPshG9Ys3zLYiBQaM';
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    <div class="container">
+        <h2>All Students</h2>
+        <div id="studentList"></div>
+    </div>
+    
+    <div style="text-align:center; margin-top: 30px;">
+        <button onclick="history.back()" class="back-button"><i class="fa-solid fa-arrow-left"></i> Back</button>
+    </div>
 
-let currentStudentId = null;
-//Check for an active session. If none exists, redirect to the login page.
-async function checkUserSession() {
-const { data: { session } } = await supabase.auth.getSession();
-if (!session) {
-window.location.href = 'index.html'; // Assuming 'index.html' is your login page
-}
-}
-checkUserSession(); // Run the check immediately on page load
-// Renders student cards by fetching data from Supabase
-async function renderStudents() {
-const studentList = document.getElementById("studentList");
-studentList.innerHTML = "";
-const { data: students, error: studentsError } = await supabase.from('students').select('*');
-if (studentsError) {
-console.error('Error fetching students:', studentsError.message);
-studentList.innerHTML = '<p>Error loading students.</p>';
-return;
-}
-if (students.length === 0) {
-studentList.innerHTML = '<p>No students found.</p>';
-return;
-}
-// Fetch all fees to calculate balance
-const { data: fees, error: feesError } = await supabase.from('fees').select('student_id, amount');
-if (feesError) {
-console.error('Error fetching fees:', feesError.message);
-}
-const feeMap = {};
-if (fees) {
-fees.forEach(fee => {
-feeMap[fee.student_id] = (feeMap[fee.student_id] || 0) + fee.amount;
-});
-}
-students.forEach(student => {
-const card = document.createElement("div");
-card.className = "student-card";
-const info = document.createElement("div");
-info.className = "student-info";
-const namePhone = document.createElement("div");
-namePhone.innerHTML = `<strong>${student.name}</strong><br><small>${student.phone}</small>`;
-info.appendChild(namePhone);
-const totalPaid = feeMap[student.id] || 0;
-const total = parseFloat(student.totalFee) || 0;
-const pending = Math.max(total - totalPaid, 0);
-const feeInfo = document.createElement("div");
-feeInfo.innerHTML = `
-💰 Total Fee: ${total}<br>
-💵 Paid: ${totalPaid}<br>
-🧾 Balance: ${pending}
-`;
-info.appendChild(feeInfo);
-const dayContainer = document.createElement("div");
-const days = Array.isArray(student.day) ? student.day : [student.day];
-days.filter(Boolean).forEach(day => {
-const pill = document.createElement("span");
-pill.className = "pill";
-pill.textContent = day;
-dayContainer.appendChild(pill);
-});
-info.appendChild(dayContainer);
-const actions = document.createElement("div");
-actions.className = "buttons";
-actions.innerHTML = `
-<button class="edit-btn" onclick="openEditModal('${student.id}')">Edit</button>
-<button class="delete-btn" onclick="deleteStudent('${student.id}')">Delete</button>
-`;
-info.appendChild(actions);
-card.appendChild(info);
-studentList.appendChild(card);
-});
-}
-// Delete student from Supabase
-async function deleteStudent(studentId) {
-if (confirm("Are you sure you want to delete this student? This will also delete related fees and attendance records.")) {
-// Delete related records first due to foreign key constraints
-await supabase.from('fees').delete().eq('student_id', studentId);
-await supabase.from('attendance').delete().eq('student_id', studentId);
-const { error } = await supabase.from('students').delete().eq('id', studentId);
-if (error) {
-alert("Error deleting student: " + error.message);
-} else {
-alert("Student deleted successfully!");
-renderStudents();
-}
-}
-}
-// Open modal with student data from Supabase
-async function openEditModal(studentId) {
-currentStudentId = studentId;
-const { data: student, error } = await supabase.from('students').select('*').eq('id', studentId).single();
-if (error) {
-alert("Error fetching student data: " + error.message);
-return;
-}
-document.getElementById("editName").value = student.name || "";
-document.getElementById("editPhone").value = student.phone || "";
-document.getElementById("editTotalFee").value = student.totalFee || "";
-document.getElementById("editInitialPayment").value = student.initialPayment || "";
-document.querySelectorAll(".days-checkboxes input").forEach(cb => cb.checked = false);
-const days = Array.isArray(student.day) ? student.day : [student.day];
-days.forEach(day => {
-const cb = document.querySelector(`.days-checkboxes input[value="${day}"]`);
-if (cb) cb.checked = true;
-});
-document.getElementById("editModal").style.display = "flex";
-}
-function closeModal() {
-document.getElementById("editModal").style.display = "none";
-}
-// Save edits to Supabase
-async function saveEdit() {
-const name = document.getElementById("editName").value;
-const phone = document.getElementById("editPhone").value;
-const totalFee = parseFloat(document.getElementById("editTotalFee").value) || 0;
-const initialPayment = parseFloat(document.getElementById("editInitialPayment").value) || 0;
-const balanceFee = totalFee - initialPayment;
-const selectedDays = [];
-document.querySelectorAll(".days-checkboxes input:checked").forEach(cb => {
-selectedDays.push(cb.value);
-});
-const updatedStudent = {
-name: name,
-phone: phone,
-totalFee: totalFee,
-initialPayment: initialPayment,
-balanceFee: balanceFee,
-day: selectedDays
-};
-const { error } = await supabase.from('students').update(updatedStudent).eq('id', currentStudentId);
-if (error) {
-alert("Error saving changes: " + error.message);
-} else {
-alert("Student updated successfully!");
-closeModal();
-renderStudents();
-}
-}
-// Initial render
-renderStudents();
-</script>
-<div style="text-align:center; margin-top: 30px;">
-<button onclick="history.back()" style="
-width: 100%;
-background-color: #007bff;
-color: white;
-padding: 12px;
-font-size: 16px;
-border: none;
-border-radius: 10px;
-cursor: pointer;
-">⬅️ Back</button>
-</div>
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <h3>Edit Student</h3>
+            <label>Name</label>
+            <input type="text" id="editName" placeholder="Name">
+            <label>Phone</label>
+            <input type="text" id="editPhone" placeholder="Phone">
+            <label>Total Fee</label>
+            <input type="number" id="editTotalFee" placeholder="Total Fee">
+            <label>Initial Payment</label>
+            <input type="number" id="editInitialPayment" placeholder="Initial Payment">
+            <label>Assigned Days</label>
+            <div class="days-checkboxes">
+                <label><input type="checkbox" value="Monday"> Mon</label>
+                <label><input type="checkbox" value="Tuesday"> Tue</label>
+                <label><input type="checkbox" value="Wednesday"> Wed</label>
+                <label><input type="checkbox" value="Thursday"> Thu</label>
+                <label><input type="checkbox" value="Friday"> Fri</label>
+                <label><input type="checkbox" value="Saturday"> Sat</label>
+                <label><input type="checkbox" value="Sunday"> Sun</label>
+            </div>
+            <div class="modal-buttons">
+                <button class="close-btn" onclick="closeModal()">Cancel</button>
+                <button class="save-btn" onclick="saveEdit()">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://ndishfwnkzdedfcywcle.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5kaXNoZndua3pkZWRmY3l3Y2xlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYwOTk0MjcsImV4cCI6MjA3MTY3NTQyN30.CXQSfhR0MVLF40v2Tp-BcENBpHpPshG9Ys3zLYiBQaM';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        let currentStudentId = null;
+
+        async function checkUserSession() {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) {
+                window.location.href = 'index.html';
+            }
+        }
+        checkUserSession();
+
+        async function renderStudents() {
+            const studentList = document.getElementById("studentList");
+            studentList.innerHTML = "";
+
+            const { data: students, error: studentsError } = await supabase.from('students').select('*, classes(name)');
+            if (studentsError) {
+                console.error('Error fetching students:', studentsError.message);
+                studentList.innerHTML = '<p>Error loading students.</p>';
+                return;
+            }
+
+            if (students.length === 0) {
+                studentList.innerHTML = '<p>No students found.</p>';
+                return;
+            }
+
+            const { data: fees, error: feesError } = await supabase.from('fees').select('student_id, amount');
+            if (feesError) {
+                console.error('Error fetching fees:', feesError.message);
+            }
+
+            const feeMap = {};
+            if (fees) {
+                fees.forEach(fee => {
+                    feeMap[fee.student_id] = (feeMap[fee.student_id] || 0) + fee.amount;
+                });
+            }
+
+            students.forEach(student => {
+                const card = document.createElement("div");
+                card.className = "student-card";
+                
+                const info = document.createElement("div");
+                info.className = "student-info";
+
+                // Student Header with name and phone
+                const studentHeader = document.createElement("div");
+                studentHeader.className = "student-header";
+                studentHeader.innerHTML = `
+                    <div>
+                        <p class="student-name">${student.name}</p>
+                        <p class="student-phone">${student.phone}</p>
+                    </div>
+                `;
+                info.appendChild(studentHeader);
+
+                // Student details (Fee and Class)
+                const totalPaid = feeMap[student.id] || 0;
+                const total = parseFloat(student.totalFee) || 0;
+                const pending = Math.max(total - totalPaid, 0);
+
+                const studentDetails = document.createElement("div");
+                studentDetails.className = "student-details";
+                studentDetails.innerHTML = `
+                    <p><b>💰 Total Fee:</b> ${total}</p>
+                    <p><b>💵 Paid:</b> ${totalPaid}</p>
+                    <p><b>🧾 Balance:</b> ${Math.round(pending)}</p>
+                    <p><b>🎓 Class:</b> ${student.classes ? student.classes.name : 'N/A'}</p>
+                `;
+                info.appendChild(studentDetails);
+
+                // Assigned days
+                const dayContainer = document.createElement("div");
+                dayContainer.className = "pill-container";
+                const days = Array.isArray(student.day) ? student.day : [student.day];
+                days.filter(Boolean).forEach(day => {
+                    const pill = document.createElement("span");
+                    pill.className = "pill";
+                    pill.textContent = day;
+                    dayContainer.appendChild(pill);
+                });
+                info.appendChild(dayContainer);
+
+                // Action buttons
+                const actions = document.createElement("div");
+                actions.className = "actions";
+                actions.innerHTML = `
+                    <button class="edit-btn" onclick="openEditModal('${student.id}')"><i class="fa-solid fa-pen-to-square"></i> Edit</button>
+                    <button class="delete-btn" onclick="deleteStudent('${student.id}')"><i class="fa-solid fa-trash-can"></i> Delete</button>
+                `;
+                info.appendChild(actions);
+
+                card.appendChild(info);
+                studentList.appendChild(card);
+            });
+        }
+
+        async function deleteStudent(studentId) {
+            if (confirm("Are you sure you want to delete this student? This will also delete related fees and attendance records.")) {
+                // Delete related records first due to foreign key constraints
+                await supabase.from('fees').delete().eq('student_id', studentId);
+                await supabase.from('attendance').delete().eq('student_id', studentId);
+
+                const { error } = await supabase.from('students').delete().eq('id', studentId);
+                if (error) {
+                    alert("Error deleting student: " + error.message);
+                } else {
+                    alert("Student deleted successfully!");
+                    renderStudents();
+                }
+            }
+        }
+
+        async function openEditModal(studentId) {
+            currentStudentId = studentId;
+            const { data: student, error } = await supabase.from('students').select('*').eq('id', studentId).single();
+            if (error) {
+                alert("Error fetching student data: " + error.message);
+                return;
+            }
+
+            document.getElementById("editName").value = student.name || "";
+            document.getElementById("editPhone").value = student.phone || "";
+            document.getElementById("editTotalFee").value = student.totalFee || "";
+            document.getElementById("editInitialPayment").value = student.initialPayment || "";
+
+            document.querySelectorAll(".days-checkboxes input").forEach(cb => cb.checked = false);
+            const days = Array.isArray(student.day) ? student.day : [student.day];
+            days.forEach(day => {
+                const cb = document.querySelector(`.days-checkboxes input[value="${day}"]`);
+                if (cb) cb.checked = true;
+            });
+
+            document.getElementById("editModal").style.display = "flex";
+        }
+
+        function closeModal() {
+            document.getElementById("editModal").style.display = "none";
+        }
+
+        async function saveEdit() {
+            const name = document.getElementById("editName").value;
+            const phone = document.getElementById("editPhone").value;
+            const totalFee = parseFloat(document.getElementById("editTotalFee").value) || 0;
+            const initialPayment = parseFloat(document.getElementById("editInitialPayment").value) || 0;
+            const balanceFee = totalFee - initialPayment;
+
+            const selectedDays = [];
+            document.querySelectorAll(".days-checkboxes input:checked").forEach(cb => {
+                selectedDays.push(cb.value);
+            });
+
+            const updatedStudent = {
+                name: name,
+                phone: phone,
+                totalFee: totalFee,
+                initialPayment: initialPayment,
+                balanceFee: Math.round(balanceFee),
+                day: selectedDays
+            };
+
+            const { error } = await supabase.from('students').update(updatedStudent).eq('id', currentStudentId);
+
+            if (error) {
+                alert("Error saving changes: " + error.message);
+            } else {
+                alert("Student updated successfully!");
+                closeModal();
+                renderStudents();
+            }
+        }
+        
+        renderStudents();
+    </script>
 </body>
 </html>
