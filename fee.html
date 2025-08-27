@@ -311,11 +311,7 @@
                 console.error('Error fetching company data:', error?.message);
                 return;
             }
-            headerTitle.textContent = data.companies.display_name || 'Collect Fee';
-            if (data.companies.logo_url) {
-                headerLogo.src = data.companies.logo_url;
-                headerLogo.style.display = 'inline-block';
-            }
+            
         }
 
         async function renderStudents(searchQuery = '', classFilterId = null) {
