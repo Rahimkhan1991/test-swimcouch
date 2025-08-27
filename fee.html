@@ -430,45 +430,52 @@
         }
 
         async function openFeeModal(studentId) {
-            currentStudentId = studentId;
-            const modal = document.getElementById('feeModal');
-            const modalStudentName = document.getElementById('modalStudentName');
-            const modalDetails = document.getElementById('modalDetails');
-            const amountInput = document.getElementById('amount');
-            amountInput.value = '';
+    currentStudentId = studentId;
+    const modal = document.getElementById('feeModal');
+    const modalStudentName = document.getElementById('modalStudentName');
+    const modalDetails = document.getElementById('modalDetails');
+    const amountInput = document.getElementById('amount');
+    amountInput.value = '';
 
-            const { data: student, error: studentError } = await supabase
-                .from('students')
-                .select('name, totalFee, initialPayment, balanceFee')
-                .eq('id', studentId)
-                .single();
+    const { data: student, error: studentError } = await supabase
+        .from('students')
+        .select('name, totalFee, initialPayment, balanceFee')
+        .eq('id', studentId)
+        .single();
 
-            const { data: fees, error: feesError } = await supabase
-                .from('fees')
-                .select('amount, date')
-                .eq('student_id', studentId)
-                .order('date', { ascending: false });
+    const { data: fees, error: feesError } = await supabase
+        .from('fees')
+        .select('id, amount, date')
+        .eq('student_id', studentId)
+        .order('date', { ascending: false });
 
-            if (studentError || feesError) {
-                showMessage('Error fetching student details.');
-                return;
-            }
+    if (studentError || feesError) {
+        showMessage('Error fetching student details.');
+        return;
+    }
 
-            const totalPaid = fees.reduce((sum, f) => sum + f.amount, 0);
-            const pending = Math.round(student.totalFee - totalPaid);
+    const totalPaid = fees.reduce((sum, f) => sum + f.amount, 0);
+    const pending = Math.round(student.totalFee - totalPaid);
 
-            modalStudentName.textContent = student.name;
-            modalDetails.innerHTML = `
-                <p><strong>Total Fee:</strong> ${student.totalFee}</p>
-                <p><strong>Total Paid:</strong> ${totalPaid}</p>
-                <p><strong>Balance:</strong> ${pending}</p>
-                <p><strong>Recent Payments:</strong></p>
-                <ul id="feeHistoryList">
-                    ${fees.length > 0 ? fees.map(f => `<li>${f.date}: $${f.amount}</li>`).join('') : '<li>No recent payments.</li>'}
-                </ul>
-            `;
-            modal.style.display = 'flex';
-        }
+    modalStudentName.textContent = student.name;
+    modalDetails.innerHTML = `
+        <p><strong>Total Fee:</strong> ${student.totalFee}</p>
+        <p><strong>Total Paid:</strong> ${totalPaid}</p>
+        <p><strong>Balance:</strong> ${pending}</p>
+        <p><strong>Recent Payments:</strong></p>
+        <ul id="feeHistoryList">
+            ${fees.length > 0 ? fees.map(f => 
+                `<li>
+                    <span>${f.date}: $${f.amount}</span>
+                    <button class="receipt-btn" onclick="generateReceipt(${f.id})">
+                        <i class="fa-solid fa-receipt"></i>
+                    </button>
+                </li>`
+            ).join('') : '<li>No recent payments.</li>'}
+        </ul>
+    `;
+    modal.style.display = 'flex';
+}
 
         function closeModal() {
             document.getElementById('feeModal').style.display = 'none';
@@ -525,21 +532,27 @@
             }
         }
         
-     async function generateReceipt(studentId, amount) {
+async function generateReceipt(feeId) {
     const { jsPDF } = window.jspdf;
     const receiptTemplate = document.getElementById('receipt-template');
     
-    // Populate the template with the correct company name
-    document.getElementById('receiptCompany').innerHTML = `<h4>${currentCompanyName}</h4>`;
-    document.getElementById('receiptDate').textContent = new Date().toLocaleDateString();
+    // Fetch the specific fee record and the linked student
+    const { data: feeData, error: feeError } = await supabase
+        .from('fees')
+        .select('*, students(name)')
+        .eq('id', feeId)
+        .single();
     
-    const { data: student, error } = await supabase.from('students').select('name').eq('id', studentId).single();
-    if (error) {
-        console.error('Error fetching student for receipt:', error.message);
+    if (feeError || !feeData || !feeData.students) {
+        console.error('Error fetching fee or student details:', feeError?.message);
         return;
     }
-    document.getElementById('receiptStudentName').textContent = student.name;
-    document.getElementById('receiptAmount').textContent = amount;
+    
+    // Populate the template with the correct data
+    document.getElementById('receiptCompany').innerHTML = `<h4>${currentCompanyName}</h4>`;
+    document.getElementById('receiptDate').textContent = feeData.date;
+    document.getElementById('receiptStudentName').textContent = feeData.students.name;
+    document.getElementById('receiptAmount').textContent = feeData.amount;
 
     // Generate PDF from the HTML template
     html2canvas(receiptTemplate, { scale: 2 }).then(canvas => {
@@ -549,9 +562,8 @@
         const pdfWidth = doc.internal.pageSize.getWidth();
         const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
         
-        // Corrected line: Explicitly specify format and data type
-        doc.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight, '', 'FAST');
-        doc.save(`receipt_${student.name}.pdf`);
+        doc.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+        doc.save(`receipt_${feeData.students.name}_${feeData.date}.pdf`);
     });
 }
 
