@@ -2,412 +2,312 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Coach Management App</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Coaching Classes Management - Home</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
-
         :root {
-            --primary: #6d28d9;
-            --secondary: #9333ea;
-            --bg-gradient: linear-gradient(135deg, #a8edea, #fed6e3);
-            --white: #fff;
-            --dark: #111827;
-            --gray: #6b7280;
-            --radius: 20px;
-            --shadow: 0 8px 24px rgba(0,0,0,0.12);
+            --primary-color: #007bff;
+            --background-color: #f0f4f8;
+            --card-background: #ffffff;
+            --text-color: #333;
+            --soft-blue: #e0f7fa;
+            --soft-green: #e8f5e9;
+            --soft-yellow: #fffde7;
+            --shadow-light: 0 4px 8px rgba(0, 0, 0, 0.05);
+            --shadow-hover: 0 8px 16px rgba(0, 0, 0, 0.1);
         }
-
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; }
 
         body {
-            background: var(--bg-gradient);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            padding-bottom: 90px;
-            color: var(--dark);
-        }
-
-        /* HEADER */
-        header {
-            padding: 28px 20px;
-            color: var(--white);
-            position: relative; /* Container for absolute positioning */
-            width: 100%;
-            box-sizing: border-box;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-        }
-
-        /* The glass-glow block itself */
-        .header-glass-glow {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 20px;
-            box-shadow: 0 0 20px rgba(147, 51, 234, 0.5), inset 0 0 10px rgba(255, 255, 255, 0.2);
+            font-family: 'Segoe UI', sans-serif;
+            margin: 0;
             padding: 20px;
+            background-color: var(--background-color);
+            color: var(--text-color);
             display: flex;
+            flex-direction: column;
             align-items: center;
-            justify-content: center;
-            width: calc(100% - 40px); /* Adjust for body padding */
-            max-width: 480px;
-            margin: 0 auto;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+        }
+
+        header {
+            width: 100%;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            margin-bottom: 10px;
         }
         
-        /* Inner container for logo and text */
-        .header-logo-container {
-            display: flex;
-            align-items: center;
+        #userWelcome {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-color);
+            margin: 0;
+            text-align: left;
         }
+
         #headerLogo {
             height: 40px;
             width: 40px;
             border-radius: 50%;
             object-fit: cover;
-            margin-right: 10px;
-            border: 2px solid var(--white);
             display: none;
         }
+        
+        .header-bottom {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
         #companyNameDisplay {
             font-size: 1rem;
-            font-weight: 600;
+            color: #555;
+            margin: 0;
         }
 
-        /* User Icon - positioned absolutely */
-        #userIcon {
-            position: absolute;
-            top: 28px;
-            right: 20px;
-            font-size: 2.5rem;
-            color: var(--white);
-            cursor: pointer;
-            transition: transform 0.2s, color 0.2s;
-            z-index: 101;
-            background: radial-gradient(circle at center, rgba(255, 255, 255, 0.2) 0%, transparent 70%);
-            border-radius: 50%;
-            padding: 5px;
-        }
-        #userIcon:hover {
-            transform: scale(1.1);
-            color: var(--secondary);
+        #dateTime {
+            font-size: 0.9rem;
+            color: #777;
+            margin: 0;
         }
 
-        /* User Details Pop-up */
-        .glass-glow-popup {
-            position: absolute;
-            top: 80px;
-            right: 20px;
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(15px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 12px;
-            box-shadow: 0 6px 25px rgba(0, 0, 0, 0.4);
-            padding: 15px 20px;
-            display: none;
-            flex-direction: column;
-            z-index: 1000;
-            color: var(--white);
-            text-align: left;
-            min-width: 200px;
-        }
-        .glass-glow-popup p {
-            margin: 5px 0;
-            font-size: 0.9rem;
-        }
-        .glass-glow-popup #logoutPopupBtn {
-            background-color: var(--primary);
-            color: var(--white);
-            padding: 10px 15px;
-            border-radius: 8px;
-            font-size: 0.9rem;
-            margin-top: 10px;
-            border: none;
-            cursor: pointer;
-            transition: background 0.2s ease, transform 0.2s ease;
-            align-self: flex-start;
-        }
-        .glass-glow-popup #logoutPopupBtn:hover {
-            background-color: var(--secondary);
-            transform: translateY(-2px);
-        }
-        
-        /* DASHBOARD GRID */
-        .dashboard {
-            padding: 20px;
+        .grid-container {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            gap: 18px;
+            gap: 15px;
+            width: 100%;
         }
+
         .card {
-            position: relative;
-            border-radius: var(--radius);
-            padding: 28px 18px;
+            background-color: var(--card-background);
+            border-radius: 12px;
+            padding: 20px;
             text-align: center;
-            overflow: hidden;
-            cursor: pointer;
-            box-shadow: var(--shadow);
+            font-size: 1rem;
+            color: var(--text-color);
+            box-shadow: var(--shadow-light);
+            transition: transform 0.2s, box-shadow 0.2s;
+            text-decoration: none;
             display: flex;
             flex-direction: column;
-            align-items: center;
             justify-content: center;
-            color: var(--white);
-            text-decoration: none;
-            transition: transform 0.25s ease, box-shadow 0.25s ease;
+            align-items: center;
+            min-height: 120px;
         }
-        
+
         .card:hover {
-            transform: translateY(-6px);
-            box-shadow: 0 12px 32px rgba(0,0,0,0.3);
-        }
-        .card::before {
-            content: "";
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            border-radius: var(--radius);
-            background: linear-gradient(135deg, #6d28d9, #2BC0E4, #4481eb, #6d28d9);
-            background-size: 300% 300%;
-            animation: gradientMove 6s ease infinite;
-            z-index: 0;
-        }
-        @keyframes gradientMove {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-        .card i, .card span, .card small {
-            position: relative;
-            z-index: 1;
-        }
-        .card i {
-            font-size: 2.2rem;
-            margin-bottom: 12px;
-        }
-        .card span {
-            font-weight: 600;
-            font-size: 1rem;
-        }
-        .card small {
-            display: block;
-            margin-top: 6px;
-            font-size: 0.85rem;
-            opacity: 0.85;
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-hover);
         }
 
-        /* LOGOUT BUTTON - this will now be in the popup */
-        #logoutButton { display: none; }
+        .card-icon {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            color: var(--primary-color);
+        }
+
+        .card-label {
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
         
-        /* FLOATING ACTION BUTTON */
-        .fab {
-            position: fixed;
-            bottom: 100px;
-            right: 20px;
-            background: var(--white);
-            color: var(--primary);
-            border-radius: 50%;
-            width: 65px;
-            height: 65px;
+        /* Specific card colors from mockup */
+        .card:nth-child(1) { background-color: #e3f2fd; }
+        .card:nth-child(2) { background-color: #e8f5e9; }
+        .card:nth-child(3) { background-color: #fff8e1; }
+        .card:nth-child(4) { background-color: #f3e5f5; }
+        .card:nth-child(5) { background-color: #fbe9e7; }
+        .card:nth-child(6) { background-color: #ede7f6; }
+        .card:nth-child(7) { background-color: #d1c4e9; }
+        .card:nth-child(8) { background-color: #cfd8dc; }
+
+        #logoutButton {
+            background-color: #ef5350;
+            color: white;
+            border: none;
+            cursor: pointer;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 1rem;
+            margin-top: 20px;
+            transition: background-color 0.2s;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.8rem;
-            box-shadow: var(--shadow);
-            cursor: pointer;
-            text-decoration: none;
-            transition: background 0.25s ease, transform 0.25s ease;
-            z-index: 10;
-        }
-        .fab:hover {
-            background: var(--primary);
-            color: var(--white);
-            transform: scale(1.05);
         }
 
-        /* BOTTOM NAVIGATION */
-        .bottom-nav {
-            position: fixed;
-            bottom: 15px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: var(--white);
-            border-radius: 40px;
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            padding: 12px 0;
-            width: 92%;
-            max-width: 480px;
-            box-shadow: var(--shadow);
-            z-index: 10;
+        #logoutButton:hover {
+            background-color: #e53935;
         }
-        .bottom-nav a {
-            flex: 1;
-            text-align: center;
-            text-decoration: none;
-            color: var(--gray);
-            font-size: 1.5rem;
-            position: relative;
-            padding: 8px 0;
-            transition: color 0.25s ease;
-        }
-        .bottom-nav a.active {
-            color: var(--primary);
-        }
-        .bottom-nav a.active::after {
-            content: "";
-            position: absolute;
-            bottom: -6px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 6px;
-            height: 6px;
-            background: var(--primary);
-            border-radius: 50%;
-        }
-
-        /* WHATSAPP SUPPORT */
+        
         .whatsapp-float {
             position: fixed;
-            bottom: 180px;
+            bottom: 20px;
             right: 20px;
-            background: #25D366;
+            z-index: 1000;
+            background-color: #25D366;
             border-radius: 50%;
-            padding: 14px;
-            box-shadow: var(--shadow);
-            transition: transform 0.25s ease;
-            z-index: 10;
+            padding: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            transition: background-color 0.3s ease;
         }
         .whatsapp-float:hover {
-            transform: scale(1.1);
+            background-color: #1EBE5D;
         }
-        .whatsapp-float img {
-            width: 34px;
-            height: 34px;
+        .whatsapp-icon {
+            width: 40px;
+            height: 40px;
+            display: block;
         }
     </style>
 </head>
 <body>
-    <header>
-        <div class="header-glass-glow">
-            <div class="header-logo-container">
+    <div class="container">
+        <header>
+            <div class="header-top">
+                <p id="userWelcome"></p>
                 <img id="headerLogo" src="" alt="Company Logo">
-                <p id="companyNameDisplay">Loading company...</p>
             </div>
+            <div class="header-bottom">
+                <p id="companyNameDisplay"></p>
+                <p id="dateTime"></p>
+            </div>
+        </header>
+        
+        <div class="grid-container">
+            <a class="card" href="add-student.html">
+                <span class="card-icon"><i class="fa-solid fa-user-plus"></i></span>
+                <span class="card-label">Student Management</span>
+            </a>
+            <a class="card" href="view-students.html">
+                <span class="card-icon"><i class="fa-solid fa-clipboard-list"></i></span>
+                <span class="card-label">View Students</span>
+            </a>
+            <a class="card" href="attendance.html">
+                <span class="card-icon"><i class="fa-solid fa-calendar-check"></i></span>
+                <span class="card-label">Attendance</span>
+            </a>
+            <a class="card" href="fee.html">
+                <span class="card-icon"><i class="fa-solid fa-money-bill-wave"></i></span>
+                <span class="card-label">Fee Collection</span>
+            </a>
+            <a class="card" href="attendance_report.html">
+                <span class="card-icon"><i class="fa-solid fa-chart-line"></i></span>
+                <span class="card-label">Attendance Report</span>
+            </a>
+            <a class="card" href="finance_report.html">
+                <span class="card-icon"><i class="fa-solid fa-chart-bar"></i></span>
+                <span class="card-label">Finance Summary</span>
+            </a>
+            <a class="card" href="sms.html">
+                <span class="card-icon"><i class="fa-solid fa-envelope"></i></span>
+                <span class="card-label">SMS Alerts</span>
+            </a>
+            <a class="card" href="admin.html">
+                <span class="card-icon"><i class="fa-solid fa-user-gear"></i></span>
+                <span class="card-label">Admin Panel</span>
+            </a>
         </div>
         
-        <i id="userIcon" class="fas fa-user-circle"></i>
-        
-        <div id="user-details-popup" class="glass-glow-popup">
-            <p id="userWelcome">Welcome, <strong id="userName"></strong></p>
-            <p>Role: <strong id="userRole"></strong></p>
-            <p>Time: <span id="dateTime"></span></p>
-            <button id="logoutPopupBtn">Logout</button>
-        </div>
-    </header>
-
-    <main class="dashboard">
-        <a href="view-students.html" class="card"><i class="fas fa-users"></i><span>Students</span><small>Manage all students</small></a>
-        <a href="attendance.html" class="card"><i class="fas fa-calendar-check"></i><span>Attendance</span><small>Track daily presence</small></a>
-        <a href="fee.html" class="card"><i class="fas fa-wallet"></i><span>Fees</span><small>Collect & monitor fees</small></a>
-        <a href="attendance_report.html" class="card"><i class="fas fa-chart-line"></i><span>Reports</span><small>Attendance analysis</small></a>
-        <a href="finance_report.html" class="card"><i class="fas fa-coins"></i><span>Finance</span><small>View summary</small></a>
-        <a href="sms.html" class="card"><i class="fas fa-envelope"></i><span>SMS</span><small>Send alerts</small></a>
-        <a href="admin.html" class="card"><i class="fas fa-user-shield"></i><span>Admin</span><small>Settings & control</small></a>
-    </main>
-
-    <button id="logoutButton" style="display:none;">
-        <i class="fas fa-sign-out-alt"></i> Logout
-    </button>
+        <button class="card" id="logoutButton">
+            <i class="fa-solid fa-right-from-bracket"></i> Logout
+        </button>
+    </div>
     
-    <a href="add-student.html" class="fab"><i class="fas fa-plus"></i></a>
-
-    <a href="https://wa.me/6285739677818?text=Hi%20I%20need%20help%20with%20Coach%20App..."
-        target="_blank" class="whatsapp-float">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp">
+    <a href="https://wa.me/6285739677818?text=Hi%20I%20have%20an%20issue%20with%20Coach%20App.%20Here%20are%20the%20details..."
+       target="_blank"
+       class="whatsapp-float">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp" class="whatsapp-icon">
     </a>
 
-    <nav class="bottom-nav">
-        <a href="view-students.html" class="active"><i class="fas fa-users"></i></a>
-        <a href="attendance.html"><i class="fas fa-calendar-check"></i></a>
-        <a href="fee.html"><i class="fas fa-wallet"></i></a>
-        <a href="admin.html"><i class="fas fa-cog"></i></a>
-    </nav>
     <script>
-        const SUPABASE_URL = "https://ndishfwnkzdedfcywcle.supabase.co";
-        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5kaXNoZndua3pkZWRmY3l3Y2xlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYwOTk0MjcsImV4cCI6MjA3MTY3NTQyN30.CXQSfhR0MVLF40v2Tp-BcENBpHpPshG9Ys3zLYiBQaM";
+        const SUPABASE_URL = 'https://ndishfwnkzdedfcywcle.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5kaXNoZndua3pkZWRmY3l3Y2xlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYwOTk0MjcsImV4cCI6MjA3MTY3NTQyN30.CXQSfhR0MVLF40v2Tp-BcENBpHpPshG9Ys3zLYiBQaM';
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // Function to load user and company details
-        async function loadUserAndCompany() {
+        async function logout() {
+            const { error } = await supabase.auth.signOut();
+            if (error) {
+                console.error("Logout error:", error);
+            } else {
+                window.location.href = "index.html";
+            }
+        }
+
+        async function loadDynamicContent() {
             const { data: { session }, error: sessionError } = await supabase.auth.getSession();
             if (sessionError || !session) {
-                window.location.href = "index.html";
+                window.location.href = 'index.html';
                 return;
             }
+
             const user = session.user;
-            
-            // Fetch company details
-            const { data: userData, error } = await supabase
+
+            const { data, error } = await supabase
                 .from('users')
                 .select('role, companies(display_name, logo_url)')
                 .eq('id', user.id)
                 .single();
 
-            const companyName = userData?.companies?.display_name || 'Coaching Classes Management';
-            const companyLogo = userData?.companies?.logo_url || '';
-            
-            document.getElementById("companyNameDisplay").textContent = companyName;
-            document.getElementById("userName").textContent = user.email.split("@")[0];
-            document.getElementById("userRole").textContent = userData?.role || 'User';
-            
-            if (companyLogo) {
-                const logoEl = document.getElementById("headerLogo");
-                logoEl.src = companyLogo;
-                logoEl.style.display = 'block';
-            }
-        }
+            const userWelcomeElement = document.getElementById('userWelcome');
+            const headerLogo = document.getElementById('headerLogo');
+            const companyNameDisplayElement = document.getElementById('companyNameDisplay');
 
-        // Function to update date and time
-        function updateDateTime() {
-            const now = new Date();
-            document.getElementById("dateTime").textContent = now.toLocaleString("id-ID", {
-                weekday: "long", month: "long", day: "numeric",
-                hour: "2-digit", minute: "2-digit",
-                hour12: false
-            });
-        }
-        
-        // Logout function
-        async function logout() {
-            const { error } = await supabase.auth.signOut();
-            if (!error) {
-                window.location.href = "index.html";
+            const userName = user.email ? user.email.split('@')[0] : 'User'; // Use part of email as name
+            const userRole = data?.role || 'User';
+
+            userWelcomeElement.textContent = `Welcome, ${userName} (${userRole})`;
+
+            if (error || !data || !data.companies) {
+                console.error('Error fetching company data:', error?.message);
+                companyNameDisplayElement.textContent = 'Coaching Classes Management';
+                headerLogo.style.display = 'none';
+                return;
+            }
+
+            companyNameDisplayElement.textContent = data.companies.display_name || 'Coaching Classes Management';
+
+            if (data.companies.logo_url) {
+                headerLogo.src = data.companies.logo_url;
+                headerLogo.style.display = 'block';
             } else {
-                console.error("Logout failed:", error);
-                alert("Logout failed. Please try again.");
+                headerLogo.src = ''; 
+                headerLogo.style.display = 'none';
             }
         }
-        
-        // Function to toggle the user details popup
-        function toggleUserPopup() {
-            const popup = document.getElementById('user-details-popup');
-            popup.style.display = popup.style.display === 'flex' ? 'none' : 'flex';
+
+        function updateDateTime() {
+            const dateTimeElement = document.getElementById('dateTime');
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            const timeStr = now.toLocaleTimeString('en-US');
+            dateTimeElement.textContent = `${dateStr} | ${timeStr}`;
         }
 
-        // Add event listeners
-        document.getElementById('userIcon').addEventListener('click', toggleUserPopup);
-        document.getElementById('logoutPopupBtn').addEventListener('click', logout);
-        
-        // Load data on page load
-        window.onload = () => {
-            loadUserAndCompany();
+        document.getElementById('logoutButton').addEventListener('click', logout);
+
+        window.onload = async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            await loadDynamicContent();
             updateDateTime();
-            setInterval(updateDateTime, 60000);
+            setInterval(updateDateTime, 1000);
         };
     </script>
 </body>
