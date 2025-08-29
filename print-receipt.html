@@ -73,18 +73,19 @@
       }
 
       const { data: fees, error } = await supabase
-        .from("fees")
-        .select(`
-          id, amount, date, receipt_no, date_of_joining,
-          students (
-            id, name, phone, totalFee, initialPayment, balanceFee,
-            classes (name),
-            companies (id, display_name, logo_url)
-          )
-        `)
-        .eq("student_id", studentId)
-        .eq("company_id", currentCompanyId)
-        .order("date", { ascending: true });
+  .from("fees")
+  .select(`
+    id, amount, date, receipt_no,
+    students (
+      id, name, phone, totalFee, initialPayment, balanceFee,
+      classes (name),
+      companies (id, display_name, logo_url)
+    )
+  `)
+  .eq("student_id", studentId)
+  .eq("company_id", currentCompanyId)
+  .order("date", { ascending: true });
+
 
       if (error || !fees?.length) {
         tbody.innerHTML = `<tr><td colspan="3">No payments found.</td></tr>`;
@@ -115,7 +116,7 @@
         date: fee.date,
         studentName: student?.name,
         className: student?.classes?.name,
-        dateOfJoining: fee.date_of_joining || "...............",
+        dateOfJoining: student?.created_at || "...............",
         totalFee: student?.totalFee || 0,
         paidFee: student?.initialPayment || 0,
         balanceFee: student?.balanceFee || 0,
