@@ -274,15 +274,41 @@
     .template-preview button { margin-top:10px; padding:6px 12px; background:#28a745; color:#fff; border:none; border-radius:5px; }
     .close-modal-btn { padding:6px 12px; background:#ef5350; color:#fff; border:none; border-radius:5px; cursor:pointer; margin-top:10px; }
 
-    /* Print */
-    #printArea { display:none; }
-    @media print {
-      body * { visibility:hidden; }
-      #printArea, #printArea * { visibility:visible; }
-      #printArea { display:block !important; position:absolute; top:0; left:0; width:85%; }
-      @page { size: A5 landscape; margin:10mm; }
-      .receipt { padding:20px; }
-    }
+  /* Print */
+#printArea { display:none; }
+
+@media print {
+  body {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #fff !important;
+  }
+
+  body * { visibility:hidden; }
+  #printArea, #printArea * { visibility:visible; }
+
+  #printArea {
+    display:block !important;
+    position:absolute;
+    top:0;
+    left:0;
+    width:100%;          /* use full width */
+    height:auto;
+    margin:0 auto;
+    box-sizing: border-box;
+  }
+
+  @page {
+    size: A5 landscape;
+    margin: 10mm;        /* controlled margin */
+  }
+
+  .receipt {
+    padding:20px;
+    page-break-inside: avoid; /* prevent page splitting */
+  }
+}
+
 
     /* Receipt styles */
     .receipt { width:75%; height:85%; }
