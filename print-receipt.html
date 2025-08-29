@@ -4,7 +4,95 @@
   <meta charset="UTF-8" />
   <title>Receipts</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script type="module">
+    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.8/+esm";
+
+    const SUPABASE_URL = "https://ndishfwnkzdedfcywcle.supabase.co";
+    const SUPABASE_ANON_KEY = "YOUR-ANON-KEY-HERE";
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    async function loadClasses() {
+      const { data: classes } = await supabase.from("classes").select("id,name").order("name");
+      const classSelect = document.getElementById("classSelect");
+      classes?.forEach(c => {
+        const opt = document.createElement("option");
+        opt.value = c.id;
+        opt.textContent = c.name;
+        classSelect.appendChild(opt);
+      });
+    }
+
+    async function loadStudents(classId, search="") {
+      const studentSelect = document.getElementById("studentSelect");
+      studentSelect.innerHTML = `<option value="">-- Select Student --</option>`;
+      if (!classId) return;
+      let query = supabase.from("students").select("id,name").eq("class_id", classId).order("name");
+      if (search) query = query.ilike("name", `%${search}%`);
+      const { data: students } = await query;
+      students?.forEach(s => {
+        const opt = document.createElement("option");
+        opt.value = s.id;
+        opt.textContent = s.name;
+        studentSelect.appendChild(opt);
+      });
+    }
+
+    async function loadPayments(studentId) {
+      const tbody = document.querySelector("#paymentTable tbody");
+      tbody.innerHTML = "";
+      if (!studentId) {
+        tbody.innerHTML = `<tr><td colspan="3">Select a student to view payments.</td></tr>`;
+        return;
+      }
+      const { data: fees, error } = await supabase
+        .from("fees")
+        .select("id, amount, date, receipt_no, students(name, classes(name)), companies(display_name,logo_url)")
+        .eq("student_id", studentId)
+        .order("date", { ascending: true });
+
+      if (error || !fees?.length) {
+        tbody.innerHTML = `<tr><td colspan="3">No payments found.</td></tr>`;
+        return;
+      }
+
+      fees.forEach(fee => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${fee.date}</td>
+          <td>$${fee.amount}</td>
+          <td><button class="print-btn" onclick='printReceipt(${JSON.stringify(JSON.stringify(fee))})'>Print</button></td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    window.printReceipt = function(feeJson) {
+      const fee = JSON.parse(feeJson);
+      document.getElementById("printStudent").textContent = fee.students?.name || "N/A";
+      document.getElementById("printClass").textContent = fee.students?.classes?.name || "N/A";
+      document.getElementById("printAmount").textContent = fee.amount;
+      document.getElementById("printDate").textContent = fee.date;
+      document.getElementById("printId").textContent = fee.receipt_no;
+
+      document.getElementById("companyName").textContent = fee.companies?.display_name || "Company";
+      if (fee.companies?.logo_url) {
+        const logo = document.getElementById("companyLogo");
+        logo.src = fee.companies.logo_url;
+        logo.style.display = "inline";
+      }
+
+      setTimeout(() => window.print(), 200);
+    };
+
+    document.getElementById("classSelect").addEventListener("change", e => loadStudents(e.target.value));
+    document.getElementById("studentSearch").addEventListener("input", e => {
+      const classId = document.getElementById("classSelect").value;
+      loadStudents(classId, e.target.value);
+    });
+    document.getElementById("studentSelect").addEventListener("change", e => loadPayments(e.target.value));
+
+    loadClasses();
+  </script>
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
@@ -15,112 +103,38 @@
       flex-direction: column;
       align-items: center;
     }
-    .container {
-      width: 100%;
-      max-width: 800px;
-    }
-    h1 {
-      color: #007bff;
-      text-align: center;
-      margin-bottom: 20px;
-    }
-    .filters {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-bottom: 20px;
-      justify-content: center;
-    }
-    select, input {
-      padding: 10px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      font-size: 1rem;
-    }
-    .history {
-      background: #fff;
-      border-radius: 10px;
-      padding: 20px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    }
-    .history h3 {
-      margin-top: 0;
-      color: #333;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 10px;
-    }
-    th, td {
-      padding: 10px;
-      border-bottom: 1px solid #ddd;
-      text-align: left;
-    }
-    th {
-      background: #f0f0f0;
-    }
-    .print-btn {
-      padding: 6px 12px;
-      background: #007bff;
-      color: #fff;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-    .print-btn:hover {
-      background: #0056b3;
-    }
-    /* Hidden print template */
-    #printArea {
-      display: none;
-    }
+    .container { width: 100%; max-width: 800px; }
+    h1 { color: #007bff; text-align: center; margin-bottom: 20px; }
+    .filters { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; justify-content: center; }
+    select, input { padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 1rem; }
+    .history { background: #fff; border-radius: 10px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+    .history h3 { margin-top: 0; color: #333; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { padding: 10px; border-bottom: 1px solid #ddd; text-align: left; }
+    th { background: #f0f0f0; }
+    .print-btn { padding: 6px 12px; background: #007bff; color: #fff; border: none; border-radius: 6px; cursor: pointer; }
+    .print-btn:hover { background: #0056b3; }
+    #printArea { display: none; }
     @media print {
-      body * {
-        visibility: hidden;
-      }
-      #printArea, #printArea * {
-        visibility: visible;
-      }
-      #printArea {
-        display: block !important;
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 100%;
-        background: #fff;
-        padding: 20px;
-      }
+      body * { visibility: hidden; }
+      #printArea, #printArea * { visibility: visible; }
+      #printArea { display: block !important; position: absolute; left: 0; top: 0; width: 100%; background: #fff; padding: 20px; }
     }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>Student Payment Receipts</h1>
-    
     <div class="filters">
-      <select id="classSelect">
-        <option value="">-- Select Class --</option>
-      </select>
+      <select id="classSelect"><option value="">-- Select Class --</option></select>
       <input type="text" id="studentSearch" placeholder="Search Student..." />
-      <select id="studentSelect">
-        <option value="">-- Select Student --</option>
-      </select>
+      <select id="studentSelect"><option value="">-- Select Student --</option></select>
     </div>
-
     <div class="history" id="historySection">
       <h3>Payment History</h3>
       <table id="paymentTable">
-        <thead>
-          <tr>
-            <th>Date</th>
-            <th>Amount</th>
-            <th>Receipt</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr><td colspan="3">Select a student to view payments.</td></tr>
-        </tbody>
+        <thead><tr><th>Date</th><th>Amount</th><th>Receipt</th></tr></thead>
+        <tbody><tr><td colspan="3">Select a student to view payments.</td></tr></tbody>
       </table>
     </div>
   </div>
@@ -143,105 +157,5 @@
       Thank you for your payment!
     </div>
   </div>
-
-  <script>
-    const SUPABASE_URL = "https://ndishfwnkzdedfcywcle.supabase.co";
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5kaXNoZndua3pkZWRmY3l3Y2xlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYwOTk0MjcsImV4cCI6MjA3MTY3NTQyN30.CXQSfhR0MVLF40v2Tp-BcENBpHpPshG9Ys3zLYiBQaM"; // ⚠️ Replace with secure method
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-    async function loadClasses() {
-      const { data: classes } = await supabase.from("classes").select("id,name").order("name");
-      const classSelect = document.getElementById("classSelect");
-      classes.forEach(c => {
-        const opt = document.createElement("option");
-        opt.value = c.id;
-        opt.textContent = c.name;
-        classSelect.appendChild(opt);
-      });
-    }
-
-    async function loadStudents(classId, search="") {
-      const studentSelect = document.getElementById("studentSelect");
-      studentSelect.innerHTML = `<option value="">-- Select Student --</option>`;
-      if (!classId) return;
-      let query = supabase.from("students").select("id,name").eq("class_id", classId).order("name");
-      if (search) query = query.ilike("name", `%${search}%`);
-      const { data: students } = await query;
-      students.forEach(s => {
-        const opt = document.createElement("option");
-        opt.value = s.id;
-        opt.textContent = s.name;
-        studentSelect.appendChild(opt);
-      });
-    }
-
-    async function loadPayments(studentId) {
-      const tbody = document.querySelector("#paymentTable tbody");
-      tbody.innerHTML = "";
-      if (!studentId) {
-        tbody.innerHTML = `<tr><td colspan="3">Select a student to view payments.</td></tr>`;
-        return;
-      }
-      const { data: fees, error } = await supabase
-        .from("fees")
-        .select("id, amount, date, students(name, classes(name)), companies(display_name,logo_url)")
-        .eq("student_id", studentId)
-        .order("date", { ascending: true });
-
-      if (error || fees.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="3">No payments found.</td></tr>`;
-        return;
-      }
-
-      fees.forEach((fee, index) => {
-        // Generate sequential receipt numbers
-        const receiptNo = "RCPT-" + String(index + 1).padStart(3, "0");
-
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${fee.date}</td>
-          <td>$${fee.amount}</td>
-          <td><button class="print-btn" onclick='printReceipt(${JSON.stringify(JSON.stringify({...fee, receipt_no: receiptNo}))})'>Print</button></td>
-        `;
-        tbody.appendChild(tr);
-      });
-    }
-
-    function printReceipt(feeJson) {
-      const fee = JSON.parse(feeJson);
-      document.getElementById("printStudent").textContent = fee.students?.name || "N/A";
-      document.getElementById("printClass").textContent = fee.students?.classes?.name || "N/A";
-      document.getElementById("printAmount").textContent = fee.amount;
-      document.getElementById("printDate").textContent = fee.date;
-      document.getElementById("printId").textContent = fee.receipt_no || ("RCPT-" + fee.id);
-
-      document.getElementById("companyName").textContent = fee.companies?.display_name || "Company";
-      if (fee.companies?.logo_url) {
-        const logo = document.getElementById("companyLogo");
-        logo.src = fee.companies.logo_url;
-        logo.style.display = "inline";
-      }
-
-      // Small delay ensures content is rendered before print
-      setTimeout(() => {
-        window.print();
-      }, 200);
-    }
-
-    // Event listeners
-    document.getElementById("classSelect").addEventListener("change", (e) => {
-      loadStudents(e.target.value);
-    });
-    document.getElementById("studentSearch").addEventListener("input", (e) => {
-      const classId = document.getElementById("classSelect").value;
-      loadStudents(classId, e.target.value);
-    });
-    document.getElementById("studentSelect").addEventListener("change", (e) => {
-      loadPayments(e.target.value);
-    });
-
-    // Init
-    loadClasses();
-  </script>
 </body>
 </html>
