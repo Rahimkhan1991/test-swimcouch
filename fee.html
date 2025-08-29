@@ -1,398 +1,254 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Collect Fee</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <meta charset="UTF-8">
+  <title>Print Receipt</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+  <!-- Supabase -->
+  <script type="module">
+    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.8/+esm";
+
+    const SUPABASE_URL = "https://ndishfwnkzdedfcywcle.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5kaXNoZndua3pkZWRmY3l3Y2xlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYwOTk0MjcsImV4cCI6MjA3MTY3NTQyN30.CXQSfhR0MVLF40v2Tp-BcENBpHpPshG9Ys3zLYiBQaM";
+
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    let currentCompanyId = null;
+
+    // Load user + company
+    async function loadDynamicHeader() {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        window.location.href = 'index.html';
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('users')
+        .select('company_id, companies(display_name, logo_url)')
+        .eq('id', session.user.id)
+        .single();
+
+      if (error || !data) return;
+
+      currentCompanyId = data.company_id;
+      document.getElementById('headerTitle').textContent = data.companies.display_name;
+      if (data.companies.logo_url) {
+        document.getElementById('headerLogo').src = data.companies.logo_url;
+        document.getElementById('headerLogo').style.display = "inline-block";
+      }
+
+      loadStudents();
+    }
+
+    // Load students
+    async function loadStudents(search = "") {
+      if (!currentCompanyId) return;
+      const { data: students } = await supabase
+        .from("students")
+        .select("id, name")
+        .eq("company_id", currentCompanyId)
+        .ilike("name", `%${search}%`)
+        .order("name");
+
+      const studentSelect = document.getElementById("studentSelect");
+      studentSelect.innerHTML = `<option value="">-- Select Student --</option>`;
+      students?.forEach(s => {
+        const opt = document.createElement("option");
+        opt.value = s.id;
+        opt.textContent = s.name;
+        studentSelect.appendChild(opt);
+      });
+    }
+
+    // Load payments
+    async function loadPayments(studentId) {
+      const tbody = document.querySelector("#paymentTable tbody");
+      tbody.innerHTML = "";
+
+      if (!studentId) {
+        tbody.innerHTML = `<tr><td colspan="3">Select a student to view payments.</td></tr>`;
+        return;
+      }
+
+      const { data: fees, error } = await supabase
+  .from("fees")
+  .select(`
+    id, amount, date, receipt_no,
+    students (
+      id, name, phone, totalFee, initialPayment, balanceFee,
+      classes (name),
+      companies (id, display_name, logo_url)
+    )
+  `)
+  .eq("student_id", studentId)
+  .eq("company_id", currentCompanyId)
+  .order("date", { ascending: true });
+
+
+      if (error || !fees?.length) {
+        tbody.innerHTML = `<tr><td colspan="3">No payments found.</td></tr>`;
+        return;
+      }
+
+      fees.forEach(fee => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${fee.date}</td>
+          <td>Rp ${fee.amount}</td>
+          <td><button class="view-btn" onclick='openTemplateChooser(${JSON.stringify(JSON.stringify(fee))})'>Print</button></td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // Open receipt
+    window.openTemplateChooser = function(feeJson) {
+      const fee = JSON.parse(feeJson);
+      const student = fee.students;
+      const company = student?.companies;
+
+      const data = {
+        companyLogo: company?.logo_url || "",
+        companyName: company?.display_name || "Company",
+        receiptNo: fee.receipt_no || "####",
+        date: fee.date,
+        studentName: student?.name,
+        className: student?.classes?.name,
+        dateOfJoining: student?.created_at || "...............",
+        totalFee: student?.totalFee || 0,
+        paidFee: student?.initialPayment || 0,
+        balanceFee: student?.balanceFee || 0,
+        amount: fee.amount
+      };
+
+      const html = `
+        <div class="receipt">
+          <div class="receipt-header">
+            ${data.companyLogo ? `<img src="${data.companyLogo}" class="logo"/>` : ""}
+            <div>
+              <h2>${data.companyName}</h2>
+              <h3>Payment Receipt</h3>
+            </div>
+          </div>
+
+          <div class="info">
+            <p><strong>Receipt No:</strong> ${data.receiptNo}</p>
+            <p><strong>Date:</strong> ${data.date}</p>
+            <p><strong>Student:</strong> ${data.studentName}</p>
+            <p><strong>Class:</strong> ${data.className}</p>
+            <p><strong>Date of Joining:</strong> ${data.dateOfJoining}</p>
+          </div>
+
+          <table class="fee-table">
+            <thead>
+              <tr>
+                <th>Sr No.</th>
+                <th>Particulars</th>
+                <th>Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>1</td>
+                <td>
+                  Student Fee
+                  <div class="meta">
+                    Total Fee: ${data.totalFee}<br>
+                    Paid Fee: ${data.paidFee}<br>
+                    Balance Fee: ${data.balanceFee}
+                  </div>
+                </td>
+                <td>Rp ${data.amount}</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="footer">
+            <p><strong>Total: Rp ${data.amount}</strong></p>
+            <p>Fees Paid Once is not Refundable</p>
+            <p class="note">This is a computer generated invoice, no signature required.</p>
+            <p class="thanks">Thank you for your payment</p>
+          </div>
+        </div>
+      `;
+
+      document.getElementById("printArea").innerHTML = html;
+      setTimeout(() => window.print(), 200);
+    };
+
+    // Bind events
+    document.addEventListener("DOMContentLoaded", async () => {
+      await loadDynamicHeader();
+      document.getElementById("studentSelect").addEventListener("change", e => loadPayments(e.target.value));
+    });
+  </script>
+
+  <!-- Styles -->
   <style>
-    :root {
-      --primary-color: #007bff;
-      --background-color: #f0f4f8;
-      --card-background: #ffffff;
-      --text-color: #333;
-      --shadow-light: 0 4px 8px rgba(0, 0, 0, 0.05);
-      --shadow-hover: 0 8px 16px rgba(0, 0, 0, 0.1);
-      --input-background: #f7f7f7;
-      --input-border: #ddd;
-      --success-bg: #d4edda;
-      --success-text: #155724;
-      --btn-radius: 10px;
+    body { font-family: Arial, sans-serif; background:#f0f4f8; margin:0; padding:20px; }
+    .container { max-width:700px; margin:auto; }
+    .company-header-box { display:flex; align-items:center; gap:15px; margin-bottom:20px; }
+    #headerLogo { height:50px; width:50px; border-radius:50%; display:none; object-fit:cover; }
+    #headerTitle { font-size:1.5rem; color:#007bff; }
+
+    .history { background:#fff; padding:20px; border-radius:10px; box-shadow:0 2px 6px rgba(0,0,0,0.1); }
+    table { width:100%; border-collapse:collapse; }
+    th, td { padding:10px; border-bottom:1px solid #ddd; text-align:left; }
+    .view-btn { padding:6px 12px; background:#007bff; color:#fff; border:none; border-radius:6px; cursor:pointer; }
+
+    /* Print Area */
+    #printArea { display:none; }
+
+    @media print {
+      body * { visibility:hidden; }
+      #printArea, #printArea * { visibility:visible; }
+      #printArea {
+        display:block !important;
+        position:fixed; top:0; left:0;
+        width:210mm; height:148mm; /* A5 landscape */
+        margin:0; padding:0;
+      }
+      @page { size: A5 landscape; margin:10mm; }
+      .receipt { width:100%; height:100%; padding:10mm; box-sizing:border-box; }
     }
 
-    body {
-      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-      margin: 0;
-      padding: 20px;
-      background-color: var(--background-color);
-      color: var(--text-color);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      min-height: 100vh;
-    }
+    /* Receipt Styles */
+    .receipt-header { display:flex; align-items:center; gap:15px; margin-bottom:15px; }
+    .receipt-header .logo { width:60px; height:60px; object-fit:contain; }
+    .receipt-header h2 { margin:0; font-size:1.2rem; }
+    .receipt-header h3 { margin:0; font-size:1rem; color:#555; }
 
-    .container { width: 100%; max-width: 600px; }
+    .info p { margin:3px 0; font-size:0.9rem; }
 
-    .company-header-box {
-      display: flex; align-items: center; justify-content: center;
-      gap: 15px; background: var(--card-background);
-      border-radius: 12px; padding: 20px 25px;
-      box-shadow: var(--shadow-light); margin-bottom: 25px;
-    }
-    #headerLogo { height: 50px; width: 50px; border-radius: 50%; object-fit: cover; display: none; }
-    #companyNameDisplay { font-size: 1.5rem; font-weight: 600; color: var(--primary-color); margin: 0; }
+    .fee-table { width:100%; border-collapse:collapse; margin-top:15px; }
+    .fee-table th, .fee-table td { border:1px solid #ccc; padding:8px; font-size:0.9rem; }
+    .fee-table .meta { font-size:0.8rem; color:#555; margin-top:5px; }
 
-    .search-container { position: relative; margin-bottom: 20px; }
-    .search-container input {
-      width: 100%; padding: 12px 40px 12px 15px;
-      border-radius: 25px; border: 1px solid #ccc; font-size: 1rem;
-    }
-    .search-container .fa-search {
-      position: absolute; right: 15px; top: 50%; transform: translateY(-50%);
-      color: #777;
-    }
-
-    .class-filter-container { overflow-x: auto; white-space: nowrap; margin-bottom: 15px; padding: 10px 0; }
-    .class-filter-container::-webkit-scrollbar { display: none; }
-    .class-filter-btn {
-      background: var(--card-background); border: 1px solid #ccc;
-      border-radius: 20px; padding: 8px 16px; margin-right: 10px;
-      cursor: pointer; transition: all 0.2s; font-size: 0.9rem;
-    }
-    .class-filter-btn.active, .class-filter-btn:hover {
-      background: var(--primary-color); color: white; border-color: var(--primary-color);
-    }
-
-    .student-card {
-      background: var(--card-background); border-radius: 12px; padding: 15px;
-      margin-bottom: 15px; box-shadow: var(--shadow-light);
-      cursor: pointer; transition: 0.2s;
-    }
-    .student-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-hover); }
-    .student-name { font-weight: 600; font-size: 1.1rem; }
-    .student-details-summary { font-size: 0.9rem; color: #777; }
-
-    .modal {
-      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6);
-      backdrop-filter: blur(5px); justify-content: center; align-items: center; padding: 16px;
-    }
-    .modal-content {
-      background: var(--card-background); padding: 25px;
-      border-radius: 12px; width: 90%; max-width: 480px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-    }
-
-    .btn {
-      padding: 12px; border: none; border-radius: var(--btn-radius);
-      cursor: pointer; font-weight: 600; display: inline-flex;
-      align-items: center; justify-content: center; gap: 8px;
-      width: 100%;
-    }
-    .btn[disabled] { opacity: 0.6; cursor: not-allowed; }
-    .btn-primary { background: var(--primary-color); color: #fff; }
-    .btn-primary:hover { background: #0056b3; }
-    .btn-success { background: #28a745; color: #fff; }
-    .btn-success:hover { background: #218838; }
-
-    .receipt-btn {
-      background: #ffc107; border: none; border-radius: 8px; padding: 4px 8px;
-      display: inline-flex; align-items: center; gap: 5px; cursor: pointer;
-    }
-    .receipt-btn:hover { background: #e0a800; }
-
-    .status-message {
-      position: fixed; left: 50%; transform: translateX(-50%); bottom: 20px;
-      background: var(--success-bg); color: var(--success-text);
-      padding: 10px 14px; border-radius: 8px; min-width: 260px;
-      box-shadow: var(--shadow-light);
-    }
-    .status-message.error { background: #fdecea; color: #611a15; }
-    .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; }
+    .footer { margin-top:20px; font-size:0.9rem; }
+    .footer .note { font-size:0.8rem; color:#666; }
+    .footer .thanks { margin-top:10px; text-align:center; font-weight:bold; }
   </style>
 </head>
 <body>
 <div class="container">
-  <div class="company-header-box">
-    <img id="headerLogo" alt="Company Logo">
-    <h1 id="companyNameDisplay">Collect Fee</h1>
-  </div>
+  <header class="company-header-box">
+    <img id="headerLogo" src="" alt="Company Logo">
+    <h1 id="headerTitle">Receipts</h1>
+  </header>
 
-  <div class="search-container">
-    <label class="sr-only" for="searchInput">Search by student name</label>
-    <input type="text" id="searchInput" placeholder="Search by name...">
-    <i class="fa-solid fa-search"></i>
-  </div>
-
-  <div id="classFilterContainer" class="class-filter-container"></div>
-  <div id="studentList"></div>
-
-  <button onclick="history.back()" class="btn btn-primary">
-    <i class="fa-solid fa-arrow-left"></i> Back
-  </button>
-</div>
-
-<div id="feeModal" class="modal" role="dialog" aria-modal="true">
-  <div class="modal-content">
-    <div class="modal-header">
-      <h3 id="modalStudentName"></h3>
-    </div>
-    <div id="modalDetails"></div>
-    <div class="fee-form">
-      <label for="amount">Enter Amount to Collect:</label>
-      <input type="number" id="amount" placeholder="Enter amount" min="1" step="0.01">
-      <button id="collectBtn" class="btn btn-success">
-        <i class="fa-solid fa-dollar-sign"></i> Collect Fee
-      </button>
-    </div>
-    <div style="text-align:center; margin-top:20px;">
-      <button id="closeModalBtn" class="btn btn-primary" style="width:auto;">
-        <i class="fa-solid fa-xmark"></i> Close
-      </button>
-    </div>
+  <div class="history">
+    <h3>Payment History</h3>
+    <select id="studentSelect"><option value="">-- Select Student --</option></select>
+    <table id="paymentTable">
+      <thead><tr><th>Date</th><th>Amount</th><th>Action</th></tr></thead>
+      <tbody><tr><td colspan="3">Select a student to view payments.</td></tr></tbody>
+    </table>
   </div>
 </div>
 
-<script type="module">
-  import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.8/+esm";
-
-  // ========= Config =========
-  const SUPABASE_URL = 'https://ndishfwnkzdedfcywcle.supabase.co';
-  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5kaXNoZndua3pkZWRmY3l3Y2xlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYwOTk0MjcsImV4cCI6MjA3MTY3NTQyN30.CXQSfhR0MVLF40v2Tp-BcENBpHpPshG9Ys3zLYiBQaM';
-  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-  // ========= State =========
-  let currentStudentId = null;
-  let selectedClassId = null;
-  let debounceTimer = null;
-  let currentCompanyId = null;
-
-  // ========= Helpers =========
-  function toast(msg, type = 'success') {
-    const el = document.createElement('div');
-    el.className = `status-message ${type === 'error' ? 'error' : ''}`;
-    el.textContent = msg;
-    document.body.appendChild(el);
-    setTimeout(() => el.remove(), 3000);
-  }
-  function setLoading(btn, loading) {
-    if (!btn) return;
-    btn.disabled = loading;
-    if (loading) {
-      btn.dataset.originalText = btn.innerHTML;
-      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
-    } else if (btn.dataset.originalText) {
-      btn.innerHTML = btn.dataset.originalText;
-      delete btn.dataset.originalText;
-    }
-  }
-
-  // ========= Header =========
-  async function loadDynamicHeader() {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) { window.location.href = 'index.html'; return; }
-
-    const { data, error } = await supabase
-      .from('users')
-      .select('company_id, companies(display_name, logo_url)')
-      .eq('id', session.user.id).single();
-
-    if (error || !data?.companies) return;
-
-    currentCompanyId = data.company_id;
-    document.getElementById('companyNameDisplay').textContent = data.companies.display_name;
-    if (data.companies.logo_url) {
-      const logo = document.getElementById('headerLogo');
-      logo.src = data.companies.logo_url;
-      logo.style.display = 'inline-block';
-    }
-  }
-
-  // ========= Students =========
-  async function renderStudents(searchQuery = '', classFilterId = null) {
-    const studentList = document.getElementById('studentList');
-    studentList.innerHTML = '<p style="text-align:center;">Loading...</p>';
-
-    if (!currentCompanyId) return;
-
-    let query = supabase.from('students')
-      .select('id, name, classes(name), class_id')
-      .eq('company_id', currentCompanyId)
-      .order('name');
-
-    if (searchQuery) query = query.ilike('name', `%${searchQuery}%`);
-    if (classFilterId) query = query.eq('class_id', classFilterId);
-
-    const { data: students, error } = await query;
-    if (error || !students?.length) {
-      studentList.innerHTML = '<p style="text-align:center;">No students found.</p>';
-      return;
-    }
-
-    studentList.innerHTML = '';
-    students.forEach(s => {
-      const card = document.createElement('div');
-      card.className = 'student-card';
-      card.innerHTML = `
-        <div class="student-name">${s.name}</div>
-        <div class="student-details-summary">${s.classes?.name ?? 'N/A'}</div>
-      `;
-      card.onclick = () => openFeeModal(s.id);
-      studentList.appendChild(card);
-    });
-  }
-
-  // ========= Class Filters =========
-  async function renderClassFilters() {
-    const container = document.getElementById('classFilterContainer');
-    container.innerHTML = '';
-    if (!currentCompanyId) return;
-
-    const { data: classes } = await supabase.from('classes')
-      .select('id, name')
-      .eq('company_id', currentCompanyId)
-      .order('name');
-
-    const allBtn = document.createElement('button');
-    allBtn.className = 'class-filter-btn active';
-    allBtn.textContent = 'All Students';
-    allBtn.onclick = () => {
-      selectedClassId = null;
-      document.querySelectorAll('.class-filter-btn').forEach(b => b.classList.remove('active'));
-      allBtn.classList.add('active');
-      renderStudents(document.getElementById('searchInput').value);
-    };
-    container.appendChild(allBtn);
-
-    classes?.forEach(cls => {
-      const btn = document.createElement('button');
-      btn.className = 'class-filter-btn';
-      btn.textContent = cls.name;
-      btn.onclick = () => {
-        selectedClassId = cls.id;
-        document.querySelectorAll('.class-filter-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        renderStudents(document.getElementById('searchInput').value, cls.id);
-      };
-      container.appendChild(btn);
-    });
-  }
-
-  // ========= Modal =========
-  async function openFeeModal(studentId) {
-    currentStudentId = studentId;
-    const modal = document.getElementById('feeModal');
-    const modalDetails = document.getElementById('modalDetails');
-    const modalStudentName = document.getElementById('modalStudentName');
-    const collectBtn = document.getElementById('collectBtn');
-    const amountInput = document.getElementById('amount');
-
-    setLoading(collectBtn, true);
-    modal.style.display = 'flex';
-    modalDetails.innerHTML = '<p><i class="fa-solid fa-spinner fa-spin"></i> Loading...</p>';
-
-    const { data: student } = await supabase.from('students')
-      .select('name, totalFee').eq('id', studentId).single();
-
-    const { data: fees } = await supabase.from('fees')
-      .select('id, amount, date').eq('student_id', studentId).order('date', { ascending: false });
-
-    const totalPaid = fees?.reduce((sum, f) => sum + f.amount, 0) ?? 0;
-    const pending = Math.max((student?.totalFee ?? 0) - totalPaid, 0);
-
-    modalStudentName.textContent = student?.name ?? '';
-    modalDetails.innerHTML = `
-      <p><strong>Total Fee:</strong> ${student?.totalFee ?? 0}</p>
-      <p><strong>Total Paid:</strong> ${totalPaid}</p>
-      <p><strong>Balance:</strong> ${pending}</p>
-      <p><strong>Recent Payments:</strong></p>
-      <ul>
-        ${fees?.length ? fees.map(f => `
-          <li>${f.date}: $${f.amount}
-            <a href="print-receipt.html?feeId=${f.id}" target="_blank">
-              <button class="receipt-btn"><i class="fa-solid fa-receipt"></i></button>
-            </a>
-          </li>`).join('') : '<li>No recent payments.</li>'}
-      </ul>
-    `;
-    amountInput.value = pending > 0 ? pending : '';
-    setLoading(collectBtn, false);
-  }
-
-  function closeModal() {
-    document.getElementById('feeModal').style.display = 'none';
-  }
-
-  document.getElementById('closeModalBtn').addEventListener('click', closeModal);
-  document.getElementById('collectBtn').addEventListener('click', collectFee);
-
-  // ========= Collect Fee =========
-  async function collectFee() {
-    const amountInput = document.getElementById('amount');
-    const amount = parseFloat(amountInput.value);
-    const collectBtn = document.getElementById('collectBtn');
-    setLoading(collectBtn, true);
-
-    if (!currentStudentId || isNaN(amount) || amount <= 0) {
-      toast("Please enter a valid amount.", 'error');
-      return setLoading(collectBtn, false);
-    }
-
-    const { data: { session } } = await supabase.auth.getSession();
-    const user = session?.user;
-    if (!user) {
-      toast("Session expired. Please log in again.", 'error');
-      return setLoading(collectBtn, false);
-    }
-
-    const { data: student } = await supabase.from('students')
-      .select('totalFee').eq('id', currentStudentId).single();
-    const { data: fees } = await supabase.from('fees')
-      .select('amount').eq('student_id', currentStudentId);
-
-    const totalPaid = fees?.reduce((s, f) => s + f.amount, 0) ?? 0;
-    const pending = (student?.totalFee ?? 0) - totalPaid;
-
-    if (amount > pending) {
-      toast(`Payment exceeds pending fee. Remaining: ${pending}`, 'error');
-      return setLoading(collectBtn, false);
-    }
-
-    const { error } = await supabase.from('fees').insert([{
-      student_id: currentStudentId,
-      amount,
-      date: new Date().toISOString().split("T")[0],
-      user_id: user.id,
-      company_id: currentCompanyId
-    }]);
-
-    if (error) {
-      toast("Failed to collect fee: " + error.message, 'error');
-    } else {
-      toast("Fee collected successfully!");
-      amountInput.value = '';
-      openFeeModal(currentStudentId);
-    }
-    setLoading(collectBtn, false);
-  }
-
-  // ========= Events =========
-  document.getElementById('searchInput').addEventListener('input', (e) => {
-    clearTimeout(debounceTimer);
-    debounceTimer = setTimeout(() => {
-      renderStudents(e.target.value, selectedClassId);
-    }, 300);
-  });
-
-  // ========= Init =========
-  window.addEventListener('load', async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) return window.location.href = 'index.html';
-    await loadDynamicHeader();
-    await renderClassFilters();
-    await renderStudents();
-  });
-</script>
+<!-- Print Area -->
+<div id="printArea"></div>
 </body>
 </html>
