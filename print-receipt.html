@@ -208,6 +208,68 @@
             <footer>Digital Copy - ${new Date().getFullYear()}</footer>
           </div>`;
       }
+      <!-- Inside chooseTemplate function -->
+if (templateId === 4) {
+  html = `
+    <div class="receipt template4">
+      <header class="receipt-header">
+        <div class="company-block">
+          <img src="${fee.companies?.logo_url || ""}" class="company-logo"/>
+          <h2 class="company-name">${companyName}</h2>
+        </div>
+        <div class="receipt-title">
+          <h3>Payment Receipt</h3>
+        </div>
+        <div class="receipt-meta">
+          <p>Receipt No : ${fee.receipt_no || "#####"}</p>
+          <p>Date : ${fee.date}</p>
+        </div>
+      </header>
+
+      <section class="student-info">
+        <p>Name of Student : ${studentName}</p>
+        <p>Course : ${className}</p>
+        <p>Date of Joining : .......................</p>
+      </section>
+
+      <table class="details-table">
+        <thead>
+          <tr>
+            <th>Sr No.</th>
+            <th>Particulars</th>
+            <th>Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>1</td>
+            <td>
+              Student Fee
+              <div class="sub-details">
+                <a href="#">Additional fee details</a>
+                <p>Total Fee : xxx</p>
+                <p>Paid Fee : ${fee.amount}</p>
+                <p>Balance Fee : xxx</p>
+              </div>
+            </td>
+            <td>Rp ${fee.amount}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="total-row">
+        <strong>Total :</strong> Rp ${fee.amount}
+      </div>
+
+      <footer class="receipt-footer">
+        <p class="tnc"><strong>Terms and Conditions :</strong> Fees Paid Once is not Refundable</p>
+        <p class="note">This is computer generated invoice, hence , does not require any signature.</p>
+        <p class="thanks">Thank you for your payment</p>
+      </footer>
+    </div>
+  `;
+}
+
 
       printArea.innerHTML = html;
       document.getElementById("templateModal").style.display = "none";
@@ -301,7 +363,7 @@
     left: 0;
     width: 210mm;     /* exact A5 landscape width */
     height: 148mm;    /* exact A5 landscape height */
-    margin: 0 auto;
+    margin: 10 auto;
     overflow: hidden; /* prevent spill */
   }
 
@@ -338,6 +400,116 @@
     .template3 header { text-align:center; margin-bottom:10px; }
     .template3 section div { margin:6px 0; }
     .template3 footer { text-align:right; margin-top:20px; font-size:0.8rem; }
+/* Template 4 Styles */
+.template4 {
+  font-family: Arial, sans-serif;
+  border: 1px solid #000;
+  padding: 10px 20px;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.template4 .receipt-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  border-bottom: 2px solid #000;
+  padding-bottom: 8px;
+}
+
+.template4 .company-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+.template4 .company-logo {
+  width: 50px;
+  height: 50px;
+  object-fit: contain;
+}
+.template4 .company-name {
+  font-size: 18px;
+  font-weight: bold;
+  color: #888;
+}
+.template4 .receipt-title h3 {
+  font-size: 20px;
+  font-weight: bold;
+  text-decoration: underline;
+}
+.template4 .receipt-meta {
+  text-align: right;
+  font-size: 14px;
+}
+
+.template4 .student-info {
+  margin: 12px 0;
+  font-size: 14px;
+  line-height: 1.6;
+  border-bottom: 1px solid #ccc;
+  padding-bottom: 6px;
+}
+
+.template4 .details-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  margin-top: 10px;
+}
+.template4 .details-table th,
+.template4 .details-table td {
+  border: 1px solid #000;
+  padding: 6px;
+  text-align: left;
+  vertical-align: top;
+}
+.template4 .details-table th {
+  background: #f0f0f0;
+}
+.template4 .sub-details {
+  font-size: 12px;
+  margin-top: 6px;
+  color: #555;
+}
+.template4 .sub-details a {
+  text-decoration: underline;
+  font-size: 12px;
+  color: #007bff;
+}
+
+.template4 .total-row {
+  text-align: right;
+  font-weight: bold;
+  font-size: 16px;
+  margin-top: 6px;
+  border-top: 2px solid #000;
+  padding-top: 6px;
+}
+
+.template4 .receipt-footer {
+  margin-top: auto;
+  text-align: center;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.template4 .tnc {
+  font-weight: bold;
+  font-size: 13px;
+}
+.template4 .note {
+  margin-top: 6px;
+  color: #444;
+}
+.template4 .thanks {
+  margin-top: 6px;
+  font-style: italic;
+}
+
+    
   </style>
 </head>
 <body>
@@ -384,6 +556,11 @@
         <p>Template 3 - Minimalist</p>
         <button onclick="chooseTemplate(3)">Choose</button>
       </div>
+      <div class="template-preview">
+  <p>Template 4 - Official Receipt</p>
+  <button onclick="chooseTemplate(4)">Choose</button>
+</div>
+
     </div>
     <button class="close-modal-btn" onclick="closeTemplateChooser()">Close</button>
   </div>
