@@ -213,44 +213,36 @@ if (templateId === 4) {
   html = `
     <div class="receipt template4">
       <header class="receipt-header">
-        <div class="company-block">
-          <img src="${fee.companies?.logo_url || ""}" class="company-logo"/>
-          <h2 class="company-name">${companyName}</h2>
+        <div class="left">
+          <img src="${fee.companies?.logo_url || ""}" class="logo" />
+          <h2>${companyName}</h2>
         </div>
-        <div class="receipt-title">
+        <div class="right">
           <h3>Payment Receipt</h3>
-        </div>
-        <div class="receipt-meta">
-          <p>Receipt No : ${fee.receipt_no || "#####"}</p>
-          <p>Date : ${fee.date}</p>
+          <p><strong>Receipt No:</strong> ${fee.receipt_no}</p>
+          <p><strong>Date:</strong> ${fee.date}</p>
         </div>
       </header>
 
       <section class="student-info">
-        <p>Name of Student : ${studentName}</p>
-        <p>Course : ${className}</p>
-        <p>Date of Joining : .......................</p>
+        <p><strong>Name of Student:</strong> ${studentName}</p>
+        <p><strong>Course:</strong> ${className}</p>
+        <p><strong>Date of Joining:</strong> ${fee.date_of_joining || "................"}</p>
       </section>
 
-      <table class="details-table">
+      <table class="receipt-table">
         <thead>
-          <tr>
-            <th>Sr No.</th>
-            <th>Particulars</th>
-            <th>Amount</th>
-          </tr>
+          <tr><th>Sr No.</th><th>Particulars</th><th>Amount</th></tr>
         </thead>
         <tbody>
           <tr>
             <td>1</td>
             <td>
-              Student Fee
-              <div class="sub-details">
-                <a href="#">Additional fee details</a>
-                <p>Total Fee : xxx</p>
-                <p>Paid Fee : ${fee.amount}</p>
-                <p>Balance Fee : xxx</p>
-              </div>
+              Student Fee <br>
+              <a href="#">Additional fee details</a><br>
+              Total Fee : ${fee.total_fee || "xxx"} <br>
+              Paid Fee : ${fee.paid_fee || fee.amount} <br>
+              Balance Fee : ${fee.balance_fee || "xxx"}
             </td>
             <td>Rp ${fee.amount}</td>
           </tr>
@@ -261,14 +253,16 @@ if (templateId === 4) {
         <strong>Total :</strong> Rp ${fee.amount}
       </div>
 
-      <footer class="receipt-footer">
-        <p class="tnc"><strong>Terms and Conditions :</strong> Fees Paid Once is not Refundable</p>
-        <p class="note">This is computer generated invoice, hence , does not require any signature.</p>
-        <p class="thanks">Thank you for your payment</p>
+      <footer>
+        <p><strong>Terms and Conditions:</strong> Fees Paid Once is not Refundable</p>
+        <small>
+          This is computer generated invoice, hence, does not require any signature. <br>
+          <em>Thank you for your payment</em>
+        </small>
       </footer>
-    </div>
-  `;
+    </div>`;
 }
+
 
 
       printArea.innerHTML = html;
@@ -402,111 +396,66 @@ if (templateId === 4) {
     .template3 footer { text-align:right; margin-top:20px; font-size:0.8rem; }
 /* Template 4 Styles */
 .template4 {
-  font-family: Arial, sans-serif;
+  font-family: 'Segoe UI', sans-serif;
   border: 1px solid #000;
-  padding: 10px 20px;
+  padding: 15px;
   background: #fff;
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  box-sizing: border-box;
 }
 
 .template4 .receipt-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   border-bottom: 2px solid #000;
-  padding-bottom: 8px;
+  padding-bottom: 10px;
+  margin-bottom: 15px;
 }
 
-.template4 .company-block {
+.template4 .receipt-header .left {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 5px;
+  gap: 10px;
 }
-.template4 .company-logo {
-  width: 50px;
+
+.template4 .receipt-header .logo {
   height: 50px;
+  width: 50px;
   object-fit: contain;
-}
-.template4 .company-name {
-  font-size: 18px;
-  font-weight: bold;
-  color: #888;
-}
-.template4 .receipt-title h3 {
-  font-size: 20px;
-  font-weight: bold;
-  text-decoration: underline;
-}
-.template4 .receipt-meta {
-  text-align: right;
-  font-size: 14px;
 }
 
 .template4 .student-info {
-  margin: 12px 0;
-  font-size: 14px;
-  line-height: 1.6;
-  border-bottom: 1px solid #ccc;
-  padding-bottom: 6px;
+  margin-bottom: 15px;
 }
 
-.template4 .details-table {
+.template4 .receipt-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 14px;
-  margin-top: 10px;
+  margin-bottom: 15px;
 }
-.template4 .details-table th,
-.template4 .details-table td {
+
+.template4 .receipt-table th,
+.template4 .receipt-table td {
   border: 1px solid #000;
-  padding: 6px;
+  padding: 8px;
   text-align: left;
   vertical-align: top;
 }
-.template4 .details-table th {
-  background: #f0f0f0;
-}
-.template4 .sub-details {
-  font-size: 12px;
-  margin-top: 6px;
-  color: #555;
-}
-.template4 .sub-details a {
-  text-decoration: underline;
-  font-size: 12px;
-  color: #007bff;
+
+.template4 .receipt-table th {
+  background: #f9f9f9;
 }
 
 .template4 .total-row {
   text-align: right;
   font-weight: bold;
-  font-size: 16px;
-  margin-top: 6px;
-  border-top: 2px solid #000;
-  padding-top: 6px;
+  margin-top: 10px;
+  margin-right: 5px;
 }
 
-.template4 .receipt-footer {
-  margin-top: auto;
+.template4 footer {
+  margin-top: 20px;
+  font-size: 0.85rem;
   text-align: center;
-  font-size: 12px;
-  line-height: 1.6;
-}
-.template4 .tnc {
-  font-weight: bold;
-  font-size: 13px;
-}
-.template4 .note {
-  margin-top: 6px;
-  color: #444;
-}
-.template4 .thanks {
-  margin-top: 6px;
-  font-style: italic;
 }
 
     
