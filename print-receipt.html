@@ -68,20 +68,25 @@
 
     window.printReceipt = function(feeJson) {
       const fee = JSON.parse(feeJson);
-      document.getElementById("printStudent").textContent = fee.students?.name || "N/A";
-      document.getElementById("printClass").textContent = fee.students?.classes?.name || "N/A";
-      document.getElementById("printAmount").textContent = fee.amount;
-      document.getElementById("printDate").textContent = fee.date;
-      document.getElementById("printId").textContent = fee.receipt_no;
 
-      document.getElementById("companyName").textContent = fee.companies?.display_name || "Company";
+      // Fill common data
+      document.querySelectorAll(".printStudent").forEach(el => el.textContent = fee.students?.name || "N/A");
+      document.querySelectorAll(".printClass").forEach(el => el.textContent = fee.students?.classes?.name || "N/A");
+      document.querySelectorAll(".printAmount").forEach(el => el.textContent = fee.amount);
+      document.querySelectorAll(".printDate").forEach(el => el.textContent = fee.date);
+      document.querySelectorAll(".printId").forEach(el => el.textContent = fee.receipt_no);
+      document.querySelectorAll(".companyName").forEach(el => el.textContent = fee.companies?.display_name || "Company");
+
       if (fee.companies?.logo_url) {
-        const logo = document.getElementById("companyLogo");
-        logo.src = fee.companies.logo_url;
-        logo.style.display = "inline";
+        document.querySelectorAll(".companyLogo").forEach(logo => {
+          logo.src = fee.companies.logo_url;
+          logo.style.display = "inline";
+        });
       }
 
-      setTimeout(() => window.print(), 200);
+      // Show print area
+      document.getElementById("printArea").style.display = "block";
+      window.print();
     };
 
     document.getElementById("classSelect").addEventListener("change", e => loadStudents(e.target.value));
@@ -105,15 +110,9 @@
       align-items: center;
     }
     .container { width: 100%; max-width: 800px; }
+    h1 { color: #007bff; text-align: center; margin-bottom: 15px; font-weight: 600; }
 
-    h1 {
-      color: #007bff;
-      text-align: center;
-      margin-bottom: 15px;
-      font-weight: 600;
-    }
-
-    /* Unified filter section */
+    /* Filters */
     .filter-panel {
       width: 100%;
       background: #fff;
@@ -122,77 +121,50 @@
       margin-bottom: 20px;
       overflow: hidden;
     }
-
     .filter-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 12px 16px;
-      background: #007bff;
-      color: #fff;
-      cursor: pointer;
-      font-size: 1rem;
-      font-weight: 500;
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 12px 16px; background: #007bff; color: #fff; cursor: pointer;
     }
-
-    .filter-body {
-      display: none;
-      padding: 15px;
-      background: #f9f9f9;
-    }
-
-    .filter-body select,
-    .filter-body input {
-      width: 100%;
-      padding: 12px;
-      margin-bottom: 12px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      font-size: 1rem;
+    .filter-body { display: none; padding: 15px; background: #f9f9f9; }
+    .filter-body select, .filter-body input {
+      width: 100%; max-width: 300px; padding: 12px;
+      margin-bottom: 12px; border: 1px solid #ccc;
+      border-radius: 8px; font-size: 1rem;
     }
 
     /* Payment history */
     .history {
-      background: #fff;
-      border-radius: 12px;
-      padding: 20px;
+      background: #fff; border-radius: 12px; padding: 20px;
       box-shadow: 0 3px 10px rgba(0,0,0,0.1);
     }
-
-    .history h3 { margin-top: 0; color: #333; font-weight: 600; }
     table { width: 100%; border-collapse: collapse; margin-top: 12px; }
-    th, td {
-      padding: 12px;
-      border-bottom: 1px solid #eee;
-      text-align: left;
-    }
+    th, td { padding: 12px; border-bottom: 1px solid #eee; text-align: left; }
     th { background: #f0f0f0; font-weight: 600; }
-
     .print-btn {
-      padding: 6px 14px;
-      background: #007bff;
-      color: #fff;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: background 0.2s;
+      padding: 6px 14px; background: #007bff; color: #fff; border: none;
+      border-radius: 6px; cursor: pointer;
     }
     .print-btn:hover { background: #0056b3; }
 
-    /* Hidden receipt */
+    /* Receipts landscape */
     #printArea { display: none; }
+    .receipt { display: none; width: 210mm; height: 148mm; padding: 20px; box-sizing: border-box; }
+    .receipt.active { display: block; }
 
+    /* Print rules */
     @media print {
       body * { visibility: hidden; }
       #printArea, #printArea * { visibility: visible; }
       #printArea {
         display: block !important;
-        position: absolute;
-        left: 0; top: 0;
-        width: 100%;
-        background: #fff;
-        padding: 20px;
+        position: absolute; left: 0; top: 0;
       }
+      .switchBtns { display: none !important; }
+    }
+    .switchBtns { text-align: center; margin-bottom: 10px; }
+    .switchBtns button {
+      padding: 6px 12px; margin: 4px;
+      background: #007bff; color: #fff; border: none; border-radius: 4px;
     }
   </style>
 </head>
@@ -202,18 +174,16 @@
 
     <!-- Filter section -->
     <div class="filter-panel">
-      <div class="filter-header" onclick="document.querySelector('.filter-body').classList.toggle('show')">
-        Filters <span>▼</span>
-      </div>
+      <div class="filter-header">Filters <span>▼</span></div>
       <div class="filter-body">
         <select id="classSelect"><option value="">-- Select Class --</option></select>
         <select id="studentSelect"><option value="">-- Select Student --</option></select>
-        <input type="text" id="studentSearch" placeholder="Search Student..." style="width: 97%;">
+        <input type="text" id="studentSearch" placeholder="Search Student...">
       </div>
     </div>
 
     <!-- Payment history -->
-    <div class="history" id="historySection">
+    <div class="history">
       <h3>Payment History</h3>
       <table id="paymentTable">
         <thead><tr><th>Date</th><th>Amount</th><th>Receipt</th></tr></thead>
@@ -222,31 +192,76 @@
     </div>
   </div>
 
-  <!-- Hidden printable receipt -->
+  <!-- Hidden printable receipts -->
   <div id="printArea">
-    <div style="text-align:center; border-bottom:2px solid #007bff; padding:10px; margin-bottom:15px;">
-      <img id="companyLogo" src="" style="height:60px; border-radius:50%; display:none;" />
-      <h2 id="companyName">Company</h2>
-      <h3>Payment Receipt</h3>
+    <div class="switchBtns">
+      <button onclick="switchReceipt(1)">Template 1</button>
+      <button onclick="switchReceipt(2)">Template 2</button>
+      <button onclick="switchReceipt(3)">Template 3</button>
     </div>
-    <div style="padding: 0 20px;">
-      <p><strong>Student:</strong> <span id="printStudent"></span></p>
-      <p><strong>Class:</strong> <span id="printClass"></span></p>
-      <p><strong>Amount Paid:</strong> $<span id="printAmount"></span></p>
-      <p><strong>Date:</strong> <span id="printDate"></span></p>
-      <p><strong>Receipt No:</strong> <span id="printId"></span></p>
+
+    <!-- Template 1 -->
+    <div id="receipt1" class="receipt active">
+      <div style="text-align:center; border-bottom:2px solid #007bff; padding-bottom:10px;">
+        <img class="companyLogo" src="" style="height:60px; border-radius:50%; display:none;" />
+        <h2 class="companyName">Company</h2>
+        <h3>Payment Receipt</h3>
+      </div>
+      <p><b>Student:</b> <span class="printStudent"></span></p>
+      <p><b>Class:</b> <span class="printClass"></span></p>
+      <p><b>Amount:</b> $<span class="printAmount"></span></p>
+      <p><b>Date:</b> <span class="printDate"></span></p>
+      <p><b>Receipt No:</b> <span class="printId"></span></p>
     </div>
-    <div style="text-align:center; margin-top:20px; font-size:0.9rem; color:#555;">
-      Thank you for your payment!
+
+    <!-- Template 2 -->
+    <div id="receipt2" class="receipt">
+      <div style="border:2px solid #333; padding:15px; border-radius:10px; height:100%;">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #ccc; padding-bottom:10px;">
+          <img class="companyLogo" src="" style="height:50px; display:none;" />
+          <h3 class="companyName">Company</h3>
+        </div>
+        <h2 style="text-align:center; margin:10px 0; color:#007bff;">Payment Receipt</h2>
+        <p><b>Receipt No:</b> <span class="printId"></span></p>
+        <p><b>Date:</b> <span class="printDate"></span></p>
+        <p><b>Student:</b> <span class="printStudent"></span></p>
+        <p><b>Class:</b> <span class="printClass"></span></p>
+        <p><b>Amount:</b> $<span class="printAmount"></span></p>
+      </div>
+    </div>
+
+    <!-- Template 3 -->
+    <div id="receipt3" class="receipt">
+      <div style="padding:20px; border:1px dashed #007bff; height:100%;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+          <h2 class="companyName">Company</h2>
+          <img class="companyLogo" src="" style="height:60px; display:none;" />
+        </div>
+        <table style="width:100%; border-collapse:collapse;">
+          <tr><td><b>Receipt No:</b></td><td><span class="printId"></span></td></tr>
+          <tr><td><b>Date:</b></td><td><span class="printDate"></span></td></tr>
+          <tr><td><b>Student:</b></td><td><span class="printStudent"></span></td></tr>
+          <tr><td><b>Class:</b></td><td><span class="printClass"></span></td></tr>
+          <tr><td><b>Amount:</b></td><td>$<span class="printAmount"></span></td></tr>
+        </table>
+      </div>
     </div>
   </div>
 
   <script>
-    // toggle filter body open/close
+    // filter toggle
     document.querySelector(".filter-header").addEventListener("click", () => {
-      document.querySelector(".filter-body").style.display =
-        document.querySelector(".filter-body").style.display === "block" ? "none" : "block";
+      const fb = document.querySelector(".filter-body");
+      fb.style.display = fb.style.display === "block" ? "none" : "block";
     });
+
+    // Switch between templates
+    function switchReceipt(n) {
+      document.querySelectorAll(".receipt").forEach(r => r.classList.remove("active"));
+      document.getElementById("receipt" + n).classList.add("active");
+    }
+    window.switchReceipt = switchReceipt;
   </script>
 </body>
 </html>
+
