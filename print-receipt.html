@@ -8,8 +8,10 @@
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.8/+esm";
 
     const SUPABASE_URL = "https://ndishfwnkzdedfcywcle.supabase.co";
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5kaXNoZndua3pkZWRmY3l3Y2xlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYwOTk0MjcsImV4cCI6MjA3MTY3NTQyN30.CXQSfhR0MVLF40v2Tp-BcENBpHpPshG9Ys3zLYiBQaM";
+    const SUPABASE_ANON_KEY = "YOUR_KEY";
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    let selectedFee = null;
 
     async function loadClasses() {
       const { data: classes } = await supabase.from("classes").select("id,name").order("name");
@@ -60,33 +62,84 @@
         tr.innerHTML = `
           <td>${fee.date}</td>
           <td>$${fee.amount}</td>
-          <td><button class="print-btn" onclick='printReceipt(${JSON.stringify(JSON.stringify(fee))})'>Print</button></td>
+          <td><button class="view-btn" onclick='openTemplateChooser(${JSON.stringify(JSON.stringify(fee))})'>View</button></td>
         `;
         tbody.appendChild(tr);
       });
     }
 
-    window.printReceipt = function(feeJson) {
-      const fee = JSON.parse(feeJson);
+    // Open template chooser modal
+    window.openTemplateChooser = function(feeJson) {
+      selectedFee = JSON.parse(feeJson);
+      document.getElementById("templateModal").style.display = "flex";
+    };
 
-      // Fill common data
-      document.querySelectorAll(".printStudent").forEach(el => el.textContent = fee.students?.name || "N/A");
-      document.querySelectorAll(".printClass").forEach(el => el.textContent = fee.students?.classes?.name || "N/A");
-      document.querySelectorAll(".printAmount").forEach(el => el.textContent = fee.amount);
-      document.querySelectorAll(".printDate").forEach(el => el.textContent = fee.date);
-      document.querySelectorAll(".printId").forEach(el => el.textContent = fee.receipt_no);
-      document.querySelectorAll(".companyName").forEach(el => el.textContent = fee.companies?.display_name || "Company");
+    // Choose template and print
+    window.chooseTemplate = function(templateId) {
+      const fee = selectedFee;
+      const printArea = document.getElementById("printArea");
+      let html = "";
 
-      if (fee.companies?.logo_url) {
-        document.querySelectorAll(".companyLogo").forEach(logo => {
-          logo.src = fee.companies.logo_url;
-          logo.style.display = "inline";
-        });
+      if (templateId === 1) {
+        html = `
+          <div class="receipt template1">
+            <header>
+              <img src="${fee.companies?.logo_url || ""}" class="logo" />
+              <h2>${fee.companies?.display_name || "Company"}</h2>
+              <h3>Payment Receipt</h3>
+            </header>
+            <section>
+              <p><strong>Student:</strong> ${fee.students?.name || "N/A"}</p>
+              <p><strong>Class:</strong> ${fee.students?.classes?.name || "N/A"}</p>
+              <p><strong>Amount:</strong> $${fee.amount}</p>
+              <p><strong>Date:</strong> ${fee.date}</p>
+              <p><strong>Receipt No:</strong> ${fee.receipt_no}</p>
+            </section>
+            <footer>Thank you for your payment!</footer>
+          </div>`;
       }
 
-      // Show print area
-      document.getElementById("printArea").style.display = "block";
-      window.print();
+      if (templateId === 2) {
+        html = `
+          <div class="receipt template2">
+            <header>
+              <h1>${fee.companies?.display_name || "Company"}</h1>
+              <small>Payment Receipt</small>
+            </header>
+            <section>
+              <table>
+                <tr><td>Student</td><td>${fee.students?.name}</td></tr>
+                <tr><td>Class</td><td>${fee.students?.classes?.name}</td></tr>
+                <tr><td>Amount</td><td>$${fee.amount}</td></tr>
+                <tr><td>Date</td><td>${fee.date}</td></tr>
+                <tr><td>Receipt #</td><td>${fee.receipt_no}</td></tr>
+              </table>
+            </section>
+            <footer>Powered by ${fee.companies?.display_name || "Company"}</footer>
+          </div>`;
+      }
+
+      if (templateId === 3) {
+        html = `
+          <div class="receipt template3">
+            <header>
+              <h2>Receipt</h2>
+              <p>${fee.companies?.display_name || "Company"}</p>
+            </header>
+            <section>
+              <div><strong>Student:</strong> ${fee.students?.name}</div>
+              <div><strong>Class:</strong> ${fee.students?.classes?.name}</div>
+              <div><strong>Amount:</strong> $${fee.amount}</div>
+              <div><strong>Date:</strong> ${fee.date}</div>
+              <div><strong>Receipt:</strong> ${fee.receipt_no}</div>
+            </section>
+            <footer>Digital Copy - ${new Date().getFullYear()}</footer>
+          </div>`;
+      }
+
+      printArea.innerHTML = html;
+      document.getElementById("templateModal").style.display = "none";
+      setTimeout(() => window.print(), 200);
     };
 
     document.getElementById("classSelect").addEventListener("change", e => loadStudents(e.target.value));
@@ -100,85 +153,64 @@
   </script>
 
   <style>
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background: #f4f7fb;
-      margin: 0;
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-    .container { width: 100%; max-width: 800px; }
-    h1 { color: #007bff; text-align: center; margin-bottom: 15px; font-weight: 600; }
+    body { font-family: 'Segoe UI', sans-serif; background:#f4f7fb; margin:0; padding:20px; }
+    .container { max-width:800px; margin:auto; }
+    h1 { text-align:center; color:#007bff; }
 
-    /* Filters */
-    .filter-panel {
-      width: 100%;
-      background: #fff;
-      border-radius: 12px;
-      box-shadow: 0 3px 8px rgba(0,0,0,0.1);
-      margin-bottom: 20px;
-      overflow: hidden;
-    }
-    .filter-header {
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 12px 16px; background: #007bff; color: #fff; cursor: pointer;
-    }
-    .filter-body { display: none; padding: 15px; background: #f9f9f9; }
-    .filter-body select, .filter-body input {
-      width: 100%; max-width: 300px; padding: 12px;
-      margin-bottom: 12px; border: 1px solid #ccc;
-      border-radius: 8px; font-size: 1rem;
-    }
+    .filter-panel { background:#fff; border-radius:12px; box-shadow:0 3px 8px rgba(0,0,0,0.1); margin:20px 0; }
+    .filter-body { padding:15px; }
+    .filter-body select, .filter-body input { width:100%; padding:10px; margin-bottom:12px; }
 
-    /* Payment history */
-    .history {
-      background: #fff; border-radius: 12px; padding: 20px;
-      box-shadow: 0 3px 10px rgba(0,0,0,0.1);
-    }
-    table { width: 100%; border-collapse: collapse; margin-top: 12px; }
-    th, td { padding: 12px; border-bottom: 1px solid #eee; text-align: left; }
-    th { background: #f0f0f0; font-weight: 600; }
-    .print-btn {
-      padding: 6px 14px; background: #007bff; color: #fff; border: none;
-      border-radius: 6px; cursor: pointer;
-    }
-    .print-btn:hover { background: #0056b3; }
+    .history { background:#fff; border-radius:12px; padding:20px; box-shadow:0 3px 10px rgba(0,0,0,0.1); }
+    table { width:100%; border-collapse:collapse; margin-top:12px; }
+    th, td { padding:10px; border-bottom:1px solid #eee; }
+    .view-btn { padding:6px 12px; background:#007bff; color:#fff; border:none; border-radius:6px; cursor:pointer; }
 
-    /* Receipts landscape */
-    #printArea { display: none; }
-    .receipt { display: none; width: 210mm; height: 148mm; padding: 20px; box-sizing: border-box; }
-    .receipt.active { display: block; }
+    /* Modal */
+    .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); justify-content:center; align-items:center; z-index:9999; }
+    .modal-content { background:#fff; padding:20px; border-radius:10px; max-width:900px; width:95%; }
+    .template-grid { display:grid; grid-template-columns:1fr; gap:15px; }
+    @media(min-width:768px){ .template-grid { grid-template-columns:repeat(3,1fr); } }
+    .template-preview { border:1px solid #ddd; padding:10px; border-radius:8px; background:#fafafa; text-align:center; }
+    .template-preview button { margin-top:10px; padding:6px 12px; background:#28a745; color:#fff; border:none; border-radius:5px; }
 
-    /* Print rules */
+    /* Printable area */
+    #printArea { display:none; }
     @media print {
-      body * { visibility: hidden; }
-      #printArea, #printArea * { visibility: visible; }
-      #printArea {
-        display: block !important;
-        position: absolute; left: 0; top: 0;
-      }
-      .switchBtns { display: none !important; }
+      body * { visibility:hidden; }
+      #printArea, #printArea * { visibility:visible; }
+      #printArea { display:block !important; position:absolute; top:0; left:0; width:100%; }
+      @page { size: A5 landscape; margin:10mm; }
     }
-    .switchBtns { text-align: center; margin-bottom: 10px; }
-    .switchBtns button {
-      padding: 6px 12px; margin: 4px;
-      background: #007bff; color: #fff; border: none; border-radius: 4px;
-    }
+
+    /* Receipt Styles */
+    .receipt { width:100%; height:100%; }
+    .template1 { font-family:Arial; border:2px solid #007bff; padding:20px; }
+    .template1 header { text-align:center; }
+    .template1 .logo { height:50px; }
+    .template1 footer { margin-top:20px; text-align:center; }
+
+    .template2 { font-family:Georgia; border:1px dashed #333; padding:20px; }
+    .template2 header { text-align:center; color:#007bff; }
+    .template2 table { width:100%; }
+    .template2 td { padding:5px; border-bottom:1px solid #ccc; }
+
+    .template3 { font-family:'Courier New'; padding:20px; background:#fef9e7; border:1px solid #999; }
+    .template3 header { text-align:center; margin-bottom:10px; }
+    .template3 section div { margin:6px 0; }
+    .template3 footer { text-align:right; margin-top:20px; font-size:0.8rem; }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>Student Payment Receipts</h1>
 
-    <!-- Filter section -->
+    <!-- Filters -->
     <div class="filter-panel">
-      <div class="filter-header">Filters <span>▼</span></div>
       <div class="filter-body">
         <select id="classSelect"><option value="">-- Select Class --</option></select>
         <select id="studentSelect"><option value="">-- Select Student --</option></select>
-        <input type="text" id="studentSearch" placeholder="Search Student...">
+        <input type="text" id="studentSearch" placeholder="Search Student..." />
       </div>
     </div>
 
@@ -186,82 +218,34 @@
     <div class="history">
       <h3>Payment History</h3>
       <table id="paymentTable">
-        <thead><tr><th>Date</th><th>Amount</th><th>Receipt</th></tr></thead>
+        <thead><tr><th>Date</th><th>Amount</th><th>Action</th></tr></thead>
         <tbody><tr><td colspan="3">Select a student to view payments.</td></tr></tbody>
       </table>
     </div>
   </div>
 
-  <!-- Hidden printable receipts -->
-  <div id="printArea">
-    <div class="switchBtns">
-      <button onclick="switchReceipt(1)">Template 1</button>
-      <button onclick="switchReceipt(2)">Template 2</button>
-      <button onclick="switchReceipt(3)">Template 3</button>
-    </div>
-
-    <!-- Template 1 -->
-    <div id="receipt1" class="receipt active">
-      <div style="text-align:center; border-bottom:2px solid #007bff; padding-bottom:10px;">
-        <img class="companyLogo" src="" style="height:60px; border-radius:50%; display:none;" />
-        <h2 class="companyName">Company</h2>
-        <h3>Payment Receipt</h3>
-      </div>
-      <p><b>Student:</b> <span class="printStudent"></span></p>
-      <p><b>Class:</b> <span class="printClass"></span></p>
-      <p><b>Amount:</b> $<span class="printAmount"></span></p>
-      <p><b>Date:</b> <span class="printDate"></span></p>
-      <p><b>Receipt No:</b> <span class="printId"></span></p>
-    </div>
-
-    <!-- Template 2 -->
-    <div id="receipt2" class="receipt">
-      <div style="border:2px solid #333; padding:15px; border-radius:10px; height:100%;">
-        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #ccc; padding-bottom:10px;">
-          <img class="companyLogo" src="" style="height:50px; display:none;" />
-          <h3 class="companyName">Company</h3>
+  <!-- Template chooser modal -->
+  <div id="templateModal" class="modal">
+    <div class="modal-content">
+      <h3>Choose Receipt Template</h3>
+      <div class="template-grid">
+        <div class="template-preview">
+          <p>Template 1 - Classic</p>
+          <button onclick="chooseTemplate(1)">Choose</button>
         </div>
-        <h2 style="text-align:center; margin:10px 0; color:#007bff;">Payment Receipt</h2>
-        <p><b>Receipt No:</b> <span class="printId"></span></p>
-        <p><b>Date:</b> <span class="printDate"></span></p>
-        <p><b>Student:</b> <span class="printStudent"></span></p>
-        <p><b>Class:</b> <span class="printClass"></span></p>
-        <p><b>Amount:</b> $<span class="printAmount"></span></p>
-      </div>
-    </div>
-
-    <!-- Template 3 -->
-    <div id="receipt3" class="receipt">
-      <div style="padding:20px; border:1px dashed #007bff; height:100%;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-          <h2 class="companyName">Company</h2>
-          <img class="companyLogo" src="" style="height:60px; display:none;" />
+        <div class="template-preview">
+          <p>Template 2 - Table Format</p>
+          <button onclick="chooseTemplate(2)">Choose</button>
         </div>
-        <table style="width:100%; border-collapse:collapse;">
-          <tr><td><b>Receipt No:</b></td><td><span class="printId"></span></td></tr>
-          <tr><td><b>Date:</b></td><td><span class="printDate"></span></td></tr>
-          <tr><td><b>Student:</b></td><td><span class="printStudent"></span></td></tr>
-          <tr><td><b>Class:</b></td><td><span class="printClass"></span></td></tr>
-          <tr><td><b>Amount:</b></td><td>$<span class="printAmount"></span></td></tr>
-        </table>
+        <div class="template-preview">
+          <p>Template 3 - Minimalist</p>
+          <button onclick="chooseTemplate(3)">Choose</button>
+        </div>
       </div>
     </div>
   </div>
 
-  <script>
-    // filter toggle
-    document.querySelector(".filter-header").addEventListener("click", () => {
-      const fb = document.querySelector(".filter-body");
-      fb.style.display = fb.style.display === "block" ? "none" : "block";
-    });
-
-    // Switch between templates
-    function switchReceipt(n) {
-      document.querySelectorAll(".receipt").forEach(r => r.classList.remove("active"));
-      document.getElementById("receipt" + n).classList.add("active");
-    }
-    window.switchReceipt = switchReceipt;
-  </script>
+  <!-- Printable area -->
+  <div id="printArea"></div>
 </body>
 </html>
-
