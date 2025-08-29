@@ -1,522 +1,253 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <title>Receipts</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta charset="UTF-8">
+  <title>Print Receipt</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <!-- Supabase (ESM) -->
+  <!-- Supabase -->
   <script type="module">
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.8/+esm";
 
-    // ---------- CONFIG ----------
     const SUPABASE_URL = "https://ndishfwnkzdedfcywcle.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5kaXNoZndua3pkZWRmY3l3Y2xlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYwOTk0MjcsImV4cCI6MjA3MTY3NTQyN30.CXQSfhR0MVLF40v2Tp-BcENBpHpPshG9Ys3zLYiBQaM";
+
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // ---------- STATE ----------
     let currentCompanyId = null;
-    let selectedFee = null;
 
-    // ---------- Helpers ----------
-    function toast(msg) {
-      const d = document.createElement('div');
-      d.textContent = msg;
-      d.style.position = 'fixed';
-      d.style.left = '50%';
-      d.style.transform = 'translateX(-50%)';
-      d.style.bottom = '18px';
-      d.style.padding = '10px 14px';
-      d.style.background = '#222';
-      d.style.color = '#fff';
-      d.style.borderRadius = '6px';
-      d.style.zIndex = 99999;
-      document.body.appendChild(d);
-      setTimeout(() => d.remove(), 3000);
-    }
-
-    // ---------- Load header (company info) ----------
+    // Load user + company
     async function loadDynamicHeader() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
-        // if not logged in, redirect to index
-        // window.location.href = 'index.html';
-        // For demo, don't redirect (or uncomment above in prod)
-        console.warn('No session found (demo).');
+        window.location.href = 'index.html';
         return;
       }
-      const user = session.user;
+
       const { data, error } = await supabase
         .from('users')
         .select('company_id, companies(display_name, logo_url)')
-        .eq('id', user.id)
+        .eq('id', session.user.id)
         .single();
-      if (error) {
-        console.error('Header load error', error);
-        return;
-      }
+
+      if (error || !data) return;
+
       currentCompanyId = data.company_id;
-      document.getElementById('headerTitle').textContent = data.companies?.display_name || 'Receipts';
-      if (data.companies?.logo_url) {
-        const img = document.getElementById('headerLogo');
-        img.src = data.companies.logo_url;
-        img.style.display = 'inline-block';
+      document.getElementById('headerTitle').textContent = data.companies.display_name;
+      if (data.companies.logo_url) {
+        document.getElementById('headerLogo').src = data.companies.logo_url;
+        document.getElementById('headerLogo').style.display = "inline-block";
       }
+
+      loadStudents();
     }
 
-    // ---------- Load classes ----------
-    async function loadClasses() {
+    // Load students
+    async function loadStudents(search = "") {
       if (!currentCompanyId) return;
-      const { data: classes, error } = await supabase
-        .from('classes')
-        .select('id,name')
-        .eq('company_id', currentCompanyId)
-        .order('name');
-      if (error) { console.error(error); return; }
-      const sel = document.getElementById('classSelect');
-      sel.innerHTML = `<option value="">-- All Classes --</option>`;
-      classes.forEach(c => {
-        const o = document.createElement('option');
-        o.value = c.id;
-        o.textContent = c.name;
-        sel.appendChild(o);
+      const { data: students } = await supabase
+        .from("students")
+        .select("id, name")
+        .eq("company_id", currentCompanyId)
+        .ilike("name", `%${search}%`)
+        .order("name");
+
+      const studentSelect = document.getElementById("studentSelect");
+      studentSelect.innerHTML = `<option value="">-- Select Student --</option>`;
+      students?.forEach(s => {
+        const opt = document.createElement("option");
+        opt.value = s.id;
+        opt.textContent = s.name;
+        studentSelect.appendChild(opt);
       });
     }
 
-    // ---------- Load students (safe) ----------
-    async function loadStudents(classId = "", search = "") {
-      const sel = document.getElementById('studentSelect');
-      sel.innerHTML = `<option value="">-- Select Student --</option>`;
-      if (!currentCompanyId) return;
-      let query = supabase
-        .from('students')
-        .select('id,name,class_id')
-        .eq('company_id', currentCompanyId)
-        .order('name');
-      if (classId) query = query.eq('class_id', classId);
-      if (search) query = query.ilike('name', `%${search}%`);
-      const { data: students, error } = await query;
-      if (error) { console.error('loadStudents error', error); toast('Failed to load students'); return; }
-      if (!students || students.length === 0) {
-        sel.innerHTML = `<option value="">-- No students found --</option>`;
-        return;
-      }
-      students.forEach(s => {
-        const o = document.createElement('option');
-        o.value = s.id;
-        o.textContent = s.name;
-        sel.appendChild(o);
-      });
-    }
-
-    // ---------- Load payments (list) ----------
+    // Load payments
     async function loadPayments(studentId) {
-      const tbody = document.querySelector('#paymentTable tbody');
-      tbody.innerHTML = '';
+      const tbody = document.querySelector("#paymentTable tbody");
+      tbody.innerHTML = "";
+
       if (!studentId) {
         tbody.innerHTML = `<tr><td colspan="3">Select a student to view payments.</td></tr>`;
         return;
       }
+
       const { data: fees, error } = await supabase
-        .from('fees')
-        .select('id, amount, date, receipt_no, students(name, classes(name)), companies(display_name,logo_url)')
-        .eq('student_id', studentId)
-        .eq('company_id', currentCompanyId)
-        .order('date', { ascending: true });
-      if (error) { console.error(error); tbody.innerHTML = `<tr><td colspan="3">Error loading payments</td></tr>`; return; }
-      if (!fees || fees.length === 0) {
+        .from("fees")
+        .select(`
+          id, amount, date, receipt_no, date_of_joining,
+          students (
+            id, name, phone, totalFee, initialPayment, balanceFee,
+            classes (name),
+            companies (id, display_name, logo_url)
+          )
+        `)
+        .eq("student_id", studentId)
+        .eq("company_id", currentCompanyId)
+        .order("date", { ascending: true });
+
+      if (error || !fees?.length) {
         tbody.innerHTML = `<tr><td colspan="3">No payments found.</td></tr>`;
         return;
       }
-      fees.forEach(f => {
-        const tr = document.createElement('tr');
+
+      fees.forEach(fee => {
+        const tr = document.createElement("tr");
         tr.innerHTML = `
-          <td>${f.date}</td>
-          <td>$${f.amount}</td>
-          <td><button class="view-btn" onclick='window.openTemplateChooser(${f.id})'>View</button></td>
+          <td>${fee.date}</td>
+          <td>Rp ${fee.amount}</td>
+          <td><button class="view-btn" onclick='openTemplateChooser(${JSON.stringify(JSON.stringify(fee))})'>Print</button></td>
         `;
         tbody.appendChild(tr);
       });
     }
 
-    // ---------- When user clicks View: fetch full fee record including totals & join info ----------
-    window.openTemplateChooser = async function(feeId) {
-      // fetch full fee with student/class/company and financial fields
-      const { data: fee, error } = await supabase
-        .from('fees')
-        .select(`
-          id,
-          amount,
-          date,
-          receipt_no,
-          total_fee,
-          paid_fee,
-          balance_fee,
-          date_of_joining,
-          students (
-            id, name, class_id, phone, day, totalFee, initialPayment, balanceFee,
-            classes(id,name),
-            companies(id, display_name, logo_url)
-          ),
-          companies ( id, display_name, logo_url )
-        `)
-        .eq('id', feeId)
-        .eq('company_id', currentCompanyId)
-        .single();
+    // Open receipt
+    window.openTemplateChooser = function(feeJson) {
+      const fee = JSON.parse(feeJson);
+      const student = fee.students;
+      const company = student?.companies;
 
-      if (error || !fee) {
-        console.error('Error loading fee details', error);
-        toast('Failed to load fee details');
-        return;
-      }
+      const data = {
+        companyLogo: company?.logo_url || "",
+        companyName: company?.display_name || "Company",
+        receiptNo: fee.receipt_no || "####",
+        date: fee.date,
+        studentName: student?.name,
+        className: student?.classes?.name,
+        dateOfJoining: fee.date_of_joining || "...............",
+        totalFee: student?.totalFee || 0,
+        paidFee: student?.initialPayment || 0,
+        balanceFee: student?.balanceFee || 0,
+        amount: fee.amount
+      };
 
-      // normalize: prefer students.companies if present else top-level companies
-      if (fee.students?.classes) {
-        // ok
-      }
-      selectedFee = fee;
-      // open modal
-      document.getElementById('templateModal').style.display = 'flex';
+      const html = `
+        <div class="receipt">
+          <div class="receipt-header">
+            ${data.companyLogo ? `<img src="${data.companyLogo}" class="logo"/>` : ""}
+            <div>
+              <h2>${data.companyName}</h2>
+              <h3>Payment Receipt</h3>
+            </div>
+          </div>
+
+          <div class="info">
+            <p><strong>Receipt No:</strong> ${data.receiptNo}</p>
+            <p><strong>Date:</strong> ${data.date}</p>
+            <p><strong>Student:</strong> ${data.studentName}</p>
+            <p><strong>Class:</strong> ${data.className}</p>
+            <p><strong>Date of Joining:</strong> ${data.dateOfJoining}</p>
+          </div>
+
+          <table class="fee-table">
+            <thead>
+              <tr>
+                <th>Sr No.</th>
+                <th>Particulars</th>
+                <th>Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>1</td>
+                <td>
+                  Student Fee
+                  <div class="meta">
+                    Total Fee: ${data.totalFee}<br>
+                    Paid Fee: ${data.paidFee}<br>
+                    Balance Fee: ${data.balanceFee}
+                  </div>
+                </td>
+                <td>Rp ${data.amount}</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="footer">
+            <p><strong>Total: Rp ${data.amount}</strong></p>
+            <p>Fees Paid Once is not Refundable</p>
+            <p class="note">This is a computer generated invoice, no signature required.</p>
+            <p class="thanks">Thank you for your payment</p>
+          </div>
+        </div>
+      `;
+
+      document.getElementById("printArea").innerHTML = html;
+      setTimeout(() => window.print(), 200);
     };
 
-    window.closeTemplateChooser = function () {
-      document.getElementById('templateModal').style.display = 'none';
-      selectedFee = null;
-    };
-
-    // ---------- choose template & print ----------
-    window.chooseTemplate = function(templateId) {
-      if (!selectedFee) { toast('No fee selected'); return; }
-      const fee = selectedFee;
-
-      // derive fields safely
-      const student = fee.students || {};
-      const studentName = student.name || 'N/A';
-      const className = student.classes?.name || '';
-      const company = (student.companies && Object.keys(student.companies).length) ? student.companies : (fee.companies || {});
-      const companyName = company.display_name || company.name || 'Company';
-      const logoUrl = company.logo_url || '';
-
-      // financials: prefer explicit columns on fee, else fallbacks
-      const totalFee = fee.total_fee ?? fee.totalFee ?? 'xxx';
-      const paidFee = fee.paid_fee ?? fee.paidFee ?? fee.amount ?? 0;
-      const balanceFee = fee.balance_fee ?? fee.balanceFee ?? (typeof totalFee === 'number' && typeof paidFee === 'number' ? (totalFee - paidFee) : 'xxx');
-
-      // Template HTMLs
-      let html = '';
-
-      if (templateId === 1) {
-        html = `
-          <div class="receipt template1">
-            <header><div class="left"><img src="${logoUrl}" class="logo" onerror="this.style.display='none'"/></div>
-              <div class="center"><h2>${companyName}</h2><h3>Payment Receipt</h3></div>
-              <div class="right"><p>Receipt No : <strong>${fee.receipt_no || '#####'}</strong></p><p>Date : <strong>${fee.date}</strong></p></div>
-            </header>
-            <section class="student-info">
-              <p><strong>Name of Student:</strong> ${studentName}</p>
-              <p><strong>Course:</strong> ${className}</p>
-              <p><strong>Date of Joining:</strong> ${fee.date_of_joining || '.............'}</p>
-            </section>
-            <table class="receipt-table">
-              <thead><tr><th>Sr No.</th><th>Particulars</th><th>Amount</th></tr></thead>
-              <tbody>
-                <tr>
-                  <td>1</td>
-                  <td>
-                    Student Fee<br/>
-                    <small><a>Additional fee details</a><br/>
-                    Total Fee : ${totalFee}<br/>
-                    Paid Fee : ${paidFee}<br/>
-                    Balance Fee : ${balanceFee}</small>
-                  </td>
-                  <td class="amount">Rp ${fee.amount}</td>
-                </tr>
-              </tbody>
-            </table>
-            <div class="total-row">Total : <strong>Rp ${fee.amount}</strong></div>
-            <footer>
-              <p class="tnc">Terms and Conditions : Fees Paid Once is not Refundable</p>
-              <p class="note">This is computer generated invoice, hence does not require any signature.</p>
-              <p class="thanks">Thank you for your payment</p>
-            </footer>
-          </div>
-        `;
-      } else if (templateId === 2) {
-        html = `
-          <div class="receipt template2">
-            <header>
-              <div class="left"><img src="${logoUrl}" class="logo" onerror="this.style.display='none'"/></div>
-              <div class="center"><h2>${companyName}</h2></div>
-              <div class="right"><p>Receipt No: ${fee.receipt_no || '#####'}</p><p>Date: ${fee.date}</p></div>
-            </header>
-            <section class="student-info">
-              <p><strong>Student:</strong> ${studentName}</p>
-              <p><strong>Class:</strong> ${className}</p>
-            </section>
-            <table class="receipt-table">
-              <thead><tr><th>Sr</th><th>Particulars</th><th>Amount</th></tr></thead>
-              <tbody>
-                <tr>
-                  <td>1</td>
-                  <td>Student Fee<br/><small>Total Fee: ${totalFee} | Paid: ${paidFee} | Balance: ${balanceFee}</small></td>
-                  <td class="amount">Rp ${fee.amount}</td>
-                </tr>
-              </tbody>
-            </table>
-            <div class="total-row">Total : <strong>Rp ${fee.amount}</strong></div>
-            <footer><small>Powered by ${companyName}</small></footer>
-          </div>
-        `;
-      } else if (templateId === 3) {
-        html = `
-          <div class="receipt template3">
-            <header>
-              <div class="left"><img src="${logoUrl}" class="logo" onerror="this.style.display='none'"/></div>
-              <div class="center"><h2>${companyName}</h2><h4>Payment Receipt</h4></div>
-              <div class="right"><p>Receipt: ${fee.receipt_no || '#####'}</p><p>${fee.date}</p></div>
-            </header>
-            <section class="student-info">
-              <p><strong>Student:</strong> ${studentName}</p>
-              <p><strong>Class:</strong> ${className}</p>
-            </section>
-            <table class="receipt-table">
-              <thead><tr><th>Sr</th><th>Details</th><th>Amount</th></tr></thead>
-              <tbody>
-                <tr>
-                  <td>1</td>
-                  <td>Student Fee<br/><small>Total: ${totalFee} | Paid: ${paidFee} | Balance: ${balanceFee}</small></td>
-                  <td class="amount">Rp ${fee.amount}</td>
-                </tr>
-              </tbody>
-            </table>
-            <div class="total-row">Total : <strong>Rp ${fee.amount}</strong></div>
-            <footer><small>Digital Copy - ${new Date().getFullYear()}</small></footer>
-          </div>
-        `;
-      } else if (templateId === 4) {
-        // The clean professional template (your screenshot)
-        html = `
-          <div class="receipt template4">
-            <header class="receipt-header">
-              <div class="left">
-                <img src="${logoUrl}" class="company-logo" onerror="this.style.display='none'"/>
-                <div class="company-name">${companyName}</div>
-              </div>
-              <div class="title">Payment Receipt</div>
-              <div class="meta">
-                <div>Receipt No : <strong>${fee.receipt_no || '#####'}</strong></div>
-                <div>Date : <strong>${fee.date}</strong></div>
-              </div>
-            </header>
-
-            <section class="student-info">
-              <div><strong>Name of Student :</strong> ${studentName}</div>
-              <div><strong>Course :</strong> ${className}</div>
-              <div><strong>Date of Joining :</strong> ${fee.date_of_joining || '.............'}</div>
-            </section>
-
-            <table class="details-table">
-              <thead>
-                <tr>
-                  <th style="width:7%;">Sr No.</th>
-                  <th style="width:68%;">Particulars</th>
-                  <th style="width:25%;text-align:right;">Amount</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>1</td>
-                  <td>
-                    <div style="font-weight:bold;">Student Fee</div>
-                    <div style="margin-top:6px;">
-                      <a style="color:#007bff;text-decoration:underline;">Additional fee details</a>
-                    </div>
-                    <div style="margin-top:8px;font-size:13px;color:#333;">
-                      Total Fee : ${totalFee} <br/>
-                      Paid Fee : ${paidFee} <br/>
-                      Balance Fee : ${balanceFee}
-                    </div>
-                  </td>
-                  <td style="text-align:right;vertical-align:top;">Rp ${fee.amount}</td>
-                </tr>
-              </tbody>
-            </table>
-
-            <div class="total-row">Total : <strong>Rp ${fee.amount}</strong></div>
-
-            <footer class="receipt-footer">
-              <div class="tnc"><strong>Terms and Conditions :</strong> Fees Paid Once is not Refundable</div>
-              <div class="note">This is computer generated invoice, hence, does not require any signature.</div>
-              <div class="thanks">Thank you for your payment</div>
-            </footer>
-          </div>
-        `;
-      }
-
-      // inject and print
-      const printArea = document.getElementById('printArea');
-      printArea.innerHTML = html;
-
-      // close modal & print
-      document.getElementById('templateModal').style.display = 'none';
-
-      // slight delay to allow DOM to paint, then print
-      setTimeout(() => window.print(), 300);
-    };
-
-    // ---------- Init ----------
-    document.addEventListener('DOMContentLoaded', async () => {
-      // try to load header (if auth exists)
-      try { await loadDynamicHeader(); } catch (e) { console.warn(e); }
-      await loadClasses();
-
-      document.getElementById('classSelect').addEventListener('change', (e) => {
-        loadStudents(e.target.value);
-      });
-      document.getElementById('studentSearch').addEventListener('input', (e) => {
-        const classId = document.getElementById('classSelect').value;
-        loadStudents(classId, e.target.value);
-      });
-      document.getElementById('studentSelect').addEventListener('change', (e) => {
-        loadPayments(e.target.value);
-      });
+    // Bind events
+    document.addEventListener("DOMContentLoaded", async () => {
+      await loadDynamicHeader();
+      document.getElementById("studentSelect").addEventListener("change", e => loadPayments(e.target.value));
     });
   </script>
 
-  <!-- ---------- STYLES ---------- -->
+  <!-- Styles -->
   <style>
-    :root{
-      --primary:#007bff;
-      --bg:#f4f7fb;
-      --card:#fff;
-      --muted:#666;
-    }
-    *{box-sizing:border-box}
-    body{font-family: "Segoe UI", Roboto, Arial, sans-serif;margin:0;background:var(--bg);padding:20px}
-    .container{max-width:900px;margin:0 auto}
+    body { font-family: Arial, sans-serif; background:#f0f4f8; margin:0; padding:20px; }
+    .container { max-width:700px; margin:auto; }
+    .company-header-box { display:flex; align-items:center; gap:15px; margin-bottom:20px; }
+    #headerLogo { height:50px; width:50px; border-radius:50%; display:none; object-fit:cover; }
+    #headerTitle { font-size:1.5rem; color:#007bff; }
 
-    .company-header-box{display:flex;align-items:center;gap:12px;background:var(--card);padding:16px;border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,0.06);margin-bottom:18px}
-    #headerLogo{height:48px;width:48px;border-radius:8px;object-fit:cover;display:none}
-    #headerTitle{font-size:20px;color:var(--primary);font-weight:700}
+    .history { background:#fff; padding:20px; border-radius:10px; box-shadow:0 2px 6px rgba(0,0,0,0.1); }
+    table { width:100%; border-collapse:collapse; }
+    th, td { padding:10px; border-bottom:1px solid #ddd; text-align:left; }
+    .view-btn { padding:6px 12px; background:#007bff; color:#fff; border:none; border-radius:6px; cursor:pointer; }
 
-    .filter-panel{background:var(--card);padding:14px;border-radius:10px;margin-bottom:18px;box-shadow:0 4px 12px rgba(0,0,0,0.05)}
-    .filter-body{display:flex;flex-direction:column;gap:8px}
-    .filter-body select,.filter-body input{padding:10px;border-radius:8px;border:1px solid #e0e0e0;background:#fafafa;width:100%}
+    /* Print Area */
+    #printArea { display:none; }
 
-    .history{background:var(--card);padding:16px;border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,0.04)}
-    .history h3{margin:0 0 10px 0;color:var(--primary)}
-    table{width:100%;border-collapse:collapse}
-    th,td{padding:10px;border-bottom:1px solid #eee;text-align:left}
-    .view-btn{padding:8px 12px;border-radius:6px;background:var(--primary);color:#fff;border:none;cursor:pointer}
-
-    /* modal */
-    .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center}
-    .modal-content{background:var(--card);width:95%;max-width:920px;padding:18px;border-radius:10px}
-    .template-grid{display:grid;grid-template-columns:1fr;gap:12px}
-    @media(min-width:760px){ .template-grid{grid-template-columns:repeat(4,1fr)} }
-    .template-preview{padding:12px;border-radius:8px;background:#fafafa;border:1px solid #e6e6e6;text-align:center}
-    .template-preview button{margin-top:10px;padding:8px 10px;border-radius:6px;background:#28a745;color:#fff;border:0}
-
-    /* PRINT AREA & TEMPLATES (A5 landscape) */
-    #printArea{display:none}
-
-    @media print{
-      *{margin:0;padding:0}
-      body *{visibility:hidden}
-      #printArea, #printArea *{visibility:visible}
-      #printArea{display:block;position:fixed;left:0;top:0;width:210mm;height:148mm;box-sizing:border-box;overflow:hidden}
-      @page{size:A5 landscape;margin:10mm}
+    @media print {
+      body * { visibility:hidden; }
+      #printArea, #printArea * { visibility:visible; }
+      #printArea {
+        display:block !important;
+        position:fixed; top:0; left:0;
+        width:210mm; height:148mm; /* A5 landscape */
+        margin:0; padding:0;
+      }
+      @page { size: A5 landscape; margin:10mm; }
+      .receipt { width:100%; height:100%; padding:10mm; box-sizing:border-box; }
     }
 
-    /* Generic receipt small rules (non-print preview) */
-    .receipt{width:100%;height:100%;box-sizing:border-box;background:#fff}
-    .receipt header{display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:8px}
-    .receipt .left{display:flex;align-items:center;gap:10px}
-    .receipt .logo{height:48px;width:48px;object-fit:contain;border-radius:6px}
-    .receipt .company-name{font-size:18px;font-weight:700}
-    .receipt .title{font-size:18px;font-weight:700;text-align:center}
-    .receipt .meta{text-align:right;font-size:13px;color:var(--muted)}
-    .receipt .student-info{margin:10px 0;font-size:13px;color:#222}
-    .receipt .receipt-table, .receipt .details-table{width:100%;border-collapse:collapse}
-    .receipt .receipt-table th,.receipt .receipt-table td,
-    .details-table th,.details-table td{border:1px solid #333;padding:8px;font-size:13px}
-    .receipt .amount{text-align:right}
-    .receipt .total-row{text-align:right;margin-top:8px;font-weight:700;font-size:15px}
-    .receipt footer{margin-top:18px;text-align:center;font-size:13px;color:#333}
-    .receipt .tnc{font-weight:700;margin-bottom:8px}
+    /* Receipt Styles */
+    .receipt-header { display:flex; align-items:center; gap:15px; margin-bottom:15px; }
+    .receipt-header .logo { width:60px; height:60px; object-fit:contain; }
+    .receipt-header h2 { margin:0; font-size:1.2rem; }
+    .receipt-header h3 { margin:0; font-size:1rem; color:#555; }
 
-    /* Template 4 specific tuning (the clean professional template) */
-    .template4{padding:12px}
-    .template4 .receipt-header{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #222;padding-bottom:8px;margin-bottom:12px}
-    .template4 .company-logo{height:50px;width:50px}
-    .template4 .company-name{font-size:20px;font-weight:700;color:#222}
-    .template4 .title{font-size:20px;font-weight:700;text-align:center}
-    .template4 .meta{font-size:13px}
-    .template4 .student-info{margin:8px 0}
-    .template4 .details-table th{background:#f4f4f4}
-    .template4 .receipt-footer .note{color:#555;margin-top:6px}
-    .template4 .thanks{font-style:italic;margin-top:8px}
+    .info p { margin:3px 0; font-size:0.9rem; }
+
+    .fee-table { width:100%; border-collapse:collapse; margin-top:15px; }
+    .fee-table th, .fee-table td { border:1px solid #ccc; padding:8px; font-size:0.9rem; }
+    .fee-table .meta { font-size:0.8rem; color:#555; margin-top:5px; }
+
+    .footer { margin-top:20px; font-size:0.9rem; }
+    .footer .note { font-size:0.8rem; color:#666; }
+    .footer .thanks { margin-top:10px; text-align:center; font-weight:bold; }
   </style>
 </head>
 <body>
-  <div class="container">
-    <header class="company-header-box">
-      <img id="headerLogo" src="" alt="Company Logo" />
-      <div id="headerTitle">Receipts</div>
-    </header>
+<div class="container">
+  <header class="company-header-box">
+    <img id="headerLogo" src="" alt="Company Logo">
+    <h1 id="headerTitle">Receipts</h1>
+  </header>
 
-    <section class="filter-panel">
-      <div class="filter-body">
-        <select id="classSelect"><option value="">-- All Classes --</option></select>
-        <select id="studentSelect"><option value="">-- Select Student --</option></select>
-        <input id="studentSearch" type="text" placeholder="Search student..." />
-      </div>
-    </section>
-
-    <section class="history">
-      <h3>Payment History</h3>
-      <table id="paymentTable">
-        <thead><tr><th>Date</th><th>Amount</th><th>Action</th></tr></thead>
-        <tbody><tr><td colspan="3">Select a student to view payments.</td></tr></tbody>
-      </table>
-    </section>
+  <div class="history">
+    <h3>Payment History</h3>
+    <select id="studentSelect"><option value="">-- Select Student --</option></select>
+    <table id="paymentTable">
+      <thead><tr><th>Date</th><th>Amount</th><th>Action</th></tr></thead>
+      <tbody><tr><td colspan="3">Select a student to view payments.</td></tr></tbody>
+    </table>
   </div>
+</div>
 
-  <!-- Modal -->
-  <div id="templateModal" class="modal">
-    <div class="modal-content">
-      <h3>Choose Receipt Template</h3>
-      <div class="template-grid">
-        <div class="template-preview">
-          <div style="font-weight:700;color:#007bff">Template 1</div>
-          <div style="font-size:12px;margin-top:6px;">Classic boxed</div>
-          <button onclick="chooseTemplate(1)">Choose</button>
-        </div>
-        <div class="template-preview">
-          <div style="font-weight:700;color:#28a745">Template 2</div>
-          <div style="font-size:12px;margin-top:6px;">Table format</div>
-          <button onclick="chooseTemplate(2)">Choose</button>
-        </div>
-        <div class="template-preview">
-          <div style="font-weight:700;color:#333">Template 3</div>
-          <div style="font-size:12px;margin-top:6px;">Minimal</div>
-          <button onclick="chooseTemplate(3)">Choose</button>
-        </div>
-        <div class="template-preview">
-          <div style="font-weight:700;color:#222">Template 4</div>
-          <div style="font-size:12px;margin-top:6px;">Professional (your design)</div>
-          <button onclick="chooseTemplate(4)">Choose</button>
-        </div>
-      </div>
-
-      <div style="text-align:right;margin-top:12px;">
-        <button class="close-modal-btn" onclick="closeTemplateChooser()">Close</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Print area (injected HTML for chosen template) -->
-  <div id="printArea" aria-hidden="true"></div>
-
+<!-- Print Area -->
+<div id="printArea"></div>
 </body>
 </html>
