@@ -25,19 +25,42 @@
     }
 
     async function loadStudents(classId, search="") {
-      const studentSelect = document.getElementById("studentSelect");
-      studentSelect.innerHTML = `<option value="">-- Select Student --</option>`;
-      if (!classId) return;
-      let query = supabase.from("students").select("id,name").eq("class_id", classId).order("name");
-      if (search) query = query.ilike("name", `%${search}%`);
-      const { data: students } = await query;
-      students?.forEach(s => {
-        const opt = document.createElement("option");
-        opt.value = s.id;
-        opt.textContent = s.name;
-        studentSelect.appendChild(opt);
-      });
-    }
+  const studentSelect = document.getElementById("studentSelect");
+  studentSelect.innerHTML = `<option value="">-- Select Student --</option>`;
+  if (!classId) return;
+
+  let query = supabase
+    .from("students")
+    .select("id,name,class_id")  // include the linking column for debugging
+    .eq("class_id", classId)
+    .order("name");
+
+  if (search) {
+    query = query.ilike("name", `%${search}%`);
+  }
+
+  const { data: students, error } = await query;
+
+  if (error) {
+    console.error("Error loading students:", error);
+    return;
+  }
+
+  if (!students?.length) {
+    const opt = document.createElement("option");
+    opt.textContent = "No students found";
+    studentSelect.appendChild(opt);
+    return;
+  }
+
+  students.forEach(s => {
+    const opt = document.createElement("option");
+    opt.value = s.id;
+    opt.textContent = s.name;
+    studentSelect.appendChild(opt);
+  });
+}
+
 
     async function loadPayments(studentId) {
       const tbody = document.querySelector("#paymentTable tbody");
