@@ -96,82 +96,74 @@
             });
         }
 
-        window.openTemplateChooser = function(feeJson) {
-            selectedFee = JSON.parse(feeJson);
-            document.getElementById("templateModal").style.display = "flex";
-        };
-        
-        window.closeTemplateChooser = function() {
-            document.getElementById("templateModal").style.display = "none";
-            selectedFee = null;
-        };
+         // Open template chooser modal
+    window.openTemplateChooser = function(feeJson) {
+      selectedFee = JSON.parse(feeJson);
+      document.getElementById("templateModal").style.display = "flex";
+    };
 
-        window.chooseTemplate = function(templateId) {
-            const fee = selectedFee;
-            if (!fee) return;
-            const printArea = document.getElementById("printArea");
-            let html = "";
-            const companyName = fee.companies?.display_name || "Company";
-            const studentName = fee.students?.name || "N/A";
-            const className = fee.students?.classes?.name || "N/A";
+    // Choose template and print
+    window.chooseTemplate = function(templateId) {
+      const fee = selectedFee;
+      const printArea = document.getElementById("printArea");
+      let html = "";
 
-            if (templateId === 1) {
-                html = `
-                    <div class="receipt template1">
-                        <header>
-                            <img src="${fee.companies?.logo_url || ""}" class="logo" />
-                            <h2>${companyName}</h2>
-                            <h3>Payment Receipt</h3>
-                        </header>
-                        <section>
-                            <p><strong>Student:</strong> ${studentName}</p>
-                            <p><strong>Class:</strong> ${className}</p>
-                            <p><strong>Amount:</strong> $${fee.amount}</p>
-                            <p><strong>Date:</strong> ${fee.date}</p>
-                            <p><strong>Receipt No:</strong> ${fee.receipt_no}</p>
-                        </section>
-                        <footer>Thank you for your payment!</footer>
-                    </div>`;
-            }
+      if (templateId === 1) {
+        html = `
+          <div class="receipt template1">
+            <header>
+              <img src="${fee.companies?.logo_url || ""}" class="logo" />
+              <h2>${fee.companies?.display_name || "Company"}</h2>
+              <h3>Payment Receipt</h3>
+            </header>
+            <section>
+              <p><strong>Student:</strong> ${fee.students?.name || "N/A"}</p>
+              <p><strong>Class:</strong> ${fee.students?.classes?.name || "N/A"}</p>
+              <p><strong>Amount:</strong> $${fee.amount}</p>
+              <p><strong>Date:</strong> ${fee.date}</p>
+              <p><strong>Receipt No:</strong> ${fee.receipt_no}</p>
+            </section>
+            <footer>Thank you for your payment!</footer>
+          </div>`;
+      }
 
-            if (templateId === 2) {
-                html = `
-                    <div class="receipt template2">
-                        <header>
-                            <h1>${companyName}</h1>
-                            <small>Payment Receipt</small>
-                        </header>
-                        <section>
-                            <table>
-                                <tr><td>Student</td><td>${studentName}</td></tr>
-                                <tr><td>Class</td><td>${className}</td></tr>
-                                <tr><td>Amount</td><td>$${fee.amount}</td></tr>
-                                <tr><td>Date</td><td>${fee.date}</td></tr>
-                                <tr><td>Receipt #</td><td>${fee.receipt_no}</td></tr>
-                            </table>
-                        </section>
-                        <footer>Powered by ${companyName}</footer>
-                    </div>`;
-            }
+      if (templateId === 2) {
+        html = `
+          <div class="receipt template2">
+            <header>
+              <h1>${fee.companies?.display_name || "Company"}</h1>
+              <small>Payment Receipt</small>
+            </header>
+            <section>
+              <table>
+                <tr><td>Student</td><td>${fee.students?.name}</td></tr>
+                <tr><td>Class</td><td>${fee.students?.classes?.name}</td></tr>
+                <tr><td>Amount</td><td>$${fee.amount}</td></tr>
+                <tr><td>Date</td><td>${fee.date}</td></tr>
+                <tr><td>Receipt #</td><td>${fee.receipt_no}</td></tr>
+              </table>
+            </section>
+            <footer>Powered by ${fee.companies?.display_name || "Company"}</footer>
+          </div>`;
+      }
 
-            if (templateId === 3) {
-                html = `
-                    <div class="receipt template3">
-                        <header>
-                            <h2>Receipt</h2>
-                            <p>${companyName}</p>
-                        </header>
-                        <section>
-                            <div><strong>Student:</strong> ${studentName}</div>
-                            <div><strong>Class:</strong> ${className}</div>
-                            <div><strong>Amount:</strong> $${fee.amount}</div>
-                            <div><strong>Date:</strong> ${fee.date}</div>
-                            <div><strong>Receipt:</strong> ${fee.receipt_no}</div>
-                        </section>
-                        <footer>Digital Copy - ${new Date().getFullYear()}</footer>
-                    </div>`;
-            }
-
+      if (templateId === 3) {
+        html = `
+          <div class="receipt template3">
+            <header>
+              <h2>Receipt</h2>
+              <p>${fee.companies?.display_name || "Company"}</p>
+            </header>
+            <section>
+              <div><strong>Student:</strong> ${fee.students?.name}</div>
+              <div><strong>Class:</strong> ${fee.students?.classes?.name}</div>
+              <div><strong>Amount:</strong> $${fee.amount}</div>
+              <div><strong>Date:</strong> ${fee.date}</div>
+              <div><strong>Receipt:</strong> ${fee.receipt_no}</div>
+            </section>
+            <footer>Digital Copy - ${new Date().getFullYear()}</footer>
+          </div>`;
+      }
             printArea.innerHTML = html;
             document.getElementById("templateModal").style.display = "none";
             setTimeout(() => window.print(), 200);
