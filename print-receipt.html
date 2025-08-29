@@ -278,39 +278,48 @@
 #printArea { display:none; }
 
 @media print {
-  body {
+  /* Reset everything */
+  * {
     margin: 0 !important;
     padding: 0 !important;
-    background: #fff !important;
+    box-shadow: none !important;
+    background: transparent !important;
   }
 
-  body * { visibility:hidden; }
-  #printArea, #printArea * { visibility:visible; }
+  body * { 
+    visibility: hidden; 
+  }
+
+  #printArea, #printArea * { 
+    visibility: visible; 
+  }
 
   #printArea {
-    display:block !important;
-    position:absolute;
-    top:0;
-    left:0;
-    width:100%;          /* use full width */
-    height:auto;
-    margin:0 auto;
-    box-sizing: border-box;
+    display: block !important;
+    position: fixed; /* lock to the page */
+    top: 0;
+    left: 0;
+    width: 210mm;     /* exact A5 landscape width */
+    height: 148mm;    /* exact A5 landscape height */
+    margin: 0 auto;
+    overflow: hidden; /* prevent spill */
   }
 
-    @page {
-    size: A5 portrait; /* or landscape if you want */
-    margin: 0;         /* remove all browser margins */
+  @page {
+    size: A5 landscape;
+    margin: 10mm;
   }
 
-  /* Remove forced page breaks */
   .receipt {
-    page-break-inside: avoid;
     width: 100%;
-    min-height: 100%;
-    box-sizing: border-box;
+    height: 100%;
+    padding: 10mm;
+    page-break-after: avoid;
+    page-break-before: avoid;
+    page-break-inside: avoid;
   }
 }
+
 
 
     /* Receipt styles */
