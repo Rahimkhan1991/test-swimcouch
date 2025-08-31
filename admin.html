@@ -291,28 +291,7 @@
             document.getElementById('logoUrlInput').value = data.companies.logo_url || '';
         }
 
-        document.getElementById('saveCustomizationBtn').addEventListener('click', async () => {
-            if (!currentCompanyId) {
-                alert('Could not determine company ID. Please reload the page.');
-                return;
-            }
-
-            const companyName = document.getElementById('companyNameInput').value;
-            const logoUrl = document.getElementById('logoUrlInput').value;
-
-            const { error } = await supabase
-                .from('companies')
-                .update({ display_name: companyName, logo_url: logoUrl })
-                .eq('id', currentCompanyId);
-
-            if (error) {
-                console.error('Error saving customization:', error);
-                alert('Failed to save changes.');
-            } else {
-                alert('Changes saved successfully!');
-                loadDynamicHeader();
-            }
-        });
+        
 
         async function loadUsers() {
             if (!currentCompanyId) {
