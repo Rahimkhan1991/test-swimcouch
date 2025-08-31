@@ -37,17 +37,24 @@
         }
 
         .company-header-box {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 15px;
-            background-color: var(--card-background);
-            border-radius: 12px;
-            padding: 20px 25px;
-            box-shadow: var(--shadow-light);
-            margin-bottom: 25px;
-            width: 100%;
-        }
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--card-background);
+    border-radius: 12px;
+    padding: 20px 25px;
+    box-shadow: var(--shadow-light);
+    margin-bottom: 25px;
+    width: 100%;
+}
+
+#companyNameDisplay {
+    font-size: 1.75rem; /* Larger font for better visibility as a standalone title */
+    font-weight: 600;
+    color: var(--primary-color);
+    margin: 0;
+    text-align: center;
+}
 
         #headerLogo {
             height: 50px;
@@ -215,14 +222,13 @@
     <div class="container">
         
         <div class="company-header-box"style="width: 93%;">
-            <img id="headerLogo" src="" alt="Company Logo">
             <span class="card-icon"><i class="fa-solid fa-user-gear"></i></span>
             <h1 id="companyNameDisplay">Admin Panel</h1>
         </div>
 
         <div class="section">
             <h2>🎨 Customize Home Page</h2>
-            <label for="companyNameInput">Company Name:</label>
+            
             <input type="text" id="companyNameInput" placeholder="e.g., Aquaman Swim Club">
             <label for="logoUrlInput">Logo URL:</label>
             <input type="text" id="logoUrlInput" placeholder="e.g., https://example.com/logo.png">
@@ -258,38 +264,28 @@
         let currentCompanyId = null;
 
         async function loadDynamicHeader() {
-            const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-            if (sessionError || !session) {
-                window.location.href = 'index.html';
-                return;
-            }
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    if (sessionError || !session) {
+        window.location.href = 'index.html';
+        return;
+    }
 
-            const user = session.user;
-            const { data, error } = await supabase
-                .from('users')
-                .select('company_id, companies(display_name, logo_url)')
-                .eq('id', user.id)
-                .single();
+    const user = session.user;
+    const { data, error } = await supabase
+        .from('users')
+        .select('company_id')
+        .eq('id', user.id)
+        .single();
 
-            const headerTitle = document.getElementById('companyNameDisplay');
-            const headerLogo = document.getElementById('headerLogo');
-
-            if (error || !data || !data.companies) {
-                console.error('Error fetching company data:', error?.message);
-                return;
-            }
-            
-            currentCompanyId = data.company_id;
-
-            headerTitle.textContent = data.companies.display_name || 'Admin Panel';
-            if (data.companies.logo_url) {
-                headerLogo.src = data.companies.logo_url;
-                headerLogo.style.display = 'inline-block';
-            }
-
-            document.getElementById('companyNameInput').value = data.companies.display_name || '';
-            document.getElementById('logoUrlInput').value = data.companies.logo_url || '';
-        }
+    if (error || !data) {
+        console.error('Error fetching company data:', error?.message);
+        return;
+    }
+    
+    currentCompanyId = data.company_id;
+    // The logo and company name are no longer set here.
+    // The inputs for customization are now managed separately below.
+}
 
         
 
