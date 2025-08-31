@@ -5,7 +5,6 @@
   <title>Print Receipt</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <!-- Supabase -->
   <script type="module">
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.8/+esm";
 
@@ -39,18 +38,25 @@
         document.getElementById('headerLogo').style.display = "inline-block";
       }
 
-      loadStudents();
+      // We call loadClasses here now, which will in turn call loadStudents
+      // loadStudents(); // This line is no longer needed here
     }
 
-    // Load students
-    async function loadStudents(search = "") {
+    // Load students based on an optional classId and search term
+    async function loadStudents(classId = "", search = "") {
       if (!currentCompanyId) return;
-      const { data: students } = await supabase
+      
+      let query = supabase
         .from("students")
         .select("id, name")
         .eq("company_id", currentCompanyId)
-        .ilike("name", `%${search}%`)
-        .order("name");
+        .ilike("name", `%${search}%`);
+
+      if (classId) {
+        query = query.eq("class_id", classId);
+      }
+
+      const { data: students } = await query.order("name");
 
       const studentSelect = document.getElementById("studentSelect");
       studentSelect.innerHTML = `<option value="">-- Select Student --</option>`;
@@ -61,210 +67,181 @@
         studentSelect.appendChild(opt);
       });
     }
+
     // Load classes
-async function loadClasses() {
-  if (!currentCompanyId) return;
-  const { data: classes } = await supabase
-    .from("classes")
-    .select("id, name")
-    .eq("company_id", currentCompanyId)
-    .order("name");
+    async function loadClasses() {
+      if (!currentCompanyId) return;
+      const { data: classes } = await supabase
+        .from("classes")
+        .select("id, name")
+        .eq("company_id", currentCompanyId)
+        .order("name");
 
-  const classSelect = document.getElementById("classSelect");
-  classSelect.innerHTML = `<option value="">-- Select Class --</option>`;
-  classes?.forEach(c => {
-    const opt = document.createElement("option");
-    opt.value = c.id;
-    opt.textContent = c.name;
-    classSelect.appendChild(opt);
-  });
+      const classSelect = document.getElementById("classSelect");
+      classSelect.innerHTML = `<option value="">-- Select Class --</option>`;
+      classes?.forEach(c => {
+        const opt = document.createElement("option");
+        opt.value = c.id;
+        opt.textContent = c.name;
+        classSelect.appendChild(opt);
+      });
+    }
 
-  // Attach an event listener to the class dropdown
-  classSelect.addEventListener("change", (event) => {
-    const selectedClassId = event.target.value;
-    loadStudents(selectedClassId);
-  });
-}
+    // Load payments
+    async function loadPayments(studentId) {
+      const tbody = document.querySelector("#paymentTable tbody");
+      tbody.innerHTML = "";
 
-// ... (your existing code) ...
+      if (!studentId) {
+        tbody.innerHTML = `<tr><td colspan="3">Select a student to view payments.</td></tr>`;
+        return;
+      }
 
-// Load students
-async function loadStudents(classId = "", search = "") {
-  if (!currentCompanyId) return;
+      // 1. Get student details (totalFee etc.)
+      const { data: student, error: studentError } = await supabase
+        .from("students")
+        .select("id, name, phone, totalFee, initialPayment, balanceFee, created_at, classes(name), companies(display_name, logo_url)")
+        .eq("id", studentId)
+        .single();
 
-  let query = supabase
-    .from("students")
-    .select("id, name")
-    .eq("company_id", currentCompanyId)
-    .ilike("name", `%${search}%`);
+      if (studentError) {
+        console.error("Error loading student:", studentError.message);
+        return;
+      }
 
-  // Conditionally add class filter
-  if (classId) {
-    query = query.eq("class_id", classId);
-  }
+      // 2. Get all payments for this student
+      const { data: fees, error: feesError } = await supabase
+        .from("fees")
+        .select("id, amount, date, receipt_no")
+        .eq("student_id", studentId)
+        .eq("company_id", currentCompanyId)
+        .order("date", { ascending: true });
 
-  const { data: students } = await query.order("name");
-  
-  const studentSelect = document.getElementById("studentSelect");
-  studentSelect.innerHTML = `<option value="">-- Select Student --</option>`;
-  students?.forEach(s => {
-    const opt = document.createElement("option");
-    opt.value = s.id;
-    opt.textContent = s.name;
-    studentSelect.appendChild(opt);
-  });
-}
+      if (feesError) {
+        console.error("Error loading fees:", feesError.message);
+        return;
+      }
 
-// ... (your existing loadClasses function is correct) ...
+      // 3. Calculate totals
+      const totalPaid = fees?.reduce((sum, f) => sum + f.amount, 0) ?? 0;
+      const pending = Math.max((student?.totalFee ?? 0) - totalPaid, 0);
 
-// Update the loadPayments function to correctly fetch all required data
-async function loadPayments(studentId) {
-  const tbody = document.querySelector("#paymentTable tbody");
-  tbody.innerHTML = "";
+      // Open receipt template
+      window.openTemplateChooser = function(feeJson) {
+        const fee = JSON.parse(feeJson);
 
-  if (!studentId) {
-    tbody.innerHTML = `<tr><td colspan="3">Select a student to view payments.</td></tr>`;
-    return;
-  }
-  
-  // Fetch student and all related data in a single query
-  const { data: student, error: studentError } = await supabase
-    .from("students")
-    .select("id, name, phone, totalFee, initialPayment, balanceFee, created_at, classes(name), companies(display_name, logo_url)")
-    .eq("id", studentId)
-    .single();
+        const data = {
+          companyLogo: student?.companies?.logo_url || "",
+          companyName: student?.companies?.display_name || "Company",
+          receiptNo: fee.receipt_no || "####",
+          date: fee.date,
+          studentName: student?.name,
+          className: student?.classes?.name,
+          dateOfJoining: student?.created_at || "...............",
+          totalFee: student?.totalFee || 0,
+          paidFee: totalPaid,
+          balanceFee: pending,
+          amount: fee.amount
+        };
 
-  if (studentError) {
-    console.error("Error loading student:", studentError.message);
-    return;
-  }
-  
-  // Fetch payments for this student
-  const { data: fees, error: feesError } = await supabase
-    .from("fees")
-    .select("id, amount, date, receipt_no")
-    .eq("student_id", studentId)
-    .eq("company_id", currentCompanyId)
-    .order("date", { ascending: true });
+        const html = `
+          <div class="receipt">
+            <div class="receipt-header">
+              ${data.companyLogo ? `<img src="${data.companyLogo}" class="logo"/>` : ""}
+              <div>
+                <h2>${data.companyName}</h2>
+                <h3>Payment Receipt</h3>
+              </div>
+            </div>
 
-  if (feesError) {
-    console.error("Error loading fees:", feesError.message);
-    return;
-  }
-  
-  // Calculate totals
-  const totalPaid = fees?.reduce((sum, f) => sum + f.amount, 0) ?? 0;
-  const pending = Math.max((student?.totalFee ?? 0) - totalPaid, 0);
+            <div class="info">
+              <p><strong>Receipt No:</strong> ${data.receiptNo}</p>
+              <p><strong>Date:</strong> ${data.date}</p>
+              <p><strong>Student:</strong> ${data.studentName}</p>
+              <p><strong>Class:</strong> ${data.className}</p>
+              <p><strong>Date of Joining:</strong> ${data.dateOfJoining}</p>
+            </div>
 
-  // Update the receipt template with the correct data
-  window.openTemplateChooser = async function(feeJson) {
-      const fee = JSON.parse(feeJson);
-      
-      const data = {
-        companyLogo: student?.companies?.logo_url || "",
-        companyName: student?.companies?.display_name || "Company",
-        receiptNo: fee.receipt_no || "####",
-        date: fee.date,
-        studentName: student?.name,
-        className: student?.classes?.name,
-        dateOfJoining: student?.created_at || "...............",
-        totalFee: student?.totalFee || 0,
-        paidFee: totalPaid, // This needs to be the total of all fees paid
-        balanceFee: pending, // The pending balance
-        amount: fee.amount
-      };
+            <table class="fee-table">
+              <thead>
+                <tr>
+                  <th>Sr No.</th>
+                  <th>Particulars</th>
+                  <th>Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>1</td>
+                  <td>
+                    Student Fee
+                    <div class="meta">
+                      Total Fee: ${data.totalFee}<br>
+                      Paid Fee: ${data.paidFee}<br>
+                      Balance Fee: ${data.balanceFee}
+                    </div>
+                  </td>
+                  <td>Rp ${data.amount}</td>
+                </tr>
+              </tbody>
+            </table>
 
-      const html = `
-        <div class="receipt">
-          <div class="receipt-header">
-            ${data.companyLogo ? `<img src="${data.companyLogo}" class="logo"/>` : ""}
-            <div>
-              <h2>${data.companyName}</h2>
-              <h3>Payment Receipt</h3>
+            <div class="footer">
+              <p><strong>Total: Rp ${data.amount}</strong></p>
+              <p>Fees Paid Once is not Refundable</p>
+              <p class="note">This is a computer generated invoice, no signature required.</p>
+              <p class="thanks">Thank you for your payment</p>
             </div>
           </div>
+        `;
 
-          <div class="info">
-            <p><strong>Receipt No:</strong> ${data.receiptNo}</p>
-            <p><strong>Date:</strong> ${data.date}</p>
-            <p><strong>Student:</strong> ${data.studentName}</p>
-            <p><strong>Class:</strong> ${data.className}</p>
-            <p><strong>Date of Joining:</strong> ${data.dateOfJoining}</p>
-          </div>
+        document.getElementById("printArea").innerHTML = html;
+        setTimeout(() => window.print(), 200);
+      };
 
-          <table class="fee-table">
-            <thead>
-              <tr>
-                <th>Sr No.</th>
-                <th>Particulars</th>
-                <th>Amount</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>1</td>
-                <td>
-                  Student Fee
-                  <div class="meta">
-                    Total Fee: ${data.totalFee}<br>
-                    Paid Fee: ${data.paidFee}<br>
-                    Balance Fee: ${data.balanceFee}
-                  </div>
-                </td>
-                <td>Rp ${data.amount}</td>
-              </tr>
-            </tbody>
-          </table>
+      fees.forEach(fee => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${fee.date}</td>
+          <td>Rp ${fee.amount}</td>
+          <td><button class="view-btn" onclick='openTemplateChooser(${JSON.stringify(JSON.stringify(fee))})'>Print</button></td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
 
-          <div class="footer">
-            <p><strong>Total: Rp ${data.amount}</strong></p>
-            <p>Fees Paid Once is not Refundable</p>
-            <p class="note">This is a computer generated invoice, no signature required.</p>
-            <p class="thanks">Thank you for your payment</p>
-          </div>
-        </div>
-      `;
+    // Bind events
+    document.addEventListener("DOMContentLoaded", async () => {
+      await loadDynamicHeader();
+      await loadClasses(); // <-- Call the function to load classes initially
 
-      document.getElementById("printArea").innerHTML = html;
-      setTimeout(() => window.print(), 200);
-    };
+      const classSelect = document.getElementById("classSelect");
+      const studentSelect = document.getElementById("studentSelect");
 
- // Bind events
-document.addEventListener("DOMContentLoaded", async () => {
-  await loadDynamicHeader();
-  await loadClasses(); // <-- Call the function to load classes
+      // Event listener for the class dropdown
+      classSelect.addEventListener("change", e => {
+        const selectedClassId = e.target.value;
+        loadStudents(selectedClassId); // Filter students by selected class
+        loadPayments(null); // Clear the payments table when class changes
+      });
 
-  const classSelect = document.getElementById("classSelect");
-  const studentSelect = document.getElementById("studentSelect");
-  
-  // Event listener for the class dropdown
-  classSelect.addEventListener("change", e => {
-    const selectedClassId = e.target.value;
-    loadStudents(selectedClassId); // Filter students by selected class
-    loadPayments(null); // Clear the payments table when class changes
-  });
-
-  // Event listener for the student dropdown
-  studentSelect.addEventListener("change", e => loadPayments(e.target.value));
-});
+      // Event listener for the student dropdown
+      studentSelect.addEventListener("change", e => loadPayments(e.target.value));
+    });
   </script>
 
-  <!-- Styles -->
   <style>
     body { font-family: Arial, sans-serif; background:#f0f4f8; margin:0; padding:20px; }
     .container { max-width:700px; margin:auto; }
     .company-header-box { display:flex; align-items:center; gap:15px; margin-bottom:20px; }
     #headerLogo { height:50px; width:50px; border-radius:50%; display:none; object-fit:cover; }
     #headerTitle { font-size:1.5rem; color:#007bff; }
-
     .history { background:#fff; padding:20px; border-radius:10px; box-shadow:0 2px 6px rgba(0,0,0,0.1); }
     table { width:100%; border-collapse:collapse; }
     th, td { padding:10px; border-bottom:1px solid #ddd; text-align:left; }
     .view-btn { padding:6px 12px; background:#007bff; color:#fff; border:none; border-radius:6px; cursor:pointer; }
-
     /* Print Area */
     #printArea { display:none; }
-
     @media print {
       body * { visibility:hidden; }
       #printArea, #printArea * { visibility:visible; }
@@ -277,19 +254,15 @@ document.addEventListener("DOMContentLoaded", async () => {
       @page { size: A5 landscape; margin:10mm; }
       .receipt { width:100%; height:100%; padding:10mm; box-sizing:border-box; }
     }
-
     /* Receipt Styles */
     .receipt-header { display:flex; align-items:center; gap:15px; margin-bottom:15px; }
     .receipt-header .logo { width:60px; height:60px; object-fit:contain; }
     .receipt-header h2 { margin:0; font-size:1.2rem; }
     .receipt-header h3 { margin:0; font-size:1rem; color:#555; }
-
     .info p { margin:3px 0; font-size:0.9rem; }
-
     .fee-table { width:100%; border-collapse:collapse; margin-top:15px; }
     .fee-table th, .fee-table td { border:1px solid #ccc; padding:8px; font-size:0.9rem; }
     .fee-table .meta { font-size:0.8rem; color:#555; margin-top:5px; }
-
     .footer { margin-top:20px; font-size:0.9rem; }
     .footer .note { font-size:0.8rem; color:#666; }
     .footer .thanks { margin-top:10px; text-align:center; font-weight:bold; }
@@ -313,7 +286,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   </div>
 </div>
 
-<!-- Print Area -->
 <div id="printArea"></div>
 </body>
 </html>
