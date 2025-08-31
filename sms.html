@@ -75,9 +75,11 @@
             margin-top: 20px;
         }
         .footer-buttons button {
+            width: 100%; /* Corrected width for alignment */
             background-color: #007bff;
             padding: 10px 16px;
             margin: 5px;
+            box-sizing: border-box; /* Ensures padding is included in the width */
         }
         .footer-buttons button:last-child {
             background-color: #007bff;
@@ -141,9 +143,9 @@
                 </span>️ Send WhatsApp
             </button>
     </div>
-    <div class="footer-buttons">
-        <button onclick="history.back()">⬅️ Back</button>
-    </div>
+   <div class="footer-buttons">
+    <button onclick="history.back()" class="back-button">⬅️ Back</button>
+</div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
