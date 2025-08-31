@@ -139,11 +139,7 @@
                 }
                 
 
-// Add this block to reformat the fee date
-if (data.date) {
-    const feeDateObj = new Date(data.date);
-    data.date = feeDateObj.toLocaleDateString();
-}
+
   // Reformat the fee date
     if (data.date) {
         const feeDateObj = new Date(data.date);
