@@ -397,32 +397,103 @@
         #printArea {
             display: none;
         }
+@media print {
+    /* Hide everything on the page by default and then make only the print area visible. */
+    body * { 
+        visibility: hidden; 
+    }
+    #printArea, #printArea * { 
+        visibility: visible; 
+    }
+    #printArea {
+        display: block !important;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 195mm;
+        height: 148mm; /* A5 landscape */
+        margin: 0;
+        padding: 0;
+    }
+    
+    @page { 
+        size: A5 landscape; 
+        margin: 10mm; 
+    }
+    
+    .receipt { 
+        width: 100%; 
+        height: 100%; 
+        padding: 5mm; /* Reduced padding for more content space */
+        box-sizing: border-box; 
+    }
 
-     @media print {
-      body * { visibility:hidden; }
-      #printArea, #printArea * { visibility:visible; }
-      #printArea {
-        display:block !important;
-        position:fixed; top:0; left:0;
-        width:195mm; height:148mm; /* A5 landscape */
-        margin:0; padding:0;
-      }
-      @page { size: A5 landscape; margin:10mm; }
-      .receipt { width:100%; height:100%; padding:10mm; box-sizing:border-box; }
+    /* Receipt Header */
+    .receipt-header {
+        display: flex;
+        align-items: center;
+        gap: 10px; /* Reduced gap */
+        margin-bottom: 10px; /* Reduced margin */
+    }
+    .receipt-header .logo {
+        width: 50px; /* Smaller logo */
+        height: 50px;
+        object-fit: contain;
+    }
+    .receipt-header h2 {
+        margin: 0;
+        font-size: 1rem; /* Smaller font */
+    }
+    .receipt-header h3 {
+        margin: 0;
+        font-size: 0.9rem; /* Smaller font */
+        color: #555;
+    }
 
-         /* Receipt Styles */
-    .receipt-header { display:flex; align-items:center; gap:15px; margin-bottom:15px; }
-    .receipt-header .logo { width:60px; height:60px; object-fit:contain; }
-    .receipt-header h2 { margin:0; font-size:1.2rem; }
-    .receipt-header h3 { margin:0; font-size:1rem; color:#555; }
-    .info p { margin:3px 0; font-size:0.9rem; }
-    .fee-table { width:100%; border-collapse:collapse; margin-top:15px; }
-    .fee-table th, .fee-table td { border:1px solid #ccc; padding:8px; font-size:0.9rem; }
-    .fee-table .meta { font-size:0.8rem; color:#555; margin-top:5px; }
-    .footer {margin-top: 5px;font-size: 0.9rem;}
-    .total-row {display: flex;justify-content: flex-end; /* Aligns content to the right edge */}
-    .footer .note {font-size: 0.8rem;color: #666;}
-    .footer .thanks { margin-top:10px; text-align:center; font-weight:bold; }
+    /* Info Section */
+    .info p {
+        margin: 2px 0; /* Tighter spacing */
+        font-size: 0.85rem; /* Smaller font */
+    }
+
+    /* Fee Table */
+    .fee-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px; /* Reduced margin */
+    }
+    .fee-table th, .fee-table td {
+        border: 1px solid #ccc;
+        padding: 6px; /* Reduced padding */
+        font-size: 0.85rem; /* Smaller font */
+    }
+    .fee-table .meta {
+        font-size: 0.75rem; /* Smaller font */
+        color: #555;
+        margin-top: 3px;
+    }
+    
+    /* Footer */
+    .footer {
+        margin-top: 10px; /* Reduced margin */
+        font-size: 0.85rem; /* Smaller font */
+    }
+    .total-row {
+        display: flex;
+        justify-content: flex-end;
+        font-size: 0.95rem;
+    }
+    .footer .note {
+        font-size: 0.7rem; /* Smaller font */
+        color: #666;
+    }
+    .footer .thanks { 
+        margin-top: 5px; /* Reduced margin */
+        text-align: center; 
+        font-weight: bold; 
+        font-size: 0.9rem; /* Smaller font */
+    }
+}
     </style>
 </head>
 <body>
