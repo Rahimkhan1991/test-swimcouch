@@ -139,65 +139,63 @@
                 }
 
                 const html = `
-          <div class="receipt">
-            <div class="receipt-header">
-              ${data.companyLogo ? `<img src="${data.companyLogo}" class="logo"/>` : ""}
-              <div>
-                <h2>${data.companyName}</h2>
-                <h3>Payment Receipt</h3>
-              </div>
-            </div>
-
-             <div class="info">
-            <div class="info-group">
-            <p><strong>Student:</strong> ${data.studentName}</p>
-            <p><strong>Class:</strong> ${data.className}</p>
-            <p><strong>Date of Joining:</strong> ${data.dateOfJoining}</p>
-            </div>
-          <div class="info-group right-align">
-        <p><strong>Receipt No:</strong> ${data.receiptNo}</p>
-        <p><strong>Date:</strong> ${data.date}</p>
-          </div>
-          </div>
-
-            <table class="fee-table">
-              <thead>
-                <tr>
-                  <th>Sr No.</th>
-                  <th>Particulars</th>
-                  <th>Amount</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>1</td>
-                  <td>
-                    Student Fee
-                    <div class="meta">
-                      Total Fee: ${data.totalFee}<br>
-                      Paid Fee: ${data.paidFee}<br>
-                      Balance Fee: ${data.balanceFee}
+                    <div class="receipt">
+                        <div class="receipt-header">
+                            ${data.companyLogo ? `<img src="${data.companyLogo}" class="logo"/>` : ""}
+                            <div>
+                                <h2>${data.companyName}</h2>
+                                <h3>Payment Receipt</h3>
+                            </div>
+                        </div>
+                        <div class="info">
+                            <div class="info-group">
+                                <p><strong>Student:</strong> ${data.studentName}</p>
+                                <p><strong>Class:</strong> ${data.className}</p>
+                                <p><strong>Date of Joining:</strong> ${data.dateOfJoining}</p>
+                            </div>
+                            <div class="info-group right-align">
+                                <p><strong>Receipt No:</strong> ${data.receiptNo}</p>
+                                <p><strong>Date:</strong> ${data.date}</p>
+                            </div>
+                        </div>
+                        <table class="fee-table">
+                            <thead>
+                                <tr>
+                                    <th>Sr No.</th>
+                                    <th>Particulars</th>
+                                    <th>Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>1</td>
+                                    <td>
+                                        Student Fee
+                                        <div class="meta">
+                                            Total Fee: Rp ${data.totalFee}<br>
+                                            Paid Fee: Rp ${data.paidFee}<br>
+                                            Balance Fee: Rp ${data.balanceFee}
+                                        </div>
+                                    </td>
+                                    <td>Rp ${data.amount}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div class="footer">
+                            <div class="total-row">
+                                <p><strong>Total: Rp ${data.amount}</strong></p>
+                            </div>
+                            <div class="terms-and-conditions">
+                                <p>Terms & Conditions: Fees Paid Once is not Refundable</p>
+                            </div>
+                            <p class="note">This is a computer-generated invoice, no signature required.</p>
+                            <p class="thanks">Thank you for your payment</p>
+                        </div>
                     </div>
-                  </td>
-                  <td>Rp ${data.amount}</td>
-                </tr>
-              </tbody>
-            </table>
-
-            <div class="footer">
-              <div class="total-row">
-              <p><strong>Total: Rp ${data.amount}</strong></p></div>
-              <p>Terms & Conditions : Fees Paid Once is not Refundable</p>
-              <p class="note">This is a computer generated invoice, no signature required.</p>
-              <p class="thanks">Thank you for your payment</p>
-            </div>
-          </div>
-        `;
-
-             document.getElementById("printArea").innerHTML = html;
-        setTimeout(() => window.print(), 200);
-      };
-
+                `;
+                document.getElementById("printArea").innerHTML = html;
+                setTimeout(() => window.print(), 200);
+            };
 
             fees.forEach(fee => {
                 const tr = document.createElement("tr");
@@ -226,14 +224,13 @@
 
             classSelect.addEventListener("change", e => {
                 const selectedClassId = e.target.value;
-                studentSearch.value = ""; // Clear search when class changes
+                studentSearch.value = "";
                 loadStudents(selectedClassId);
                 loadPayments(null);
             });
 
             studentSelect.addEventListener("change", e => loadPayments(e.target.value));
 
-            // New event listener for the search input
             studentSearch.addEventListener("input", e => {
                 const selectedClassId = classSelect.value;
                 const searchTerm = e.target.value;
@@ -245,21 +242,6 @@
 
     <style>
         /* General Body and Container Styles */
-        .info {
-    display: flex; /* Enables Flexbox */
-    justify-content: space-between; /* Spreads the items to both ends */
-    margin-bottom: 25px;
-    line-height: 1.6;
-}
-
-.info-group {
-    /* Basic styling for each column */
-}
-
-/* You can also use this for specific alignment if needed */
-.right-align {
-    text-align: right;
-}
         body {
             font-family: 'Segoe UI', 'Roboto', sans-serif;
             background: #f4f7fa;
@@ -397,103 +379,123 @@
         #printArea {
             display: none;
         }
-@media print {
-    /* Hide everything on the page by default and then make only the print area visible. */
-    body * { 
-        visibility: hidden; 
-    }
-    #printArea, #printArea * { 
-        visibility: visible; 
-    }
-    #printArea {
-        display: block !important;
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 195mm;
-        height: 148mm; /* A5 landscape */
-        margin: 0;
-        padding: 0;
-    }
-    
-    @page { 
-        size: A5 landscape; 
-        margin: 10mm; 
-    }
-    
-    .receipt { 
-        width: 100%; 
-        height: 100%; 
-        padding: 5mm; /* Reduced padding for more content space */
-        box-sizing: border-box; 
-    }
 
-    /* Receipt Header */
-    .receipt-header {
-        display: flex;
-        align-items: center;
-        gap: 10px; /* Reduced gap */
-        margin-bottom: 10px; /* Reduced margin */
-    }
-    .receipt-header .logo {
-        width: 50px; /* Smaller logo */
-        height: 50px;
-        object-fit: contain;
-    }
-    .receipt-header h2 {
-        margin: 0;
-        font-size: 1rem; /* Smaller font */
-    }
-    .receipt-header h3 {
-        margin: 0;
-        font-size: 0.9rem; /* Smaller font */
-        color: #555;
-    }
+        @media print {
+            /* Hide everything on the page by default and then make only the print area visible. */
+            body * { 
+                visibility: hidden; 
+            }
+            #printArea, #printArea * { 
+                visibility: visible; 
+            }
+            #printArea {
+                display: block !important;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 195mm;
+                height: 148mm; /* A5 landscape */
+                margin: 0;
+                padding: 0;
+            }
+            
+            @page { 
+                size: A5 landscape; 
+                margin: 5mm; /* Even smaller margins */
+            }
+            
+            .receipt { 
+                width: 100%; 
+                height: 100%; 
+                padding: 5mm;
+                box-sizing: border-box; 
+            }
 
-    /* Info Section */
-    .info p {
-        margin: 2px 0; /* Tighter spacing */
-        font-size: 0.85rem; /* Smaller font */
-    }
-
-    /* Fee Table */
-    .fee-table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 10px; /* Reduced margin */
-    }
-    .fee-table th, .fee-table td {
-        border: 1px solid #ccc;
-        padding: 6px; /* Reduced padding */
-        font-size: 0.85rem; /* Smaller font */
-    }
-    .fee-table .meta {
-        font-size: 0.75rem; /* Smaller font */
-        color: #555;
-        margin-top: 3px;
-    }
-    
-    /* Footer */
-    .footer {
-        margin-top: 10px; /* Reduced margin */
-        font-size: 0.85rem; /* Smaller font */
-    }
-    .total-row {
-        display: flex;
-        justify-content: flex-end;
-        font-size: 0.95rem;
-    }
-    .footer .note {
-        font-size: 0.7rem; /* Smaller font */
-        color: #666;
-    }
-    .footer .thanks { 
-        margin-top: 5px; /* Reduced margin */
-        text-align: center; 
-        font-weight: bold; 
-        font-size: 0.9rem; /* Smaller font */
-    }
-}
+            /* Receipt Header */
+            .receipt-header {
+                display: flex;
+                align-items: center;
+                gap: 5px; /* Even smaller gap */
+                margin-bottom: 5px; /* Reduced margin */
+                padding-bottom: 5px;
+            }
+            .receipt-header .logo {
+                width: 40px; /* Smaller logo */
+                height: 40px;
+            }
+            .receipt-header h2 {
+                margin: 0;
+                font-size: 0.9rem; /* Smaller font */
+            }
+            .receipt-header h3 {
+                margin: 0;
+                font-size: 0.8rem; /* Smaller font */
+                color: #555;
+            }
+            
+            /* Info Section */
+            .info {
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 10px;
+            }
+            .info-group {
+                flex-basis: 48%; /* Ensure groups take up half the space */
+                line-height: 1.2;
+                font-size: 0.8rem; /* Smaller font */
+            }
+            .info-group p {
+                margin: 0; /* Remove margin to tighten space */
+            }
+            .info-group.right-align {
+                text-align: right;
+            }
+            
+            /* Fee Table */
+            .fee-table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-top: 10px;
+            }
+            .fee-table th, .fee-table td {
+                border: 1px solid #ccc;
+                padding: 4px; /* Reduced padding */
+                font-size: 0.75rem; /* Smaller font */
+            }
+            .fee-table th {
+                background-color: #f8f8f8;
+            }
+            .fee-table .meta {
+                font-size: 0.65rem; /* Smaller font */
+                color: #666;
+                margin-top: 2px;
+            }
+            
+            /* Footer */
+            .footer {
+                margin-top: 10px;
+                font-size: 0.8rem; /* Smaller font */
+            }
+            .total-row {
+                display: flex;
+                justify-content: flex-end;
+                font-size: 0.9rem; /* Smaller font */
+                font-weight: bold;
+                margin-bottom: 5px;
+                padding-top: 5px;
+                border-top: 1px solid #ddd;
+            }
+            .footer .note {
+                font-size: 0.65rem; /* Smaller font */
+                color: #666;
+            }
+            .footer .thanks { 
+                margin-top: 5px;
+                text-align: center; 
+                font-weight: bold; 
+                font-size: 0.8rem; /* Smaller font */
+            }
+        }
     </style>
 </head>
 <body>
