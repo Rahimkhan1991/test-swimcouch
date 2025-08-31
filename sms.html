@@ -1,221 +1,277 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-<meta charset="UTF-8">
-<title>Send SMS</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<style>
-body {
-font-family: Arial, sans-serif;
-padding: 15px;
-margin: 0;
-background: #f0f2f5;
-}
-h2 {
-color: #007bff;
-font-size: 22px;
-text-align: center;
-margin-bottom: 20px;
-}
-.card {
-background: white;
-padding: 20px;
-border-radius: 12px;
-box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-max-width: 600px;
-margin: 0 auto 20px auto;
-}
-label {
-font-weight: bold;
-display: block;
-margin-top: 10px;
-}
-select,
-textarea,
-input,
-button {
-width: 100%;
-padding: 12px;
-margin-top: 6px;
-border-radius: 8px;
-border: 1px solid #ccc;
-font-size: 16px;
-box-sizing: border-box;
-}
-textarea {
-resize: vertical;
-}
-button {
-background-color: #28a745;
-color: white;
-border: none;
-font-weight: bold;
-margin-top: 15px;
-}
-button:hover {
-background-color: #218838;
-}
-.template-buttons {
-display: flex;
-flex-wrap: wrap;
-gap: 8px;
-margin-top: 6px;
-}
-.template-buttons button {
-flex: 1;
-background-color: #007bff;
-margin: 0;
-}
-.template-buttons button:hover {
-background-color: #0056b3;
-}
-.footer-buttons {
-text-align: center;
-margin-top: 20px;
-}
-.footer-buttons button {
-background-color: #007bff;
-padding: 10px 16px;
-margin: 5px;
-}
-.footer-buttons button:last-child {
-background-color: #007bff;
-}
-@media (max-width: 480px) {
-h2 {
-font-size: 20px;
-}
-.card {
-padding: 15px;
-}
-select,
-textarea,
-input,
-button {
-font-size: 15px;
-}
-.template-buttons button {
-font-size: 14px;
-padding: 10px;
-}
-.footer-buttons button {
-width: 100%;
-margin: 8px 0;
-}
-}
-</style>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <meta charset="UTF-8">
+    <title>Send SMS</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        /* Modernized Body and Container Styles */
+        body {
+            font-family: 'Segoe UI', 'Roboto', sans-serif;
+            padding: 20px;
+            margin: 0;
+            background: #f4f7fa; /* Matches the clean, modern background */
+        }
+        
+        h2 {
+            color: #1e88e5; /* Matches the header blue */
+            font-size: 2rem;
+            text-align: center;
+            margin-bottom: 30px;
+            font-weight: 600;
+        }
+        
+        .card {
+            background: white;
+            padding: 30px; /* More padding for a premium feel */
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); /* Modern, subtle shadow */
+            max-width: 600px;
+            margin: 0 auto 30px auto;
+            transition: transform 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px); /* Subtle hover effect */
+        }
+        
+        label {
+            font-weight: 600; /* Bolder labels */
+            color: #333;
+            display: block;
+            margin-top: 15px; /* More space between form elements */
+            margin-bottom: 5px;
+        }
+        
+        select,
+        textarea,
+        input,
+        button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 6px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            font-size: 16px;
+            box-sizing: border-box;
+            background-color: #f9f9f9;
+        }
+        
+        select:focus,
+        textarea:focus,
+        input:focus {
+            outline: none;
+            border-color: #1e88e5; /* Blue focus highlight */
+        }
+
+        textarea {
+            resize: vertical;
+        }
+        
+        /* Updated Button Styles */
+        .template-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px; /* Increased gap */
+            margin-top: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .template-buttons button {
+            flex: 1;
+            background-color: #1e88e5; /* A consistent blue */
+            color: white;
+            border: none;
+            font-weight: bold;
+            padding: 12px;
+            margin: 0;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+        
+        .template-buttons button:hover {
+            background-color: #1565c0; /* Darker blue on hover */
+            transform: translateY(-2px);
+        }
+
+        .send-button {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            font-weight: bold;
+            margin-top: 25px;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+        
+        .send-button:hover {
+            background-color: #218838;
+            transform: translateY(-2px);
+        }
+
+        .footer-buttons {
+            text-align: center;
+            margin-top: 30px;
+        }
+        
+        .back-button {
+            padding: 12px 20px;
+            background-color: #f0f0f0;
+            color: #555;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background-color 0.3s, border-color 0.3s, transform 0.2s;
+        }
+
+        .back-button:hover {
+            background-color: #e0e0e0;
+            border-color: #999;
+            transform: translateY(-2px);
+        }
+
+        @media (max-width: 480px) {
+            h2 {
+                font-size: 1.8rem;
+            }
+            .card {
+                padding: 20px;
+            }
+            .template-buttons button {
+                font-size: 13px;
+                padding: 10px;
+            }
+            .back-button {
+                width: 100%;
+                margin: 8px 0;
+            }
+        }
+    </style>
 </head>
 <body>
-<h2>Send SMS / WhatsApp Message</h2>
-<div class="card">
-<label for="studentSelect">Select Student:</label>
-<select id="studentSelect" onchange="fillPhone()">
-<option value="">-- Select Student --</option>
-</select>
-<label for="phone">Phone Number:</label>
-<input type="tel" id="phone" placeholder="+62...">
-<label>Use Template:</label>
-<div class="template-buttons">
-<button onclick="setTemplate('fee')"> <span class="material-icons" style="vertical-align: middle; margin-right: 6px;">
-payments
-</span> Fee Reminder</button>
-<button onclick="setTemplate('absent')"><span class="material-icons" style="vertical-align: middle; margin-right: 6px;">
-block
-</span> Absent Alert </button>
-<button onclick="setTemplate('custom')"><span class="material-icons" style="vertical-align: middle; margin-right: 6px;">
-tune
-</span>Custom</button>
-</div>
-<label for="message">Message:</label>
-<textarea id="message" rows="5" placeholder="Your message..."></textarea>
-<button onclick="sendWhatsApp()"> <span class="material-icons" style="vertical-align: middle; margin-right: 6px;">
-send
-</span>️ Send WhatsApp</button>
-</div>
-<div class="footer-buttons">
-<button onclick="history.back()">⬅️ Back</button>
-</div>
-<script>
-const SUPABASE_URL = 'https://ndishfwnkzdedfcywcle.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5kaXNoZndua3pkZWRmY3l3Y2xlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYwOTk0MjcsImV4cCI6MjA3MTY3NTQyN30.CXQSfhR0MVLF40v2Tp-BcENBpHpPshG9Ys3zLYiBQaM';
-const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-// Loads students from the database and populates the dropdown
-async function loadStudents() {
-    // 1. Get the current user's session
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-    if (sessionError || !session) {
-        console.error('Session error:', sessionError?.message);
-        window.location.href = 'index.html'; // Redirect to login
-        return;
-    }
-    const user = session.user;
+    <h2>Send SMS / WhatsApp Message</h2>
+    <div class="card">
+        <label for="studentSelect">Select Student:</label>
+        <select id="studentSelect" onchange="fillPhone()">
+            <option value="">-- Select Student --</option>
+        </select>
+        <label for="phone">Phone Number:</label>
+        <input type="tel" id="phone" placeholder="+62...">
+        <label>Use Template:</label>
+        <div class="template-buttons">
+            <button onclick="setTemplate('fee')">
+                <span class="material-icons" style="vertical-align: middle; margin-right: 6px;">
+                    payments
+                </span> Fee Reminder
+            </button>
+            <button onclick="setTemplate('absent')">
+                <span class="material-icons" style="vertical-align: middle; margin-right: 6px;">
+                    block
+                </span> Absent Alert
+            </button>
+            <button onclick="setTemplate('custom')">
+                <span class="material-icons" style="vertical-align: middle; margin-right: 6px;">
+                    tune
+                </span>Custom
+            </button>
+        </div>
+        <label for="message">Message:</label>
+        <textarea id="message" rows="5" placeholder="Your message..."></textarea>
+        <button onclick="sendWhatsApp()" class="send-button">
+            <span class="material-icons" style="vertical-align: middle; margin-right: 6px;">
+                send
+            </span>️ Send WhatsApp
+        </button>
+    </div>
+    <div class="footer-buttons">
+        <button onclick="history.back()" class="back-button">⬅️ Back</button>
+    </div>
 
-    // 2. Get the user's company ID
-    const { data: companyData, error: companyError } = await supabase
-        .from('users')
-        .select('company_id')
-        .eq('id', user.id)
-        .single();
+    <script>
+        const SUPABASE_URL = 'https://ndishfwnkzdedfcywcle.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5kaXNoZndua3pkZWRmY3l3Y2xlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYwOTk0MjcsImV4cCI6MjA3MTY3NTQyN30.CXQSfhR0MVLF40v2Tp-BcENBpHpPshG9Ys3zLYiBQaM';
+        const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    if (companyError || !companyData) {
-        console.error('Error fetching company info:', companyError?.message);
-        return;
-    }
-    const company_id = companyData.company_id;
+        // Loads students from the database and populates the dropdown
+        async function loadStudents() {
+            // 1. Get the current user's session
+            const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+            if (sessionError || !session) {
+                console.error('Session error:', sessionError?.message);
+                window.location.href = 'index.html'; // Redirect to login
+                return;
+            }
+            const user = session.user;
 
-    // 3. Fetch students, filtering by the company_id
-    const { data: students, error: studentsError } = await supabase
-        .from('students')
-        .select('name, phone')
-        .eq('company_id', company_id);
+            // 2. Get the user's company ID
+            const { data: companyData, error: companyError } = await supabase
+                .from('users')
+                .select('company_id')
+                .eq('id', user.id)
+                .single();
 
-    if (studentsError) {
-        console.error('Error fetching students:', studentsError.message);
-        return;
-    }
+            if (companyError || !companyData) {
+                console.error('Error fetching company info:', companyError?.message);
+                return;
+            }
+            const company_id = companyData.company_id;
 
-    const select = document.getElementById("studentSelect");
-    students.forEach(s => {
-        const opt = document.createElement("option");
-        opt.value = s.phone;
-        opt.textContent = s.name;
-        select.appendChild(opt);
-    });
-}
-// Fills the phone number input based on the selected student
-function fillPhone() {
-    const phone = document.getElementById("studentSelect").value;
-    document.getElementById("phone").value = phone;
-}
-// Fills the message textarea with a pre-defined template
-function setTemplate(type) {
-    const selectedOption = document.getElementById("studentSelect").selectedOptions[0];
-    const studentName = selectedOption && selectedOption.value !== "" ? selectedOption.textContent : "Student";
-    let msg = "";
-    if (type === "fee") {
-        msg = `Hello ${studentName},\n\nThis is a reminder to pay your outstanding swimming class fees.\nThank you!`;
-    } else if (type === "absent") {
-        msg = `Hello ${studentName},\n\nYou have been marked as absent today. Please inform us if there is a valid reason.\n- Coach Beqy`;
-    } else {
-        msg = "";
-    }
-    document.getElementById("message").value = msg;
-}
-// Sends the WhatsApp message
-function sendWhatsApp() {
-    const phone = document.getElementById("phone").value.replace(/\D/g, '');
-    const message = encodeURIComponent(document.getElementById("message").value);
-    if (!phone || !message) {
-        alert("Phone number and message are required.");
-        return;
-    }
-    const link = `https://wa.me/${phone}?text=${message}`;
-    window.open(link, "_blank");
-}
-// Call loadStudents on page load
-window.onload = loadStudents;
-</script>
+            // 3. Fetch students, filtering by the company_id
+            const { data: students, error: studentsError } = await supabase
+                .from('students')
+                .select('name, phone')
+                .eq('company_id', company_id);
+
+            if (studentsError) {
+                console.error('Error fetching students:', studentsError.message);
+                return;
+            }
+
+            const select = document.getElementById("studentSelect");
+            students.forEach(s => {
+                const opt = document.createElement("option");
+                opt.value = s.phone;
+                opt.textContent = s.name;
+                select.appendChild(opt);
+            });
+        }
+        
+        // Fills the phone number input based on the selected student
+        function fillPhone() {
+            const phone = document.getElementById("studentSelect").value;
+            document.getElementById("phone").value = phone;
+        }
+
+        // Fills the message textarea with a pre-defined template
+        function setTemplate(type) {
+            const selectedOption = document.getElementById("studentSelect").selectedOptions[0];
+            const studentName = selectedOption && selectedOption.value !== "" ? selectedOption.textContent : "Student";
+            let msg = "";
+            if (type === "fee") {
+                msg = `Hello ${studentName},\n\nThis is a reminder to pay your outstanding swimming class fees.\nThank you!`;
+            } else if (type === "absent") {
+                msg = `Hello ${studentName},\n\nYou have been marked as absent today. Please inform us if there is a valid reason.\n- Coach Beqy`;
+            } else {
+                msg = "";
+            }
+            document.getElementById("message").value = msg;
+        }
+        
+        // Sends the WhatsApp message
+        function sendWhatsApp() {
+            const phone = document.getElementById("phone").value.replace(/\D/g, '');
+            const message = encodeURIComponent(document.getElementById("message").value);
+            if (!phone || !message) {
+                alert("Phone number and message are required.");
+                return;
+            }
+            const link = `https://wa.me/${phone}?text=${message}`;
+            window.open(link, "_blank");
+        }
+
+        // Call loadStudents on page load
+        window.onload = loadStudents;
+    </script>
 </body>
 </html>
