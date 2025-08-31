@@ -137,6 +137,13 @@
                     const dateObj = new Date(data.dateOfJoining);
                     data.dateOfJoining = dateObj.toLocaleDateString();
                 }
+                
+
+// Add this block to reformat the fee date
+if (data.date) {
+    const feeDateObj = new Date(data.date);
+    data.date = feeDateObj.toLocaleDateString();
+}
 
                 const html = `
                     <div class="receipt">
@@ -485,6 +492,7 @@
             }
             .footer .note {
                 font-size: 0.6rem;
+                text-align: center; 
                 color: #666;
             }
             .footer .thanks { 
