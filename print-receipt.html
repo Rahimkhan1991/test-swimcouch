@@ -61,6 +61,30 @@
         studentSelect.appendChild(opt);
       });
     }
+    // Load classes
+async function loadClasses() {
+  if (!currentCompanyId) return;
+  const { data: classes } = await supabase
+    .from("classes")
+    .select("id, name")
+    .eq("company_id", currentCompanyId)
+    .order("name");
+
+  const classSelect = document.getElementById("classSelect");
+  classSelect.innerHTML = `<option value="">-- Select Class --</option>`;
+  classes?.forEach(c => {
+    const opt = document.createElement("option");
+    opt.value = c.id;
+    opt.textContent = c.name;
+    classSelect.appendChild(opt);
+  });
+
+  // Attach an event listener to the class dropdown
+  classSelect.addEventListener("change", (event) => {
+    const selectedClassId = event.target.value;
+    loadStudents(selectedClassId);
+  });
+}
 
     // Load payments
     async function loadPayments(studentId) {
