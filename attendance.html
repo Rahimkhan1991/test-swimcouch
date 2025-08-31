@@ -192,15 +192,20 @@ document.getElementById('attendanceDate').addEventListener('change', () => { res
 // ✅ Load class options
 async function loadClassOptions() {
   try {
-    const { data: students, error } = await supabase.from('students').select('class').order('class');
+    const { data: classes, error } = await supabase
+      .from('classes')
+      .select('id, name')
+      .order('name');
+
     if (error) throw error;
+
     const classFilter = document.getElementById('classFilter');
     classFilter.innerHTML = '<option value="">All Classes</option>';
-    const uniqueClasses = [...new Set(students.map(s => s.class).filter(Boolean))];
-    uniqueClasses.forEach(cls => {
+
+    classes.forEach(cls => {
       const option = document.createElement('option');
-      option.value = cls;
-      option.textContent = cls;
+      option.value = cls.id;          // use id for filtering
+      option.textContent = cls.name;  // display name
       classFilter.appendChild(option);
     });
   } catch (err) {
@@ -208,21 +213,39 @@ async function loadClassOptions() {
   }
 }
 
+
 // ✅ Load & filter students
 async function loadStudents() {
   try {
     const selectedDay = document.getElementById('dayFilter').value;
-    const selectedClass = document.getElementById('classFilter').value;
-    let { data: students, error } = await supabase.from('students').select('id, name, day, class');
+    const selectedClassId = document.getElementById('classFilter').value;
+
+    let query = supabase.from('students').select(`
+      id,
+      name,
+      day,
+      class_id,
+      classes ( name )
+    `);
+
+    if (selectedClassId) {
+      query = query.eq('class_id', selectedClassId);
+    }
+
+    let { data: students, error } = await query;
     if (error) throw error;
-    let filtered = students;
-    if (selectedDay) filtered = filtered.filter(s => Array.isArray(s.day) && s.day.includes(selectedDay));
-    if (selectedClass) filtered = filtered.filter(s => s.class === selectedClass);
-    await displayStudents(filtered);
+
+    // Apply day filter (client-side, since "day" is an array)
+    if (selectedDay) {
+      students = students.filter(s => Array.isArray(s.day) && s.day.includes(selectedDay));
+    }
+
+    await displayStudents(students);
   } catch (error) {
     showMessage('Error loading students: ' + error.message, "error");
   }
 }
+
 
 // ✅ Show students
 async function displayStudents(students) {
