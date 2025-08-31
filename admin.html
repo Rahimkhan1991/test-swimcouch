@@ -239,29 +239,33 @@
         }
 
         async function loadCustomization() {
-            if (!currentCompanyId) return;
+    if (!currentCompanyId) return;
 
-            const { data, error } = await supabase
-                .from('companies')
-                .select('display_name, logo_url')
-                .eq('id', currentCompanyId)
-                .single();
+    const { data, error } = await supabase
+        .from('companies')
+        .select('display_name, logo_url')
+        .eq('id', currentCompanyId)
+        .single();
 
-            if (error) {
-                console.error('Error loading customization:', error.message);
-                return;
-            }
+    if (error) {
+        console.error('Error loading customization:', error.message);
+        return;
+    }
 
-            document.getElementById("companyNameInput").value = data.display_name || "";
-            document.getElementById("logoUrlInput").value = data.logo_url || "";
-            document.getElementById("companyNameDisplay").textContent = data.display_name || "Admin Panel";
+    // Fill inputs (so admin sees current values)
+    document.getElementById("companyNameInput").value = data.display_name || "";
+    document.getElementById("logoUrlInput").value = data.logo_url || "";
 
-            if (data.logo_url) {
-                const logoEl = document.getElementById("headerLogo");
-                logoEl.src = data.logo_url;
-                logoEl.style.display = "block";
-            }
-        }
+    // Header stays "Admin Panel" always
+    document.getElementById("companyNameDisplay").textContent = "Admin Panel";
+
+    if (data.logo_url) {
+        const logoEl = document.getElementById("headerLogo");
+        logoEl.src = data.logo_url;
+        logoEl.style.display = "block";
+    }
+}
+
 
         async function saveCustomization() {
             const companyName = document.getElementById("companyNameInput").value.trim();
