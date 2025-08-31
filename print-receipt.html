@@ -86,74 +86,91 @@ async function loadClasses() {
   });
 }
 
-    // Load payments
-    async function loadPayments(studentId) {
-      const tbody = document.querySelector("#paymentTable tbody");
-      tbody.innerHTML = "";
+// ... (your existing code) ...
 
-      if (!studentId) {
-        tbody.innerHTML = `<tr><td colspan="3">Select a student to view payments.</td></tr>`;
-        return;
-      }
+// Load students
+async function loadStudents(classId = "", search = "") {
+  if (!currentCompanyId) return;
 
-// 1. Get student details (totalFee etc.)
-const { data: student, error: studentError } = await supabase
-  .from("students")
-  .select("id, name, phone, totalFee, initialPayment, balanceFee, classes(name), companies(display_name, logo_url)")
-  .eq("id", studentId)
-  .single();
+  let query = supabase
+    .from("students")
+    .select("id, name")
+    .eq("company_id", currentCompanyId)
+    .ilike("name", `%${search}%`);
 
-if (studentError) {
-  console.error("Error loading student:", studentError.message);
-  return;
+  // Conditionally add class filter
+  if (classId) {
+    query = query.eq("class_id", classId);
+  }
+
+  const { data: students } = await query.order("name");
+  
+  const studentSelect = document.getElementById("studentSelect");
+  studentSelect.innerHTML = `<option value="">-- Select Student --</option>`;
+  students?.forEach(s => {
+    const opt = document.createElement("option");
+    opt.value = s.id;
+    opt.textContent = s.name;
+    studentSelect.appendChild(opt);
+  });
 }
 
-// 2. Get all payments for this student
-const { data: fees, error: feesError } = await supabase
-  .from("fees")
-  .select("id, amount, date, receipt_no")
-  .eq("student_id", studentId)
-  .eq("company_id", currentCompanyId)
-  .order("date", { ascending: true });
+// ... (your existing loadClasses function is correct) ...
 
-if (feesError) {
-  console.error("Error loading fees:", feesError.message);
-  return;
-}
+// Update the loadPayments function to correctly fetch all required data
+async function loadPayments(studentId) {
+  const tbody = document.querySelector("#paymentTable tbody");
+  tbody.innerHTML = "";
 
-// 3. Calculate totals
-const totalPaid = fees?.reduce((sum, f) => sum + f.amount, 0) ?? 0;
-const pending = Math.max((student?.totalFee ?? 0) - totalPaid, 0);
+  if (!studentId) {
+    tbody.innerHTML = `<tr><td colspan="3">Select a student to view payments.</td></tr>`;
+    return;
+  }
+  
+  // Fetch student and all related data in a single query
+  const { data: student, error: studentError } = await supabase
+    .from("students")
+    .select("id, name, phone, totalFee, initialPayment, balanceFee, created_at, classes(name), companies(display_name, logo_url)")
+    .eq("id", studentId)
+    .single();
 
+  if (studentError) {
+    console.error("Error loading student:", studentError.message);
+    return;
+  }
+  
+  // Fetch payments for this student
+  const { data: fees, error: feesError } = await supabase
+    .from("fees")
+    .select("id, amount, date, receipt_no")
+    .eq("student_id", studentId)
+    .eq("company_id", currentCompanyId)
+    .order("date", { ascending: true });
 
-      fees.forEach(fee => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${fee.date}</td>
-          <td>Rp ${fee.amount}</td>
-          <td><button class="view-btn" onclick='openTemplateChooser(${JSON.stringify(JSON.stringify(fee))})'>Print</button></td>
-        `;
-        tbody.appendChild(tr);
-      });
-    }
+  if (feesError) {
+    console.error("Error loading fees:", feesError.message);
+    return;
+  }
+  
+  // Calculate totals
+  const totalPaid = fees?.reduce((sum, f) => sum + f.amount, 0) ?? 0;
+  const pending = Math.max((student?.totalFee ?? 0) - totalPaid, 0);
 
-    // Open receipt
-    window.openTemplateChooser = function(feeJson) {
+  // Update the receipt template with the correct data
+  window.openTemplateChooser = async function(feeJson) {
       const fee = JSON.parse(feeJson);
-      const student = fee.students;
-      const company = student?.companies;
-
+      
       const data = {
-        companyLogo: company?.logo_url || "",
-        companyName: company?.display_name || "Company",
+        companyLogo: student?.companies?.logo_url || "",
+        companyName: student?.companies?.display_name || "Company",
         receiptNo: fee.receipt_no || "####",
         date: fee.date,
         studentName: student?.name,
         className: student?.classes?.name,
         dateOfJoining: student?.created_at || "...............",
         totalFee: student?.totalFee || 0,
-        paidFee: student?.initialPayment || 0,
-        balanceFee: student?.balanceFee || 0,
+        paidFee: totalPaid, // This needs to be the total of all fees paid
+        balanceFee: pending, // The pending balance
         amount: fee.amount
       };
 
@@ -212,11 +229,24 @@ const pending = Math.max((student?.totalFee ?? 0) - totalPaid, 0);
       setTimeout(() => window.print(), 200);
     };
 
-    // Bind events
-    document.addEventListener("DOMContentLoaded", async () => {
-      await loadDynamicHeader();
-      document.getElementById("studentSelect").addEventListener("change", e => loadPayments(e.target.value));
-    });
+ // Bind events
+document.addEventListener("DOMContentLoaded", async () => {
+  await loadDynamicHeader();
+  await loadClasses(); // <-- Call the function to load classes
+
+  const classSelect = document.getElementById("classSelect");
+  const studentSelect = document.getElementById("studentSelect");
+  
+  // Event listener for the class dropdown
+  classSelect.addEventListener("change", e => {
+    const selectedClassId = e.target.value;
+    loadStudents(selectedClassId); // Filter students by selected class
+    loadPayments(null); // Clear the payments table when class changes
+  });
+
+  // Event listener for the student dropdown
+  studentSelect.addEventListener("change", e => loadPayments(e.target.value));
+});
   </script>
 
   <!-- Styles -->
