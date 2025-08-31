@@ -381,7 +381,6 @@
         }
 
         @media print {
-            /* Hide everything on the page by default and then make only the print area visible. */
             body * { 
                 visibility: hidden; 
             }
@@ -394,14 +393,14 @@
                 top: 0;
                 left: 0;
                 width: 195mm;
-                height: 148mm; /* A5 landscape */
+                height: 148mm;
                 margin: 0;
                 padding: 0;
             }
             
             @page { 
                 size: A5 landscape; 
-                margin: 5mm; /* Even smaller margins */
+                margin: 3mm;
             }
             
             .receipt { 
@@ -411,25 +410,24 @@
                 box-sizing: border-box; 
             }
 
-            /* Receipt Header */
             .receipt-header {
                 display: flex;
                 align-items: center;
-                gap: 5px; /* Even smaller gap */
-                margin-bottom: 5px; /* Reduced margin */
+                gap: 5px;
+                margin-bottom: 5px;
                 padding-bottom: 5px;
             }
             .receipt-header .logo {
-                width: 40px; /* Smaller logo */
+                width: 40px;
                 height: 40px;
             }
             .receipt-header h2 {
                 margin: 0;
-                font-size: 0.9rem; /* Smaller font */
+                font-size: 0.9rem;
             }
             .receipt-header h3 {
                 margin: 0;
-                font-size: 0.8rem; /* Smaller font */
+                font-size: 0.8rem;
                 color: #555;
             }
             
@@ -437,15 +435,16 @@
             .info {
                 display: flex;
                 justify-content: space-between;
-                margin-bottom: 10px;
+                margin-bottom: 5px;
+                line-height: 1;
             }
             .info-group {
-                flex-basis: 48%; /* Ensure groups take up half the space */
-                line-height: 1.2;
-                font-size: 0.8rem; /* Smaller font */
+                flex-basis: 48%;
             }
             .info-group p {
-                margin: 0; /* Remove margin to tighten space */
+                margin: 0;
+                font-size: 0.7rem;
+                line-height: 1.2;
             }
             .info-group.right-align {
                 text-align: right;
@@ -455,45 +454,45 @@
             .fee-table {
                 width: 100%;
                 border-collapse: collapse;
-                margin-top: 10px;
+                margin-top: 5px;
             }
             .fee-table th, .fee-table td {
                 border: 1px solid #ccc;
-                padding: 4px; /* Reduced padding */
-                font-size: 0.75rem; /* Smaller font */
+                padding: 3px;
+                font-size: 0.75rem;
             }
             .fee-table th {
                 background-color: #f8f8f8;
             }
             .fee-table .meta {
-                font-size: 0.65rem; /* Smaller font */
+                font-size: 0.65rem;
                 color: #666;
                 margin-top: 2px;
             }
             
             /* Footer */
             .footer {
-                margin-top: 10px;
-                font-size: 0.8rem; /* Smaller font */
+                margin-top: 5px;
+                font-size: 0.75rem;
             }
             .total-row {
                 display: flex;
                 justify-content: flex-end;
-                font-size: 0.9rem; /* Smaller font */
+                font-size: 0.8rem;
                 font-weight: bold;
                 margin-bottom: 5px;
                 padding-top: 5px;
                 border-top: 1px solid #ddd;
             }
             .footer .note {
-                font-size: 0.65rem; /* Smaller font */
+                font-size: 0.6rem;
                 color: #666;
             }
             .footer .thanks { 
                 margin-top: 5px;
                 text-align: center; 
                 font-weight: bold; 
-                font-size: 0.8rem; /* Smaller font */
+                font-size: 0.7rem;
             }
         }
     </style>
