@@ -143,6 +143,12 @@
           balanceFee: pending,
           amount: fee.amount
         };
+        // Add this line after the 'data' object is defined
+// Reformat the dateOfJoining string
+if (data.dateOfJoining && data.dateOfJoining !== "...............") {
+    const dateObj = new Date(data.dateOfJoining);
+    data.dateOfJoining = dateObj.toLocaleDateString();
+}
 
         const html = `
           <div class="receipt">
