@@ -193,7 +193,8 @@ if (data.dateOfJoining && data.dateOfJoining !== "...............") {
             </table>
 
             <div class="footer">
-              <p><strong>Total: Rp ${data.amount}</strong></p>
+              <div class="total-row">
+              <p><strong>Total: Rp ${data.amount}</strong></p></div>
               <p>Terms & Conditions : Fees Paid Once is not Refundable</p>
               <p class="note">This is a computer generated invoice, no signature required.</p>
               <p class="thanks">Thank you for your payment</p>
@@ -254,7 +255,7 @@ if (data.dateOfJoining && data.dateOfJoining !== "...............") {
       #printArea {
         display:block !important;
         position:fixed; top:0; left:0;
-        width:200mm; height:148mm; /* A5 landscape */
+        width:195mm; height:148mm; /* A5 landscape */
         margin:0; padding:0;
       }
       @page { size: A5 landscape; margin:10mm; }
@@ -269,7 +270,11 @@ if (data.dateOfJoining && data.dateOfJoining !== "...............") {
     .fee-table { width:100%; border-collapse:collapse; margin-top:15px; }
     .fee-table th, .fee-table td { border:1px solid #ccc; padding:8px; font-size:0.9rem; }
     .fee-table .meta { font-size:0.8rem; color:#555; margin-top:5px; }
-    .footer { margin-top:20px; font-size:0.9rem;text-align:right; }
+    /* Receipt Styles */
+    .footer {margin-top: 20px;font-size: 0.9rem;}
+    .total-row {display: flex;justify-content: flex-end; /* Aligns content to the right edge */}
+    .footer .note {font-size: 0.8rem;color: #666;}
+    .footer { margin-top:20px; font-size:0.9rem;}
     .footer .note { font-size:0.8rem; color:#666; }
     .footer .thanks { margin-top:10px; text-align:center; font-weight:bold; }
   </style>
