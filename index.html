@@ -106,6 +106,19 @@
     <p id="errorMsg" class="error"></p>
   </div>
 
+  <!-- 🔀 Invite link redirect bridge -->
+  <script>
+    (function () {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("type") === "invite") {
+        const redirectUrl =
+          "https://rahimkhan1991.github.io/test-swimcouch/set-password.html?" +
+          params.toString();
+        window.location.replace(redirectUrl);
+      }
+    })();
+  </script>
+
   <script>
     // Supabase Initialization
     const SUPABASE_URL = "https://ndishfwnkzdedfcywcle.supabase.co";
@@ -120,10 +133,8 @@
     const toggleLoginModeBtn = document.getElementById('toggleLoginModeBtn');
     const errorMsg = document.getElementById('errorMsg');
 
-    // State for login mode
     let isParentLogin = false;
 
-    // Toggle login mode
     function toggleLoginMode() {
       isParentLogin = !isParentLogin;
       if (isParentLogin) {
@@ -136,7 +147,6 @@
     }
     toggleLoginModeBtn.addEventListener('click', toggleLoginMode);
 
-    // Login handler
     async function login() {
       errorMsg.textContent = "";
       const email = emailInput.value.trim();
@@ -166,7 +176,6 @@
       if (e.key === "Enter") login();
     });
 
-    // Auto-redirect if already logged in
     window.onload = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
@@ -179,7 +188,6 @@
       }
     };
 
-    // Service Worker
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.register("sw.js")
         .then(() => console.log("Service Worker Registered"));
