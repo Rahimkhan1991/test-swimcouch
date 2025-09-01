@@ -432,6 +432,17 @@
             }])
             .select();
 
+
+// ... inside your addStudent() function
+
+if (parentEmail) {
+    console.log("Calling createParentAccountSecurely with email:", parentEmail); // Add this line
+    await createParentAccountSecurely(parentEmail);
+}
+
+// ...
+
+
         if (studentError) {
             alert('Error adding student: ' + studentError.message);
             return;
