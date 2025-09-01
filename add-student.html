@@ -29,10 +29,39 @@
             align-items: center;
             min-height: 100vh;
         }
-
+        
         .container {
             width: 100%;
             max-width: 600px;
+        }
+
+        .company-header-box {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            background-color: var(--card-background);
+            border-radius: 12px;
+            padding: 20px 25px;
+            box-shadow: var(--shadow-light);
+            margin-bottom: 25px;
+            width: 100%;
+        }
+
+        #headerLogo {
+            height: 50px;
+            width: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+            display: none;
+        }
+
+        #companyNameDisplay {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin: 0;
+            text-align: center;
         }
 
         .form-card {
@@ -165,12 +194,18 @@
 </head>
 <body>
     <div class="container">
+        <div class="company-header-box">
+            <img id="headerLogo" src="" alt="Company Logo">
+            <h1 id="companyNameDisplay">Add Student</h1>
+        </div>
         <div class="form-card">
             <h2><span class="card-icon"><i class="fa-solid fa-user-plus"></i></span> Add Student</h2>
             <label>Name *</label>
             <input type="text" id="name" placeholder="Student name" required>
             <label>Phone *</label>
             <input type="tel" id="phone" placeholder="+62.........." required>
+            <label>Parent Email</label>
+            <input type="email" id="parentEmailInput" placeholder="Parent's email (optional)">
             <label>Day Assigned</label>
             <div class="dropdown-container" id="dayDropdown">
                 <div class="dropdown-btn" onclick="toggleDropdown('dayDropdown')">Select Day(s)</div>
@@ -205,200 +240,241 @@
     
     <script>
         const SUPABASE_URL = 'https://ndishfwnkzdedfcywcle.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5kaXNoZndua3pkZWRmY3l3Y2xlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYwOTk0MjcsImV4cCI6MjA3MTY3NTQyN30.CXQSfhR0MVLF40v2Tp-BcENBpHpPshG9Ys3zLYiBQaM';
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5kaXNoZndua3pkZWRmY3l3Y2xlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYwOTk0MjcsImV4cCI6MjA3MTY3NTQyN30.CXQSfhR0MVLF40v2Tp-BcENBpHpPshG9Ys3zLYiBQaM';
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        async function checkUserSession() {
-            const { data: { session } } = await supabase.auth.getSession();
-            if (!session) {
-                window.location.href = 'index.html';
-            }
+    let currentCompanyId = null;
+
+    async function loadDynamicHeader() {
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        if (sessionError || !session) {
+            window.location.href = 'index.html';
+            return;
         }
+        const user = session.user;
+        const { data, error } = await supabase
+            .from('users')
+            .select('company_id, companies(display_name, logo_url)')
+            .eq('id', user.id)
+            .single();
+        const headerTitle = document.getElementById('companyNameDisplay');
+        const headerLogo = document.getElementById('headerLogo');
+        if (error || !data || !data.companies) {
+            console.error('Error fetching company data:', error?.message);
+            return;
+        }
+        currentCompanyId = data.company_id;
+        headerTitle.textContent = data.companies.display_name || 'Add Student';
+        if (data.companies.logo_url) {
+            headerLogo.src = data.companies.logo_url;
+            headerLogo.style.display = 'inline-block';
+        }
+    }
+    
+    const totalFeeInput = document.getElementById("totalFee");
+    const initialPaymentInput = document.getElementById("initialPayment");
+    const balanceFeeInput = document.getElementById("balanceFee");
+
+    totalFeeInput.addEventListener('input', calculateBalance);
+    initialPaymentInput.addEventListener('input', calculateBalance);
+
+    function calculateBalance() {
+        const total = parseFloat(totalFeeInput.value) || 0;
+        const paid = parseFloat(initialPaymentInput.value) || 0;
+        const balance = total - paid;
+        balanceFeeInput.value = balance >= 0 ? Math.round(balance) : 0;
+    }
+
+    function toggleDropdown(id) {
+        const container = document.getElementById(id);
+        container.classList.toggle("active");
+        if (id === 'dayDropdown') {
+            updateDropdownLabel('dayDropdown');
+        } else if (id === 'classDropdown') {
+            updateDropdownLabel('classDropdown');
+        }
+    }
+
+    function getSelectedDays() {
+        const checkboxes = document.querySelectorAll("#dayDropdown .dropdown-content input[type='checkbox']");
+        return Array.from(checkboxes).filter(cb => cb.checked).map(cb => cb.value);
+    }
+
+    function getSelectedClass() {
+        const radio = document.querySelector("#classDropdown .dropdown-content input[type='radio']:checked");
+        return radio ? radio.value : null;
+    }
+
+    function updateDropdownLabel(id) {
+        const btn = document.getElementById(id).querySelector(".dropdown-btn");
+        if (id === 'dayDropdown') {
+            const selected = getSelectedDays();
+            btn.textContent = selected.length > 0 ? selected.join(", ") : "Select Day(s)";
+        } else if (id === 'classDropdown') {
+            const selected = document.querySelector("#classDropdown .dropdown-content input[type='radio']:checked")?.dataset.name;
+            btn.textContent = selected ? selected : "Select Class";
+        }
+    }
+    
+    async function fetchClasses() {
+        if (!currentCompanyId) return;
+
+        const { data, error } = await supabase
+            .from('classes')
+            .select('id, name')
+            .eq('company_id', currentCompanyId)
+            .order('name', { ascending: true });
+
+        if (error) {
+            console.error('Error fetching classes:', error.message);
+            return;
+        }
+
+        const classDropdownContent = document.getElementById('classDropdownContent');
+        classDropdownContent.innerHTML = '';
         
-        const totalFeeInput = document.getElementById("totalFee");
-        const initialPaymentInput = document.getElementById("initialPayment");
-        const balanceFeeInput = document.getElementById("balanceFee");
-
-        totalFeeInput.addEventListener('input', calculateBalance);
-        initialPaymentInput.addEventListener('input', calculateBalance);
-
-      function calculateBalance() {
-    const total = parseFloat(totalFeeInput.value) || 0;
-    const paid = parseFloat(initialPaymentInput.value) || 0;
-    const balance = total - paid;
-    balanceFeeInput.value = balance >= 0 ? Math.round(balance) : 0;
-}
-
-        // Modified toggleDropdown to handle both dropdowns
-        function toggleDropdown(id) {
-            const container = document.getElementById(id);
-            container.classList.toggle("active");
-            if (id === 'dayDropdown') {
-                updateDropdownLabel('dayDropdown');
-            } else if (id === 'classDropdown') {
-                updateDropdownLabel('classDropdown');
-            }
-        }
-
-        function getSelectedDays() {
-            const checkboxes = document.querySelectorAll("#dayDropdown .dropdown-content input[type='checkbox']");
-            return Array.from(checkboxes).filter(cb => cb.checked).map(cb => cb.value);
-        }
-
-        function getSelectedClass() {
-            const radio = document.querySelector("#classDropdown .dropdown-content input[type='radio']:checked");
-            return radio ? radio.value : null;
-        }
-
-        function updateDropdownLabel(id) {
-            const btn = document.getElementById(id).querySelector(".dropdown-btn");
-            if (id === 'dayDropdown') {
-                const selected = getSelectedDays();
-                btn.textContent = selected.length > 0 ? selected.join(", ") : "Select Day(s)";
-            } else if (id === 'classDropdown') {
-                const selected = getSelectedClass();
-                btn.textContent = selected ? selected : "Select Class";
-            }
-        }
-        
-        // New function to fetch and populate classes
-        async function fetchClasses() {
-            const { data, error } = await supabase
-                .from('classes')
-                .select('id, name');
-
-            if (error) {
-                console.error('Error fetching classes:', error.message);
-                return;
-            }
-
-            const classDropdownContent = document.getElementById('classDropdownContent');
-            classDropdownContent.innerHTML = ''; // Clear existing options
-            
-            data.forEach(cls => {
-                const label = document.createElement('label');
-                label.innerHTML = `<input type="radio" name="class" value="${cls.id}" data-name="${cls.name}"> ${cls.name}`;
-                label.addEventListener('click', () => {
-                    setTimeout(() => {
-                        updateDropdownLabel('classDropdown');
-                        document.getElementById('classDropdown').classList.remove('active');
-                    }, 10);
-                });
-                classDropdownContent.appendChild(label);
+        data.forEach(cls => {
+            const label = document.createElement('label');
+            label.innerHTML = `<input type="radio" name="class" value="${cls.id}" data-name="${cls.name}"> ${cls.name}`;
+            label.addEventListener('click', () => {
+                setTimeout(() => {
+                    updateDropdownLabel('classDropdown');
+                    document.getElementById('classDropdown').classList.remove('active');
+                }, 10);
             });
-        }
+            classDropdownContent.appendChild(label);
+        });
+    }
+    
+    // THIS IS THE CORRECTED AND SECURE WAY
+    // This function will call a server-side Supabase Edge Function to invite a parent
+    async function createParentAccountSecurely(email) {
+        if (!email) return;
 
-        async function addStudent() {
-            const { data: { session } } = await supabase.auth.getSession();
-            const user = session?.user;
-
-            if (!user) {
-                alert('You must be logged in to add a student.');
-                return;
-            }
-
-            const name = document.getElementById("name").value.trim();
-            const phone = document.getElementById("phone").value.trim();
-            const selectedDays = getSelectedDays();
-            const totalFee = parseFloat(document.getElementById("totalFee").value) || 0;
-            const initialPayment = parseFloat(document.getElementById("initialPayment").value) || 0;
-            const balanceFee = totalFee - initialPayment;
-            const selectedClassId = getSelectedClass();
-
-            if (!name || !phone || selectedDays.length === 0 || !selectedClassId) {
-                alert("Please fill all required fields.");
-                return;
-            }
-
-            if (initialPayment > totalFee) {
-                alert("Initial payment cannot exceed total fee.");
-                return;
-            }
-
-            const { data: companyData, error: companyError } = await supabase
-                .from('users')
-                .select('company_id')
-                .eq('id', user.id)
-                .single();
-
-            if (companyError || !companyData) {
-                alert("Could not fetch company info.");
-                return;
-            }
-            const company_id = companyData.company_id;
-
-            const { data: existingStudents, error: fetchError } = await supabase
-                .from('students')
-                .select('name, phone')
-                .eq('company_id', company_id);
-
-            if (fetchError) {
-                alert('Error checking for duplicates: ' + fetchError.message);
-                return;
-            }
-
-            if (existingStudents.some(s => s.name.toLowerCase() === name.toLowerCase())) {
-                alert("A student with this name already exists.");
-                return;
-            }
-
-            if (existingStudents.some(s => s.phone === phone)) {
-                alert("A student with this phone number already exists.");
-                return;
-            }
-
-            const { data: studentData, error: studentError } = await supabase
-                .from('students')
-                .insert([{
-                    name,
-                    phone,
-                    day: selectedDays,
-                    totalFee,
-                    initialPayment,
-                    balanceFee,
-                    class_id: selectedClassId, // New field
-                    user_id: user.id,
-                    company_id: company_id
-                }])
-                .select();
-
-            if (studentError) {
-                alert('Error adding student: ' + studentError.message);
-                return;
-            }
-
-            const { error: feeError } = await supabase.from('fees').insert([{
-                student_id: studentData[0].id,
-                amount: initialPayment,
-                date: new Date().toISOString().split("T")[0],
-                user_id: user.id,
-                company_id: company_id
-            }]);
-
-            if (feeError) {
-                alert('Error saving fee record: ' + feeError.message);
-                return;
-            }
-
-            alert("Student added!");
-            window.location.href = "view-students.html";
-        }
-
-        document.addEventListener("click", function (e) {
-            const dayDropdown = document.getElementById("dayDropdown");
-            const classDropdown = document.getElementById("classDropdown");
-            if (!dayDropdown.contains(e.target)) {
-                dayDropdown.classList.remove("active");
-            }
-            if (!classDropdown.contains(e.target)) {
-                classDropdown.classList.remove("active");
-            }
+        // Replace 'invite-parent' with the name of your Edge Function
+        // This is a much more secure way than exposing an admin key on the client
+        const { data, error } = await supabase.functions.invoke('invite-parent', {
+            body: { email: email }
         });
 
-        window.onload = async () => {
-            await checkUserSession();
-            await fetchClasses();
-        };
+        if (error) {
+            console.error('Error inviting parent:', error.message);
+        } else {
+            console.log('Parent invited successfully:', data);
+        }
+    }
+
+    async function addStudent() {
+        const { data: { session } } = await supabase.auth.getSession();
+        const user = session?.user;
+
+        if (!user) {
+            alert('You must be logged in to add a student.');
+            return;
+        }
+
+        const name = document.getElementById("name").value.trim();
+        const phone = document.getElementById("phone").value.trim();
+        const parentEmail = document.getElementById("parentEmailInput").value.trim();
+        const selectedDays = getSelectedDays();
+        const totalFee = parseFloat(document.getElementById("totalFee").value) || 0;
+        const initialPayment = parseFloat(document.getElementById("initialPayment").value) || 0;
+        const balanceFee = totalFee - initialPayment;
+        const selectedClassId = getSelectedClass();
+
+        if (!name || !phone || selectedDays.length === 0 || !selectedClassId) {
+            alert("Please fill all required fields.");
+            return;
+        }
+
+        if (initialPayment > totalFee) {
+            alert("Initial payment cannot exceed total fee.");
+            return;
+        }
+
+        if (!currentCompanyId) {
+            alert("Could not fetch company info.");
+            return;
+        }
+
+        const { data: existingStudents, error: fetchError } = await supabase
+            .from('students')
+            .select('name, phone')
+            .eq('company_id', currentCompanyId);
+
+        if (fetchError) {
+            alert('Error checking for duplicates: ' + fetchError.message);
+            return;
+        }
+
+        if (existingStudents.some(s => s.name.toLowerCase() === name.toLowerCase())) {
+            alert("A student with this name already exists.");
+            return;
+        }
+
+        if (existingStudents.some(s => s.phone === phone)) {
+            alert("A student with this phone number already exists.");
+            return;
+        }
+
+        const { data: studentData, error: studentError } = await supabase
+            .from('students')
+            .insert([{
+                name,
+                phone,
+                parent_email: parentEmail || null,
+                day: selectedDays,
+                totalFee,
+                initialPayment,
+                balanceFee: Math.round(balanceFee),
+                class_id: selectedClassId,
+                user_id: user.id,
+                company_id: currentCompanyId
+            }])
+            .select();
+
+        if (studentError) {
+            alert('Error adding student: ' + studentError.message);
+            return;
+        }
+
+        const { error: feeError } = await supabase.from('fees').insert([{
+            student_id: studentData[0].id,
+            amount: initialPayment,
+            date: new Date().toISOString().split("T")[0],
+            user_id: user.id,
+            company_id: currentCompanyId
+        }]);
+
+        if (feeError) {
+            alert('Error saving fee record: ' + feeError.message);
+            return;
+        }
+
+        if (parentEmail) {
+            await createParentAccountSecurely(parentEmail);
+        }
+
+        alert("Student added!");
+        window.location.href = "view-students.html";
+    }
+
+    document.addEventListener("click", function (e) {
+        const dayDropdown = document.getElementById("dayDropdown");
+        const classDropdown = document.getElementById("classDropdown");
+        if (!dayDropdown.contains(e.target)) {
+            dayDropdown.classList.remove("active");
+        }
+        if (!classDropdown.contains(e.target)) {
+            classDropdown.classList.remove("active");
+        }
+    });
+
+    window.onload = async () => {
+        await checkUserSession();
+        await loadDynamicHeader();
+        await fetchClasses();
+    };
     </script>
 </body>
 </html>
