@@ -71,50 +71,66 @@
         <button onclick="history.back()">Back</button>
     </div>
 
-    <script>
-        const SUPABASE_URL = "https://ndishfwnkzdedfcywcle.supabase.co";
-        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5kaXNoZndua3pkZWRmY3l3Y2xlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYwOTk0MjcsImV4cCI6MjA3MTY3NTQyN30.CXQSfhR0MVLF40v2Tp-BcENBpHpPshG9Ys3zLYiBQaM";
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+ <script>
+    const SUPABASE_URL = "https://ndishfwnkzdedfcywcle.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5kaXNoZndua3pkZWRmY3l3Y2xlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYwOTk0MjcsImV4cCI6MjA3MTY3NTQyN30.CXQSfhR0MVLF40v2Tp-BcENBpHpPshG9Ys3zLYiBQaM";
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        async function loadStudentName() {
-            const { data: { session } } = await supabase.auth.getSession();
-            const displayDiv = document.getElementById('studentNameDisplay');
-            const messageDiv = document.getElementById('message');
+    async function loadStudentName() {
+        const displayDiv = document.getElementById('studentNameDisplay');
+        const messageDiv = document.getElementById('message');
 
-            if (!session) {
-                displayDiv.textContent = 'Not Logged In';
-                messageDiv.textContent = 'Redirecting to login page...';
-                setTimeout(() => window.location.href = 'index.html', 2000);
-                return;
-            }
-
-            const parentEmail = session.user.email;
-            
-            // Query for the student's name using the parent's email
-            const { data: students, error } = await supabase
-                .from('students')
-                .select('name')
-                .eq('parent_email', parentEmail);
-
-            if (error) {
-                displayDiv.textContent = 'Error';
-                messageDiv.textContent = 'Error fetching student data: ' + error.message;
-                console.error(error);
-                return;
-            }
-
-            if (!students || students.length === 0) {
-                displayDiv.textContent = 'No Student Found';
-                messageDiv.textContent = 'No student records are linked to this email.';
-            } else {
-                // If multiple students are found, display all their names
-                const names = students.map(s => s.name).join(', ');
-                displayDiv.textContent = names;
-                messageDiv.textContent = `Found ${students.length} student(s).`;
-            }
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        if (sessionError || !session) {
+            displayDiv.textContent = 'Not Logged In';
+            messageDiv.textContent = 'Redirecting to login page...';
+            setTimeout(() => window.location.href = 'index.html', 2000);
+            return;
         }
 
-        window.onload = loadStudentName;
-    </script>
+        const parentEmail = session.user.email;
+        
+        // Step 1: Get the company ID from the user's record
+        const { data: userData, error: userError } = await supabase
+            .from('users')
+            .select('company_id')
+            .eq('id', session.user.id)
+            .maybeSingle();
+            
+        if (userError || !userData || !userData.company_id) {
+            displayDiv.textContent = 'Error';
+            messageDiv.textContent = 'User record or company ID not found.';
+            console.error(userError);
+            return;
+        }
+        
+        const currentCompanyId = userData.company_id;
+
+        // Step 2: Query for the student's name using the parent's email AND company ID
+        const { data: students, error: studentError } = await supabase
+            .from('students')
+            .select('name')
+            .eq('parent_email', parentEmail)
+            .eq('company_id', currentCompanyId); // This is the crucial filter
+
+        if (studentError) {
+            displayDiv.textContent = 'Error';
+            messageDiv.textContent = 'Error fetching student data: ' + studentError.message;
+            console.error(studentError);
+            return;
+        }
+
+        if (!students || students.length === 0) {
+            displayDiv.textContent = 'No Student Found';
+            messageDiv.textContent = 'No student records are linked to this email.';
+        } else {
+            const names = students.map(s => s.name).join(', ');
+            displayDiv.textContent = names;
+            messageDiv.textContent = `Found ${students.length} student(s) for your company.`;
+        }
+    }
+
+    window.onload = loadStudentName;
+</script>
 </body>
 </html>
