@@ -269,44 +269,45 @@
     let currentCompanyId = null; // We will use this to securely filter all queries
 
     async function loadDynamicHeader() {
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-        if (error || !session) {
-            window.location.href = "index.html"; // Not logged in
-            return;
-        }
-
-        const user = session.user;
-        currentParentEmail = user.email;
-
-        // Corrected: Fetch company_id and details from the database
-        const { data: userData, error: userError } = await supabase
-            .from('users')
-            .select('company_id, role, companies(display_name, logo_url)')
-            .eq('id', user.id)
-            .maybeSingle();
-
-        if (userError || !userData || !userData.companies) {
-            console.error('Error fetching company data:', userError?.message);
-            // Redirect if user record is missing, which indicates an issue
-            window.location.href = "index.html";
-            return;
-        }
-        
-        // Security check: Redirect non-parents to their correct dashboard
-        if (userData.role !== 'parent') {
-            window.location.href = 'home.html';
-            return;
-        }
-        
-        currentCompanyId = userData.company_id; // Store the company ID for RLS
-
-        document.getElementById("companyNameDisplay").textContent = userData.companies.display_name || 'Parent Dashboard';
-        if (userData.companies.logo_url) {
-            const logoEl = document.getElementById("headerLogo");
-            logoEl.src = userData.companies.logo_url;
-            logoEl.style.display = "inline-block";
-        }
+    const { data: { session }, error } = await supabase.auth.getSession();
+    if (error || !session) {
+        window.location.href = "index.html"; // Not logged in
+        return;
     }
+
+    const user = session.user;
+    currentParentEmail = user.email;
+
+    // Corrected: Fetch company_id and details from the database
+    const { data: userData, error: userError } = await supabase
+        .from('users')
+        .select('company_id, role, companies(display_name, logo_url)')
+        .eq('id', user.id)
+        .maybeSingle();
+
+    if (userError || !userData || !userData.companies) {
+        // This is the error message for the second query
+        console.error('Error fetching company data:', userError?.message);
+        // Redirect if user record is missing, which indicates an issue
+        window.location.href = "index.html";
+        return;
+    }
+    
+    // Security check: Redirect non-parents to their correct dashboard
+    if (userData.role !== 'parent') {
+        window.location.href = 'home.html';
+        return;
+    }
+    
+    currentCompanyId = userData.company_id; // Store the company ID for RLS
+
+    document.getElementById("companyNameDisplay").textContent = userData.companies.display_name || 'Parent Dashboard';
+    if (userData.companies.logo_url) {
+        const logoEl = document.getElementById("headerLogo");
+        logoEl.src = userData.companies.logo_url;
+        logoEl.style.display = "inline-block";
+    }
+}
     
     async function loadStudentsForParent() {
         if (!currentParentEmail || !currentCompanyId) return;
