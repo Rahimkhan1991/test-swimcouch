@@ -239,12 +239,19 @@
     </div>
     
     <script>
-        const SUPABASE_URL = 'https://ndishfwnkzdedfcywcle.supabase.co';
+    const SUPABASE_URL = 'https://ndishfwnkzdedfcywcle.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5kaXNoZndua3pkZWRmY3l3Y2xlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYwOTk0MjcsImV4cCI6MjA3MTY3NTQyN30.CXQSfhR0MVLF40v2Tp-BcENBpHpPshG9Ys3zLYiBQaM';
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     let currentCompanyId = null;
 
+    async function checkUserSession() {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+            window.location.href = 'index.html';
+        }
+    }
+    
     async function loadDynamicHeader() {
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         if (sessionError || !session) {
@@ -288,11 +295,6 @@
     function toggleDropdown(id) {
         const container = document.getElementById(id);
         container.classList.toggle("active");
-        if (id === 'dayDropdown') {
-            updateDropdownLabel('dayDropdown');
-        } else if (id === 'classDropdown') {
-            updateDropdownLabel('classDropdown');
-        }
     }
 
     function getSelectedDays() {
@@ -337,30 +339,23 @@
             const label = document.createElement('label');
             label.innerHTML = `<input type="radio" name="class" value="${cls.id}" data-name="${cls.name}"> ${cls.name}`;
             label.addEventListener('click', () => {
-                setTimeout(() => {
-                    updateDropdownLabel('classDropdown');
-                    document.getElementById('classDropdown').classList.remove('active');
-                }, 10);
+                updateDropdownLabel('classDropdown');
+                document.getElementById('classDropdown').classList.remove('active');
             });
             classDropdownContent.appendChild(label);
         });
+
+        // Update the label after populating the options
+        updateDropdownLabel('classDropdown');
     }
     
-    // THIS IS THE CORRECTED AND SECURE WAY
-    // This function will call a server-side Supabase Edge Function to invite a parent
-    async function createParentAccountSecurely(email) {
+    async function createParentAccount(email) {
         if (!email) return;
-
-        // Replace 'invite-parent' with the name of your Edge Function
-        // This is a much more secure way than exposing an admin key on the client
-        const { data, error } = await supabase.functions.invoke('invite-parent', {
-            body: { email: email }
-        });
-
+        const { error } = await supabase.auth.admin.inviteUserByEmail(email);
         if (error) {
             console.error('Error inviting parent:', error.message);
         } else {
-            console.log('Parent invited successfully:', data);
+            console.log('Parent invited successfully.');
         }
     }
 
@@ -452,7 +447,7 @@
         }
 
         if (parentEmail) {
-            await createParentAccountSecurely(parentEmail);
+            await createParentAccount(parentEmail);
         }
 
         alert("Student added!");
@@ -475,6 +470,6 @@
         await loadDynamicHeader();
         await fetchClasses();
     };
-    </script>
+</script>
 </body>
 </html>
