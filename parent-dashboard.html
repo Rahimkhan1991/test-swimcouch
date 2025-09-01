@@ -259,141 +259,142 @@
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5kaXNoZndua3pkZWRmY3l3Y2xlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYwOTk0MjcsImV4cCI6MjA3MTY3NTQyN30.CXQSfhR0MVLF40v2Tp-BcENBpHpPshG9Ys3zLYiBQaM";
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        let currentParentEmail = null;
-        let studentsForParent = [];
-        let currentStudent = null;
-        let currentDate = new Date();
 
-        async function loadDynamicHeader() {
-            const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-            if (sessionError || !session) {
-                window.location.href = 'index.html';
-                return;
-            }
-            const user = session.user;
-            currentParentEmail = user.email; // Store parent's email
+let currentParentEmail = null;
+let studentsForParent = [];
+let currentStudent = null;
+let currentDate = new Date();
 
-            const { data, error } = await supabase
-                .from('users')
-                .select('companies(display_name, logo_url)')
-                .eq('id', user.id)
-                .single();
-            if (error || !data || !data.companies) {
-                console.error('Error fetching company data:', error?.message);
-                return;
-            }
-            document.getElementById('companyNameDisplay').textContent = data.companies.display_name || 'Parent Dashboard';
-            if (data.companies.logo_url) {
-                document.getElementById('headerLogo').src = data.companies.logo_url;
-                document.getElementById('headerLogo').style.display = 'inline-block';
-            }
-        }
-        
-        async function loadStudentsForParent() {
-            if (!currentParentEmail) return;
+async function loadDynamicHeader() {
+  const { data: { session }, error } = await supabase.auth.getSession();
+  if (error || !session) {
+    window.location.href = "index.html";
+    return;
+  }
 
-            const { data, error } = await supabase
-                .from('students')
-                .select('id, name, parent_email, classes(name)')
-                .eq('parent_email', currentParentEmail);
+  const user = session.user;
+  currentParentEmail = user.email;
 
-            if (error) {
-                console.error('Error fetching student data:', error.message);
-                return;
-            }
+  // ✅ Get company info from metadata instead of broken join
+  const companyName = user.user_metadata?.company_name || "Parent Dashboard";
+  const logoUrl = user.user_metadata?.company_logo || "";
 
-            studentsForParent = data || [];
+  document.getElementById("companyNameDisplay").textContent = companyName;
+  if (logoUrl) {
+    const logoEl = document.getElementById("headerLogo");
+    logoEl.src = logoUrl;
+    logoEl.style.display = "inline-block";
+  }
+}
 
-            if (studentsForParent.length === 0) {
-                document.getElementById('studentInfo').innerHTML = '<p style="text-align:center;">No students found linked to this account.</p>';
-                document.querySelector('.section').style.display = 'none';
-                return;
-            }
+async function loadStudentsForParent() {
+  if (!currentParentEmail) return;
 
-            if (studentsForParent.length > 1) {
-                const selector = document.getElementById('studentSelector');
-                document.getElementById('studentSelectorContainer').style.display = 'block';
-                selector.innerHTML = studentsForParent.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
-                selector.addEventListener('change', (e) => {
-                    const studentId = e.target.value;
-                    currentStudent = studentsForParent.find(s => s.id == studentId);
-                    updateStudentInfo();
-                    renderAttendanceCalendar();
-                });
-                currentStudent = studentsForParent[0];
-            } else {
-                currentStudent = studentsForParent[0];
-            }
+  const { data, error } = await supabase
+    .from("students")
+    .select("id, name, parent_email, classes(name)")
+    .eq("parent_email", currentParentEmail);
 
-            updateStudentInfo();
-            renderAttendanceCalendar();
-        }
+  if (error) {
+    console.error("Error fetching student data:", error.message);
+    return;
+  }
 
-        function updateStudentInfo() {
-            if (!currentStudent) return;
-            document.getElementById('studentInfo').querySelector('h3').textContent = currentStudent.name;
-            document.getElementById('studentInfo').querySelector('p').textContent = `Class: ${currentStudent.classes.name}`;
-        }
-        
-        async function renderAttendanceCalendar() {
-            if (!currentStudent) return;
+  studentsForParent = data || [];
 
-            const calendarBody = document.getElementById('calendarBody');
-            const monthYearDisplay = document.getElementById('currentMonthYear');
-            calendarBody.innerHTML = '';
+  if (studentsForParent.length === 0) {
+    document.getElementById("studentInfo").innerHTML =
+      "<p style='text-align:center;'>No students found linked to this account.</p>";
+    document.querySelector(".section").style.display = "none";
+    return;
+  }
 
-            const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-            const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
-            const firstDayOfWeek = startOfMonth.getDay();
+  const selector = document.getElementById("studentSelector");
+  if (studentsForParent.length > 1) {
+    document.getElementById("studentSelectorContainer").style.display = "block";
+    selector.innerHTML = studentsForParent
+      .map((s) => `<option value="${s.id}">${s.name}</option>`)
+      .join("");
+    selector.addEventListener("change", (e) => {
+      const studentId = e.target.value;
+      currentStudent = studentsForParent.find((s) => s.id == studentId);
+      updateStudentInfo();
+      renderAttendanceCalendar();
+    });
+  }
+  currentStudent = studentsForParent[0];
+  updateStudentInfo();
+  renderAttendanceCalendar();
+}
 
-            monthYearDisplay.textContent = currentDate.toLocaleString('default', { month: 'long', year: 'numeric' });
+function updateStudentInfo() {
+  if (!currentStudent) return;
+  document.querySelector("#studentInfo h3").textContent = currentStudent.name;
+  document.querySelector("#studentInfo p").textContent =
+    `Class: ${currentStudent.classes?.name || "N/A"}`;
+}
 
-            for (let i = 0; i < firstDayOfWeek; i++) {
-                const emptyCell = document.createElement('div');
-                calendarBody.appendChild(emptyCell);
-            }
+async function renderAttendanceCalendar() {
+  if (!currentStudent) return;
 
-            const { data: attendanceData, error } = await supabase
-                .from('attendance')
-                .select('date, status')
-                .eq('student_id', currentStudent.id)
-                .gte('date', startOfMonth.toISOString().split('T')[0])
-                .lte('date', endOfMonth.toISOString().split('T')[0]);
+  const calendarBody = document.getElementById("calendarBody");
+  calendarBody.innerHTML = "";
+  const monthYearDisplay = document.getElementById("currentMonthYear");
 
-            if (error) {
-                console.error('Error fetching attendance:', error.message);
-                return;
-            }
-            
-            const attendanceMap = new Map(attendanceData.map(item => [item.date, item.status]));
+  const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+  const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+  const firstDayOfWeek = startOfMonth.getDay();
 
-            for (let day = 1; day <= endOfMonth.getDate(); day++) {
-                const dayCell = document.createElement('div');
-                dayCell.className = 'day-cell';
-                dayCell.textContent = day;
+  monthYearDisplay.textContent = currentDate.toLocaleString("default", { month: "long", year: "numeric" });
 
-                const formattedDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day).toISOString().split('T')[0];
-                const status = attendanceMap.get(formattedDate);
-                
-                if (status === 'Present') {
-                    dayCell.classList.add('present');
-                } else if (status === 'Absent') {
-                    dayCell.classList.add('absent');
-                }
+  // Fill empty cells
+  for (let i = 0; i < firstDayOfWeek; i++) {
+    calendarBody.appendChild(document.createElement("div"));
+  }
 
-                calendarBody.appendChild(dayCell);
-            }
-        }
-        
-        window.changeMonth = function(offset) {
-            currentDate.setMonth(currentDate.getMonth() + offset);
-            renderAttendanceCalendar();
-        };
+  const { data: attendanceData, error } = await supabase
+    .from("attendance")
+    .select("date, status")
+    .eq("student_id", currentStudent.id)
+    .gte("date", startOfMonth.toISOString().split("T")[0])
+    .lte("date", endOfMonth.toISOString().split("T")[0]);
 
-        window.onload = async () => {
-            await loadDynamicHeader();
-            await loadStudentsForParent();
-        };
+  if (error) {
+    console.error("Error fetching attendance:", error.message);
+    return;
+  }
+
+  const attendanceMap = new Map(attendanceData.map((a) => [a.date, a.status]));
+
+  for (let day = 1; day <= endOfMonth.getDate(); day++) {
+    const dayCell = document.createElement("div");
+    dayCell.className = "day-cell";
+    dayCell.textContent = day;
+
+    const formattedDate = new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth(),
+      day
+    ).toISOString().split("T")[0];
+
+    const status = attendanceMap.get(formattedDate);
+    if (status === "Present") dayCell.classList.add("present");
+    if (status === "Absent") dayCell.classList.add("absent");
+
+    calendarBody.appendChild(dayCell);
+  }
+}
+
+window.changeMonth = function (offset) {
+  currentDate.setMonth(currentDate.getMonth() + offset);
+  renderAttendanceCalendar();
+};
+
+window.onload = async () => {
+  await loadDynamicHeader();
+  await loadStudentsForParent();
+};
+
     </script>
 </body>
 </html>
