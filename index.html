@@ -107,19 +107,7 @@
   </div>
 
   <!-- 🔀 Invite link redirect bridge -->
-  <script>
-    (function () {
-      const params = new URLSearchParams(window.location.search);
-      if (params.get("type") === "invite") {
-        const redirectUrl =
-          "https://rahimkhan1991.github.io/test-swimcouch/set-password.html?" +
-          params.toString();
-        window.location.replace(redirectUrl);
-      }
-    })();
-  </script>
-
-  <script>
+<script>
     // Supabase Initialization
     const SUPABASE_URL = "https://ndishfwnkzdedfcywcle.supabase.co";
     const SUPABASE_ANON_KEY ='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5kaXNoZndua3pkZWRmY3l3Y2xlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYwOTk0MjcsImV4cCI6MjA3MTY3NTQyN30.CXQSfhR0MVLF40v2Tp-BcENBpHpPshG9Ys3zLYiBQaM';
@@ -133,65 +121,96 @@
     const toggleLoginModeBtn = document.getElementById('toggleLoginModeBtn');
     const errorMsg = document.getElementById('errorMsg');
 
+    // This state is now only for UI display, not for security
     let isParentLogin = false;
 
     function toggleLoginMode() {
-      isParentLogin = !isParentLogin;
-      if (isParentLogin) {
-        loginTitle.textContent = "Parent Login";
-        toggleLoginModeBtn.textContent = "Log in as Official";
-      } else {
-        loginTitle.textContent = "Official Login";
-        toggleLoginModeBtn.textContent = "Log in as a Parent";
-      }
+        isParentLogin = !isParentLogin;
+        if (isParentLogin) {
+            loginTitle.textContent = "Parent Login";
+            toggleLoginModeBtn.textContent = "Log in as Official";
+        } else {
+            loginTitle.textContent = "Official Login";
+            toggleLoginModeBtn.textContent = "Log in as a Parent";
+        }
     }
     toggleLoginModeBtn.addEventListener('click', toggleLoginMode);
 
     async function login() {
-      errorMsg.textContent = "";
-      const email = emailInput.value.trim();
-      const password = passwordInput.value.trim();
+        errorMsg.textContent = "";
+        const email = emailInput.value.trim();
+        const password = passwordInput.value.trim();
 
-      if (!email || !password) {
-        errorMsg.textContent = "Please enter both email and password.";
-        return;
-      }
-
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-
-      if (error) {
-        errorMsg.textContent = error.message;
-      } else {
-        const role = data.user.user_metadata?.role || (isParentLogin ? "parent" : "official");
-        if (role === "parent") {
-          window.location.href = "parent-dashboard.html";
-        } else {
-          window.location.href = "home.html";
+        if (!email || !password) {
+            errorMsg.textContent = "Please enter both email and password.";
+            return;
         }
-      }
+
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+
+        if (error) {
+            errorMsg.textContent = error.message;
+            return;
+        }
+
+        // --- NEW, SECURE REDIRECT LOGIC ---
+        // Fetch the user's actual role from the database to ensure security.
+        const { data: userData, error: userError } = await supabase
+            .from('users')
+            .select('role')
+            .eq('id', data.user.id)
+            .maybeSingle();
+
+        const role = userData?.role || 'User'; // Fallback to 'User' if no role is found
+
+        if (userError || !userData) {
+            errorMsg.textContent = "User data not found. Please contact support.";
+            return;
+        }
+
+        if (role === "parent") {
+            window.location.href = "parent-dashboard.html";
+        } else {
+            // All other roles (Admin, User) go to the main dashboard
+            window.location.href = "home.html";
+        }
+        // --- END OF NEW LOGIC ---
     }
 
     loginBtn.addEventListener("click", login);
     passwordInput.addEventListener("keyup", (e) => {
-      if (e.key === "Enter") login();
+        if (e.key === "Enter") login();
     });
 
     window.onload = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        const role = session.user.user_metadata?.role || "official";
-        if (role === "parent") {
-          window.location.href = "parent-dashboard.html";
-        } else {
-          window.location.href = "home.html";
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+            // Fetch the user's role on page load to prevent unauthorized redirects
+            const { data: userData, error } = await supabase
+                .from('users')
+                .select('role')
+                .eq('id', session.user.id)
+                .maybeSingle();
+
+            const role = userData?.role || 'User';
+
+            if (!error && userData) {
+                if (role === "parent") {
+                    window.location.href = "parent-dashboard.html";
+                } else {
+                    window.location.href = "home.html";
+                }
+            } else {
+                // If there's no user record, redirect them to login page
+                window.location.href = 'index.html';
+            }
         }
-      }
     };
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("sw.js")
-        .then(() => console.log("Service Worker Registered"));
+        navigator.serviceWorker.register("sw.js")
+            .then(() => console.log("Service Worker Registered"));
     }
-  </script>
+</script>
 </body>
 </html>
