@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Student Attendance Report</title>
+<title>Student Attendance & Performance Report</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.2/html2pdf.bundle.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -17,7 +17,7 @@ body {
   color: #2c3e50;
 }
 .container {
-  max-width: 900px;
+  max-width: 950px;
   margin: auto;
   background: rgba(255, 255, 255, 0.9);
   border-radius: 16px;
@@ -112,6 +112,7 @@ select, input[type="date"] {
   border-bottom: 1px solid #e5e7eb;
   text-align: left;
   font-size: 0.95em;
+  vertical-align: top;
 }
 .report-table th {
   background-color: #e0f2fe;
@@ -133,7 +134,7 @@ select, input[type="date"] {
 </head>
 <body>
 <div class="container">
-  <h1>📄 Student Attendance Report</h1>
+  <h1>📄 Student Attendance & Performance Report</h1>
 
   <label for="classSelect">Select Class:</label>
   <select id="classSelect"></select>
@@ -169,19 +170,17 @@ select, input[type="date"] {
 
 <script>
 const SUPABASE_URL = 'https://ndishfwnkzdedfcywcle.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5kaXNoZndua3pkZWRmY3l3Y2xlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYwOTk0MjcsImV4cCI6MjA3MTY3NTQyN30.CXQSfhR0MVLF40v2Tp-BcENBpHpPshG9Ys3zLYiBQaM';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5kaXNoZndua3pkZWRmY3l3Y2xlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYwOTk0MjcsImV4cCI6MjA3MTY3NTQyN30.CXQSfhR0MVLF40v2Tp-BcENBpHpPshG9Ys3zLYiBQaM'; // replace
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 let currentReport = null;
 
-// Check session
 async function checkUserSession() {
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) window.location.href = 'index.html';
 }
 checkUserSession();
 
-// Populate class dropdown
 async function populateClasses() {
   const { data, error } = await supabase.from("classes").select("id, name");
   const select = document.getElementById("classSelect");
@@ -194,8 +193,6 @@ async function populateClasses() {
     select.appendChild(opt);
   });
 }
-
-// Populate students by class
 async function populateStudents(classId = null) {
   let query = supabase.from("students").select("id, name");
   if (classId) query = query.eq("class_id", classId);
@@ -210,14 +207,11 @@ async function populateStudents(classId = null) {
     select.appendChild(opt);
   });
 }
-
-// Date range toggle
 function toggleCustomRange() {
   const range = document.getElementById("rangeSelect").value;
   document.getElementById("customRange").style.display = range === "custom" ? "block" : "none";
 }
 
-// Generate report
 async function generateReport() {
   const studentId = document.getElementById("studentSelect").value;
   const reportDiv = document.getElementById("reportOutput");
@@ -228,13 +222,12 @@ async function generateReport() {
     return;
   }
 
-  // Fetch student info
+  // Fetch student
   const { data: student, error: studentError } = await supabase
     .from("students")
     .select("id, name, phone, classes(name)")
     .eq("id", studentId)
     .single();
-
   if (studentError) {
     reportDiv.innerHTML = "<p>Error fetching student details.</p>";
     return;
@@ -243,15 +236,10 @@ async function generateReport() {
   currentReport = { student };
 
   // Attendance query
-  let query = supabase.from("attendance")
-    .select("date, status")
-    .eq("student_id", studentId);
-
-  // Apply date filters
+  let query = supabase.from("attendance").select("id, date, status").eq("student_id", studentId);
   const range = document.getElementById("rangeSelect").value;
   const today = new Date();
   let startDate, endDate;
-
   if (range === "thisMonth") {
     startDate = new Date(today.getFullYear(), today.getMonth(), 1);
     endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
@@ -262,66 +250,124 @@ async function generateReport() {
     startDate = new Date(document.getElementById("startDate").value);
     endDate = new Date(document.getElementById("endDate").value);
   }
-
   if (startDate && endDate) {
     query = query.gte("date", startDate.toISOString()).lte("date", endDate.toISOString());
   }
-
   const { data: attendance, error: attendanceError } = await query;
   if (attendanceError) {
     reportDiv.innerHTML = "<p>Error fetching attendance data.</p>";
     return;
   }
+  if (!attendance || attendance.length === 0) {
+    reportDiv.innerHTML = "<p>No attendance records found.</p>";
+    return;
+  }
 
-  // Process attendance
+  // Fetch performance
+  const { data: performances, error: perfError } = await supabase
+    .from("performance_records")
+    .select(`
+      id,
+      score,
+      notes,
+      attendance_id,
+      performance_metrics(name)
+    `)
+    .in("attendance_id", attendance.map(a => a.id));
+  if (perfError) console.error("Performance fetch error:", perfError.message);
+
+  const perfMap = {};
+  if (performances) {
+    performances.forEach(p => {
+      if (!perfMap[p.attendance_id]) perfMap[p.attendance_id] = [];
+      perfMap[p.attendance_id].push(p);
+    });
+  }
+
+  // Performance summary (avg per metric)
+  const summaryMap = {};
+  performances?.forEach(p => {
+    const metric = p.performance_metrics.name;
+    if (!summaryMap[metric]) summaryMap[metric] = { total: 0, count: 0 };
+    if (p.score != null) {
+      summaryMap[metric].total += p.score;
+      summaryMap[metric].count++;
+    }
+  });
+  let perfSummaryHTML = "";
+  if (Object.keys(summaryMap).length > 0) {
+    perfSummaryHTML = `<h3 style="margin-top:25px;">⭐ Performance Summary</h3>
+    <table class="report-table">
+      <thead><tr><th>Metric</th><th>Average Score</th></tr></thead><tbody>`;
+    for (const [metric, val] of Object.entries(summaryMap)) {
+      const avg = (val.total / val.count).toFixed(2);
+      perfSummaryHTML += `<tr><td>${metric}</td><td>${avg}</td></tr>`;
+    }
+    perfSummaryHTML += "</tbody></table>";
+  }
+
+  // Attendance KPIs
   const presentDates = attendance.filter(r => r.status === "Present").map(r => r.date);
   const totalPresent = presentDates.length;
   const sessionsCompleted = Math.floor(totalPresent / 4);
   const remainingForNext = 4 - (totalPresent % 4);
 
+  // Group by session
   const grouped = [];
-  for (let i = 0; i < presentDates.length; i += 4) {
-    grouped.push(presentDates.slice(i, i + 4));
+  for (let i = 0; i < attendance.length; i += 4) {
+    grouped.push(attendance.slice(i, i + 4));
   }
 
   let sessionTable = "";
   grouped.forEach((session, idx) => {
-    sessionTable += `
-      <tr>
-        <td>Session ${idx + 1}</td>
-        <td>${session.join("<br>")}</td>
+    let rows = session.map(att => {
+      let perfHtml = "";
+      if (perfMap[att.id]) {
+        perfHtml = "<ul style='margin:5px 0 0 15px;'>";
+        perfMap[att.id].forEach(p => {
+          perfHtml += `<li><strong>${p.performance_metrics.name}:</strong> ${p.score || "N/A"} ${p.notes ? `(${p.notes})` : ""}</li>`;
+        });
+        perfHtml += "</ul>";
+      }
+      return `<tr>
+        <td>${new Date(att.date).toLocaleDateString()}</td>
+        <td>${att.status}</td>
+        <td>${perfHtml || "—"}</td>
       </tr>`;
+    }).join("");
+    sessionTable += `
+      <tr style="background:#f0f9ff;font-weight:600;">
+        <td colspan="3">Session ${idx + 1}</td>
+      </tr>
+      ${rows}
+    `;
   });
 
   const html = `
     <div class="report">
       <div class="report-title">
-        📊 Attendance Summary
+        📊 Attendance & Performance Report
         <span class="subtle">${student.classes?.name || "No Class"}</span>
       </div>
-
       <p><strong>👤 Name:</strong> ${student.name}</p>
       <p><strong>📞 Phone:</strong> ${student.phone || "N/A"}</p>
-
       <div class="summary-grid">
         <div class="kpi"><div class="value">${totalPresent}</div><div class="label">Total Presents</div></div>
         <div class="kpi"><div class="value">${sessionsCompleted}</div><div class="label">Sessions Completed</div></div>
         <div class="kpi"><div class="value">${remainingForNext === 4 ? 0 : remainingForNext}</div><div class="label">Days Left for Next Session</div></div>
       </div>
-
+      ${perfSummaryHTML}
       <h3 style="margin-top:20px;">📅 Session Breakdown</h3>
       <table class="report-table">
-        <thead><tr><th>Session</th><th>Dates</th></tr></thead>
-        <tbody>${sessionTable || "<tr><td colspan='2'>No attendance records.</td></tr>"}</tbody>
+        <thead><tr><th>Date</th><th>Status</th><th>Performance</th></tr></thead>
+        <tbody>${sessionTable || "<tr><td colspan='3'>No records.</td></tr>"}</tbody>
       </table>
-    </div>
-  `;
-
+    </div>`;
   reportDiv.innerHTML = html;
   currentReport.attendance = attendance;
+  currentReport.performances = performances;
 }
 
-// Download PDF
 function downloadPDF() {
   const reportDiv = document.getElementById("reportOutput");
   if (!reportDiv.innerHTML.trim()) {
@@ -330,26 +376,25 @@ function downloadPDF() {
   }
   const opt = {
     margin: 0.5,
-    filename: 'AttendanceReport.pdf',
+    filename: 'AttendancePerformanceReport.pdf',
     html2canvas: { scale: 2 },
     jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
   };
   html2pdf().from(reportDiv).set(opt).save();
 }
 
-// Send via WhatsApp
 function sendWhatsApp() {
   const student = currentReport?.student;
   if (!student || !student.phone) {
     alert("Phone number not available for the selected student.");
     return;
   }
-  const message = `Hello ${student.name}, your attendance report is ready. ✅ Total Presents: ${currentReport.attendance.filter(r=>r.status==="Present").length}`;
+  const totalPresent = currentReport.attendance.filter(r=>r.status==="Present").length;
+  const message = `Hello ${student.name}, your attendance & performance report is ready. ✅ Total Presents: ${totalPresent}`;
   const encoded = encodeURIComponent(message);
   window.open(`https://wa.me/${student.phone.replace(/\D/g,'')}?text=${encoded}`, "_blank");
 }
 
-// Initial load
 populateClasses();
 populateStudents();
 document.getElementById("classSelect").addEventListener("change", e => populateStudents(e.target.value));
