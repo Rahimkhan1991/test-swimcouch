@@ -152,157 +152,171 @@
   </div>
 
 <script>
-    const SUPABASE_URL = 'https://ndishfwnkzdedfcywcle.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5kaXNoZndua3pkZWRmY3l3Y2xlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYwOTk0MjcsImV4cCI6MjA3MTY3NTQyN30.CXQSfhR0MVLF40v2Tp-BcENBpHpPshG9Ys3zLYiBQaM';
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const SUPABASE_URL = 'https://ndishfwnkzdedfcywcle.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5kaXNoZndua3pkZWRmY3l3Y2xlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYwOTk0MjcsImV4cCI6MjA3MTY3NTQyN30.CXQSfhR0MVLF40v2Tp-BcENBpHpPshG9Ys3zLYiBQaM';
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    let currentCompanyId = null;
+document.getElementById('attendanceDate').valueAsDate = new Date();
 
-    async function loadDynamicHeader() {
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-        if (sessionError || !session) {
-            window.location.href = 'index.html';
-            return;
-        }
-        const user = session.user;
-        const { data, error } = await supabase
-            .from('users')
-            .select('company_id, companies(display_name, logo_url)')
-            .eq('id', user.id)
-            .single();
-        const headerTitle = document.getElementById('companyNameDisplay');
-        const headerLogo = document.getElementById('headerLogo');
-        if (error || !data || !data.companies) {
-            console.error('Error fetching company data:', error?.message);
-            return;
-        }
-        currentCompanyId = data.company_id;
-        headerTitle.textContent = data.companies.display_name || 'Attendance';
-        if (data.companies.logo_url) {
-            headerLogo.src = data.companies.logo_url;
-            headerLogo.style.display = 'inline-block';
-        }
+// ✅ Single showMessage function
+function showMessage(msg, type = "success") {
+  const old = document.querySelector('.status-message');
+  if (old) old.remove();
+  const el = document.createElement('div');
+  el.className = 'status-message';
+  el.style.background = type === "error" ? "#dc3545" : "#28a745";
+  el.textContent = msg;
+  document.querySelector('.section').appendChild(el);
+  setTimeout(() => el.remove(), 3000);
+}
+
+// ✅ Auto select current weekday
+function autoSelectCurrentDay() {
+  const dayFilter = document.getElementById('dayFilter');
+  if (!dayFilter.value) {
+    const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+    dayFilter.value = days[new Date().getDay()];
+  }
+}
+
+// ✅ Reset "mark all"
+function resetMarkAll() {
+  document.getElementById('markAll').checked = false;
+}
+
+// Filters change reload
+document.getElementById('dayFilter').addEventListener('change', () => { resetMarkAll(); loadStudents(); });
+document.getElementById('classFilter').addEventListener('change', () => { resetMarkAll(); loadStudents(); });
+document.getElementById('attendanceDate').addEventListener('change', () => { resetMarkAll(); loadStudents(); });
+
+// ✅ Load class options
+async function loadClassOptions() {
+  try {
+    const { data: classes, error } = await supabase
+      .from('classes')
+      .select('id, name')
+      .order('name');
+
+    if (error) throw error;
+
+    const classFilter = document.getElementById('classFilter');
+    classFilter.innerHTML = '<option value="">All Classes</option>';
+
+    classes.forEach(cls => {
+      const option = document.createElement('option');
+      option.value = cls.id;          // use id for filtering
+      option.textContent = cls.name;  // display name
+      classFilter.appendChild(option);
+    });
+  } catch (err) {
+    console.error("Error loading class options:", err.message);
+  }
+}
+
+
+// ✅ Load & filter students
+async function loadStudents() {
+  try {
+    const selectedDay = document.getElementById('dayFilter').value;
+    const selectedClassId = document.getElementById('classFilter').value;
+
+    let query = supabase.from('students').select(`
+      id,
+      name,
+      day,
+      class_id,
+      classes ( name )
+    `);
+
+    if (selectedClassId) {
+      query = query.eq('class_id', selectedClassId);
     }
 
-    document.getElementById('attendanceDate').valueAsDate = new Date();
+    let { data: students, error } = await query;
+    if (error) throw error;
 
-    function autoSelectCurrentDay() {
-        const dayFilter = document.getElementById('dayFilter');
-        const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-        const currentDayName = days[new Date().getDay()];
-        dayFilter.value = currentDayName;
+    // Apply day filter (client-side, since "day" is an array)
+    if (selectedDay) {
+      students = students.filter(s => Array.isArray(s.day) && s.day.includes(selectedDay));
     }
 
-    async function loadStudents() {
-        try {
-            const selectedDay = document.getElementById('dayFilter').value;
-            let query = supabase.from('students').select('id, name, day');
-            const { data: students, error } = await query;
-            if (error) throw error;
-            const filtered = selectedDay
-                ? students.filter(s => Array.isArray(s.day) && s.day.includes(selectedDay))
-                : students;
-            await displayStudents(filtered);
-        } catch (error) {
-            showMessage('Error loading students: ' + error.message);
-        }
-    }
+    await displayStudents(students);
+  } catch (error) {
+    showMessage('Error loading students: ' + error.message, "error");
+  }
+}
 
-    async function displayStudents(students) {
-        const list = document.getElementById('studentList');
-        list.innerHTML = '';
-        if (students.length === 0) {
-            list.innerHTML = '<p>No students found for this day.</p>';
-            return;
-        }
-        const date = document.getElementById('attendanceDate').value;
-        const { data: todaysRecords, error } = await supabase.from('attendance').select('student_id').eq('date', date);
-        if (error) {
-            showMessage('Error fetching attendance records: ' + error.message);
-            return;
-        }
-        const attendedStudents = todaysRecords.map(r => r.student_id);
-        students.forEach(student => {
-            const card = document.createElement('div');
-            card.className = 'student-card';
-            card.innerHTML = `
-                <div class="student-name">${student.name}</div>
-                <input type="checkbox" class="mark-present" data-id="${student.id}"
-                ${attendedStudents.includes(student.id) ? 'checked' : ''}>
-            `;
-            list.appendChild(card);
-        });
-    }
 
-    function markAllPresent() {
-        const checked = document.getElementById('markAll').checked;
-        document.querySelectorAll('.mark-present').forEach(cb => cb.checked = checked);
-    }
+// ✅ Show students
+async function displayStudents(students) {
+  const list = document.getElementById('studentList');
+  list.innerHTML = '';
+  if (students.length === 0) {
+    list.innerHTML = '<p>No students found for this day.</p>';
+    return;
+  }
+  const date = document.getElementById('attendanceDate').value;
+  const { data: todaysRecords, error } = await supabase.from('attendance').select('student_id').eq('date', date);
+  if (error) {
+    showMessage('Error fetching attendance records: ' + error.message, "error");
+    return;
+  }
+  const attendedStudents = todaysRecords.map(r => r.student_id);
+  students.forEach(student => {
+    const card = document.createElement('div');
+    card.className = 'student-card';
+    card.innerHTML = `
+      <div class="student-name">${student.name}</div>
+      <input type="checkbox" class="mark-present" data-id="${student.id}" ${attendedStudents.includes(student.id) ? 'checked' : ''}>
+    `;
+    list.appendChild(card);
+  });
+}
 
-    async function saveAttendance() {
-        try {
-            const date = document.getElementById('attendanceDate').value;
-            const { data: { session } } = await supabase.auth.getSession();
-            const user = session?.user;
-            
-            // Check for required data before continuing
-            if (!user) {
-                showMessage('Your session has expired. Please log in again.');
-                return;
-            }
-            if (!date) {
-                showMessage('Please select a date');
-                return;
-            }
-            // CRITICAL FIX: Check if company ID is available
-            if (!currentCompanyId) {
-                showMessage('Could not fetch company info. Please refresh the page.', 'error');
-                return;
-            }
+// ✅ Mark all
+function markAllPresent() {
+  const checked = document.getElementById('markAll').checked;
+  document.querySelectorAll('.mark-present').forEach(cb => cb.checked = checked);
+}
 
-            const checkboxes = document.querySelectorAll('.mark-present');
-            const recordsToSave = [];
-            checkboxes.forEach(cb => {
-                if (cb.checked) {
-                    recordsToSave.push({
-                        date: date,
-                        student_id: cb.dataset.id,
-                        status: 'Present',
-                        user_id: user.id,
-                        company_id: currentCompanyId
-                    });
-                }
-            });
+// ✅ Save attendance
+async function saveAttendance() {
+  try {
+    const date = document.getElementById('attendanceDate').value;
+    const { data: { session } } = await supabase.auth.getSession();
+    const user = session?.user;
+    if (!user) return showMessage('Your session has expired. Please log in again.', "error");
+    if (!date) return showMessage('Please select a date', "error");
 
-            const { error } = await supabase.from('attendance').upsert(recordsToSave, {
-                onConflict: 'date, student_id, company_id'
-            });
+    const { data: companyData, error: companyError } = await supabase
+      .from('users').select('company_id').eq('id', user.id).single();
+    if (companyError || !companyData) throw new Error('Could not fetch company info for user.');
 
-            if (error) throw error;
-            showMessage('Attendance saved successfully!');
-        } catch (e) {
-            showMessage('Error saving attendance: ' + e.message);
-        }
-    }
+    const company_id = companyData.company_id;
+    const checkboxes = document.querySelectorAll('.mark-present');
+    const recordsToSave = [];
+    checkboxes.forEach(cb => {
+      if (cb.checked) {
+        recordsToSave.push({ date, student_id: cb.dataset.id, status: 'Present', user_id: user.id, company_id });
+      }
+    });
 
-    function showMessage(msg, type = 'success') {
-        const old = document.querySelector('.status-message');
-        if (old) old.remove();
-        const el = document.createElement('div');
-        el.className = `status-message ${type === 'error' ? 'error' : ''}`;
-        el.textContent = msg;
-        document.body.appendChild(el);
-        setTimeout(() => el.remove(), 3000);
-    }
+    const { error } = await supabase.from('attendance').upsert(recordsToSave, {
+      onConflict: 'date, student_id, company_id'
+    });
+    if (error) throw error;
+    showMessage('Attendance saved successfully!');
+  } catch (e) {
+    showMessage('Error saving attendance: ' + e.message, "error");
+  }
+}
 
-    document.getElementById('dayFilter').addEventListener('change', loadStudents);
-    document.getElementById('attendanceDate').addEventListener('change', loadStudents);
-
-    window.onload = async () => {
-        await loadDynamicHeader();
-        autoSelectCurrentDay();
-        await loadStudents();
-    };
+// ✅ Init
+window.onload = async () => {
+  autoSelectCurrentDay();
+  await loadClassOptions();
+  await loadStudents();
+};
 </script>
 </body>
 </html>
