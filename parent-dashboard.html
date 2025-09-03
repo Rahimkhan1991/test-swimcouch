@@ -251,8 +251,8 @@
             </div>
         </div>
 
-        <button onclick="logout()" class="logout-button">
-            <i class="fa-solid fa-right-from-bracket"></i> Logout
+        <button onclick="history.logout()" class="logout-button">
+            <i class="fa-solid fa-right-from-bracket"></i> logout
         </button>
     </div>
 
@@ -265,18 +265,19 @@
         let studentsForParent = [];
         let currentStudent = null;
         let currentDate = new Date();
-        let currentCompanyId = null;
+        let currentCompanyId = null; // We will use this to securely filter all queries
 
         async function loadDynamicHeader() {
             const { data: { session }, error } = await supabase.auth.getSession();
             if (error || !session) {
-                window.location.href = "index.html";
+                window.location.href = "index.html"; // Not logged in
                 return;
             }
 
             const user = session.user;
             currentParentEmail = user.email;
 
+            // Corrected: Fetch company_id and details from the database
             const { data: userData, error: userError } = await supabase
                 .from('users')
                 .select('company_id, role, companies(display_name, logo_url)')
@@ -285,16 +286,18 @@
 
             if (userError || !userData || !userData.companies) {
                 console.error('Error fetching company data:', userError?.message);
+                // Redirect if user record is missing, which indicates an issue
                 window.location.href = "index.html";
                 return;
             }
             
+            // Security check: Redirect non-parents to their correct dashboard
             if (userData.role !== 'parent') {
                 window.location.href = 'home.html';
                 return;
             }
             
-            currentCompanyId = userData.company_id;
+            currentCompanyId = userData.company_id; // Store the company ID for RLS
 
             document.getElementById("companyNameDisplay").textContent = userData.companies.display_name || 'Parent Dashboard';
             if (userData.companies.logo_url) {
@@ -311,7 +314,7 @@
                 .from("students")
                 .select("id, name, parent_email, classes(name)")
                 .eq("parent_email", currentParentEmail)
-                .eq("company_id", currentCompanyId);
+                .eq("company_id", currentCompanyId); // Added company_id filter
 
             if (error) {
                 console.error("Error fetching student data:", error.message);
@@ -355,68 +358,68 @@
         }
 
         async function renderAttendanceCalendar() {
-            if (!currentStudent || !currentCompanyId) return;
+    if (!currentStudent || !currentCompanyId) return;
 
-            const calendarBody = document.getElementById("calendarBody");
-            calendarBody.innerHTML = "";
-            const monthYearDisplay = document.getElementById("currentMonthYear");
+    const calendarBody = document.getElementById("calendarBody");
+    calendarBody.innerHTML = "";
+    const monthYearDisplay = document.getElementById("currentMonthYear");
 
-            const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-            const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
-            const firstDayOfWeek = startOfMonth.getDay();
+    const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+    const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+    const firstDayOfWeek = startOfMonth.getDay();
 
-            monthYearDisplay.textContent = currentDate.toLocaleString("default", { month: "long", year: "numeric" });
+    monthYearDisplay.textContent = currentDate.toLocaleString("default", { month: "long", year: "numeric" });
 
-            for (let i = 0; i < firstDayOfWeek; i++) {
-                calendarBody.appendChild(document.createElement("div"));
-            }
+    for (let i = 0; i < firstDayOfWeek; i++) {
+        calendarBody.appendChild(document.createElement("div"));
+    }
 
-            const { data: attendanceData, error } = await supabase
-                .from("attendance")
-                .select("date, status")
-                .eq("student_id", currentStudent.id)
-                .eq("company_id", currentCompanyId)
-                .gte("date", startOfMonth.toISOString().split("T")[0])
-                .lte("date", endOfMonth.toISOString().split("T")[0]);
+    // Fetch attendance data for the entire month
+    const { data: attendanceData, error } = await supabase
+        .from("attendance")
+        .select("date, status")
+        .eq("student_id", currentStudent.id)
+        .eq("company_id", currentCompanyId)
+        .gte("date", startOfMonth.toISOString().split("T")[0])
+        .lte("date", endOfMonth.toISOString().split("T")[0]);
 
-            if (error) {
-                console.error("Error fetching attendance:", error.message);
-                return;
-            }
+    if (error) {
+        console.error("Error fetching attendance:", error.message);
+        return;
+    }
 
-            const attendanceMap = new Map(attendanceData.map((a) => a.date));
+    const attendanceMap = new Map(attendanceData.map((a) => [a.date, a.status]));
 
-            for (let day = 1; day <= endOfMonth.getDate(); day++) {
-                const dayCell = document.createElement("div");
-                dayCell.className = "day-cell";
-                dayCell.textContent = day;
+    for (let day = 1; day <= endOfMonth.getDate(); day++) {
+        const dayCell = document.createElement("div");
+        dayCell.className = "day-cell";
+        dayCell.textContent = day;
 
-                const year = currentDate.getFullYear();
-                const month = (currentDate.getMonth() + 1).toString().padStart(2, '0');
-                const dayString = day.toString().padStart(2, '0');
-                const formattedDate = `${year}-${month}-${dayString}`;
+        // Corrected: Manually format the date string to avoid timezone issues
+        const year = currentDate.getFullYear();
+        const month = (currentDate.getMonth() + 1).toString().padStart(2, '0');
+        const dayString = day.toString().padStart(2, '0');
+        const formattedDate = `${year}-${month}-${dayString}`;
 
-                const status = attendanceMap.get(formattedDate);
-                if (status === "Present") dayCell.classList.add("present");
-                if (status === "Absent") dayCell.classList.add("absent");
+        const status = attendanceMap.get(formattedDate);
+        if (status === "Present") dayCell.classList.add("present");
+        if (status === "Absent") dayCell.classList.add("absent");
 
-                calendarBody.appendChild(dayCell);
-            }
-        }
+        calendarBody.appendChild(dayCell);
+    }
+}
 
         window.changeMonth = function (offset) {
             currentDate.setMonth(currentDate.getMonth() + offset);
             renderAttendanceCalendar();
         };
-
-        async function logout() {
+    async function logout() {
             const { error } = await supabase.auth.signOut();
             if (error) {
                 console.error("Logout error:", error);
             }
             window.location.href = "index.html";
         }
-
         window.onload = async () => {
             await loadDynamicHeader();
             await loadStudentsForParent();
