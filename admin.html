@@ -56,8 +56,6 @@
             text-align: center;
         }
 
-     
-
         .section {
             background: var(--card-background);
             border-radius: 12px;
@@ -171,7 +169,6 @@
 <body>
     <div class="container">
         <div class="company-header-box">
-            
             <h1 id="companyNameDisplay">Admin Panel</h1>
         </div>
 
@@ -232,34 +229,26 @@
         }
 
         async function loadCustomization() {
-    if (!currentCompanyId) return;
+            if (!currentCompanyId) return;
 
-    const { data, error } = await supabase
-        .from('companies')
-        .select('display_name, logo_url')
-        .eq('id', currentCompanyId)
-        .single();
+            const { data, error } = await supabase
+                .from('companies')
+                .select('display_name, logo_url')
+                .eq('id', currentCompanyId)
+                .single();
 
-    if (error) {
-        console.error('Error loading customization:', error.message);
-        return;
-    }
+            if (error) {
+                console.error('Error loading customization:', error.message);
+                return;
+            }
 
-    // Fill inputs (so admin sees current values)
-    document.getElementById("companyNameInput").value = data.display_name || "";
-    document.getElementById("logoUrlInput").value = data.logo_url || "";
-
-    // Header stays "Admin Panel" always
-    document.getElementById("companyNameDisplay").textContent = "Admin Panel";
-
-    if (data.logo_url) {
-        const logoEl = document.getElementById("headerLogo");
-        logoEl.src = data.logo_url;
-        logoEl.style.display = "block";
-    }
-    
-}
-
+            // Fill inputs (so admin sees current values)
+            document.getElementById("companyNameInput").value = data.display_name || "";
+            document.getElementById("logoUrlInput").value = data.logo_url || "";
+            
+            // This page is an admin panel, the header should be static.
+            document.getElementById("companyNameDisplay").textContent = "Admin Panel";
+        }
 
         async function saveCustomization() {
             const companyName = document.getElementById("companyNameInput").value.trim();
