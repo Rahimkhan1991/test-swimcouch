@@ -1,216 +1,188 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Login - CoachTrack</title>
-  <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#3b82f6" />
-  <link rel="icon" href="icons/icon-192.png" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <style>
-    * { box-sizing: border-box; }
-    body {
-      font-family: 'Nunito', sans-serif;
-      background: linear-gradient(to right, #93c5fd, #e0f2fe);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      margin: 0;
-      padding: 20px;
-    }
-    .login-box {
-      background: #ffffff;
-      padding: 30px 25px;
-      border-radius: 20px;
-      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
-      width: 100%;
-      max-width: 380px;
-      text-align: center;
-      animation: fadeIn 0.6s ease-out;
-    }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    .login-box img.logo {
-      width: 80px;
-      height: auto;
-      margin-bottom: 20px;
-    }
-    .login-box h2 {
-      color: #1d4ed8;
-      font-weight: 700;
-      margin-bottom: 20px;
-    }
-    input {
-      width: 100%;
-      padding: 12px 14px;
-      margin: 10px 0;
-      border: 1px solid #d1d5db;
-      border-radius: 12px;
-      font-size: 15px;
-      transition: 0.2s ease-in-out;
-    }
-    input:focus {
-      outline: none;
-      border-color: #3b82f6;
-      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
-    }
-    button {
-      width: 100%;
-      background-color: #3b82f6;
-      color: white;
-      border: none;
-      padding: 14px;
-      border-radius: 12px;
-      font-size: 16px;
-      margin-top: 10px;
-      cursor: pointer;
-      font-weight: 600;
-      transition: background-color 0.3s ease;
-    }
-    button:hover {
-      background-color: #2563eb;
-    }
-    .toggle-btn {
-      background: none;
-      color: #1d4ed8;
-      padding: 10px;
-      font-size: 14px;
-      font-weight: 600;
-      margin-top: 15px;
-      border-bottom: 2px solid transparent;
-      width: auto;
-      display: inline-block;
-    }
-    .toggle-btn:hover {
-      border-bottom-color: #2563eb;
-    }
-    .error {
-      color: red;
-      margin-top: 10px;
-    }
-  </style>
+    <meta charset="UTF-8" />
+    <title>Login - CoachTrack</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#3b82f6" />
+    <link rel="icon" href="icons/icon-192.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Nunito', sans-serif;
+            background: linear-gradient(to right, #93c5fd, #e0f2fe);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+        .login-box {
+            background: #ffffff;
+            padding: 30px 25px;
+            border-radius: 20px;
+            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
+            width: 100%;
+            max-width: 380px;
+            text-align: center;
+            animation: fadeIn 0.6s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .login-box h2 {
+            color: #1d4ed8;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+        input {
+            width: 100%;
+            padding: 12px 14px;
+            margin: 10px 0;
+            border: 1px solid #d1d5db;
+            border-radius: 12px;
+            font-size: 15px;
+            transition: 0.2s ease-in-out;
+        }
+        input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+        }
+        button {
+            width: 100%;
+            background-color: #3b82f6;
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 12px;
+            font-size: 16px;
+            margin-top: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #2563eb;
+        }
+        .error {
+            color: red;
+            margin-top: 10px;
+        }
+    </style>
 </head>
 <body>
-  <div class="login-box">
-    <img id="loginLogo" src="https://upload.wikimedia.org/wikipedia/commons/4/47/Google_logo_%282015%29.svg" alt="App Logo" style="display: block; height: 100px; margin: 0 auto 20px auto;">
-    <h2 id="loginTitle">Official Login</h2>
-    <input type="email" id="email" placeholder="Email" />
-    <input type="password" id="password" placeholder="Password" />
-    <button id="loginBtn">Login</button>
-    <button id="toggleLoginModeBtn" class="toggle-btn">Log in as a Parent</button>
-    <p id="errorMsg" class="error"></p>
-  </div>
+    <div class="login-box">
+        <h2 id="loginTitle">CoachTrack Login</h2>
+        <input type="email" id="email" placeholder="Email" />
+        <input type="password" id="password" placeholder="Password" />
+        <button id="loginBtn">Login</button>
+        <p id="errorMsg" class="error"></p>
+    </div>
+    <script>
+        // Supabase Initialization
+        const SUPABASE_URL = "https://ndishfwnkzdedfcywcle.supabase.co";
+        const SUPABASE_ANON_KEY ='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5kaXNoZndua3pkZWRmY3l3Y2xlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYwOTk0MjcsImV4cCI6MjA3MTY3NTQyN30.CXQSfhR0MVLF40v2Tp-BcENBpHpPshG9Ys3zLYiBQaM';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  <!-- 🔀 Invite link redirect bridge -->
-<script>
-    // Supabase Initialization
-    const SUPABASE_URL = "https://ndishfwnkzdedfcywcle.supabase.co";
-    const SUPABASE_ANON_KEY ='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5kaXNoZndua3pkZWRmY3l3Y2xlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYwOTk0MjcsImV4cCI6MjA3MTY3NTQyN30.CXQSfhR0MVLF40v2Tp-BcENBpHpPshG9Ys3zLYiBQaM';
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        // DOM elements
+        const loginTitle = document.getElementById('loginTitle');
+        const loginBtn = document.getElementById('loginBtn');
+        const emailInput = document.getElementById('email');
+        const passwordInput = document.getElementById('password');
+        const errorMsg = document.getElementById('errorMsg');
 
-    // DOM elements
-    const loginTitle = document.getElementById('loginTitle');
-    const loginBtn = document.getElementById('loginBtn');
-    const emailInput = document.getElementById('email');
-    const passwordInput = document.getElementById('password');
-    const toggleLoginModeBtn = document.getElementById('toggleLoginModeBtn');
-    const errorMsg = document.getElementById('errorMsg');
+        // This function's core logic remains the same (secure redirection)
+        async function login() {
+            errorMsg.textContent = "";
+            const email = emailInput.value.trim();
+            const password = passwordInput.value.trim();
 
-    // This state is now only for UI display, not for security
-    let isParentLogin = false;
+            if (!email || !password) {
+                errorMsg.textContent = "Please enter both email and password.";
+                return;
+            }
 
-    function toggleLoginMode() {
-        isParentLogin = !isParentLogin;
-        if (isParentLogin) {
-            loginTitle.textContent = "Parent Login";
-            toggleLoginModeBtn.textContent = "Log in as Official";
-        } else {
-            loginTitle.textContent = "Official Login";
-            toggleLoginModeBtn.textContent = "Log in as a Parent";
-        }
-    }
-    toggleLoginModeBtn.addEventListener('click', toggleLoginMode);
+            const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
-    async function login() {
-        errorMsg.textContent = "";
-        const email = emailInput.value.trim();
-        const password = passwordInput.value.trim();
+            if (error) {
+                errorMsg.textContent = error.message;
+                return;
+            }
 
-        if (!email || !password) {
-            errorMsg.textContent = "Please enter both email and password.";
-            return;
-        }
-
-        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-
-        if (error) {
-            errorMsg.textContent = error.message;
-            return;
-        }
-
-        // --- NEW, SECURE REDIRECT LOGIC ---
-        // Fetch the user's actual role from the database to ensure security.
-        const { data: userData, error: userError } = await supabase
-            .from('users')
-            .select('role')
-            .eq('id', data.user.id)
-            .maybeSingle();
-
-        const role = userData?.role || 'User'; // Fallback to 'User' if no role is found
-
-        if (userError || !userData) {
-            errorMsg.textContent = "User data not found. Please contact support.";
-            return;
-        }
-
-        if (role === "parent") {
-            window.location.href = "parent-dashboard.html";
-        } else {
-            // All other roles (Admin, User) go to the main dashboard
-            window.location.href = "home.html";
-        }
-        // --- END OF NEW LOGIC ---
-    }
-
-    loginBtn.addEventListener("click", login);
-    passwordInput.addEventListener("keyup", (e) => {
-        if (e.key === "Enter") login();
-    });
-
-    window.onload = async () => {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session) {
-            // Fetch the user's role on page load to prevent unauthorized redirects
-            const { data: userData, error } = await supabase
+            // Fetch the user's actual role from the database to ensure security.
+            const { data: userData, error: userError } = await supabase
                 .from('users')
                 .select('role')
-                .eq('id', session.user.id)
+                .eq('id', data.user.id)
                 .maybeSingle();
 
-            const role = userData?.role || 'User';
+            const role = userData?.role || 'User'; // Fallback to 'User' if no role is found
 
-            if (!error && userData) {
-                if (role === "parent") {
-                    window.location.href = "parent-dashboard.html";
-                } else {
-                    window.location.href = "home.html";
-                }
+            if (userError || !userData) {
+                errorMsg.textContent = "User data not found. Please contact support.";
+                return;
+            }
+
+            if (role === "parent") {
+                window.location.href = "parent-dashboard.html";
             } else {
-                // If there's no user record, redirect them to login page
-                window.location.href = 'index.html';
+                // All other roles (Admin, User) go to the main dashboard
+                window.location.href = "home.html";
             }
         }
-    };
 
-    if ("serviceWorker" in navigator) {
-        navigator.serviceWorker.register("sw.js")
-            .then(() => console.log("Service Worker Registered"));
-    }
-</script>
+        loginBtn.addEventListener("click", login);
+        passwordInput.addEventListener("keyup", (e) => {
+            if (e.key === "Enter") login();
+        });
+
+        window.onload = async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session) {
+                // Fetch the user's role on page load to prevent unauthorized redirects
+                const { data: userData, error } = await supabase
+                    .from('users')
+                    .select('role')
+                    .eq('id', session.user.id)
+                    .maybeSingle();
+
+                const role = userData?.role || 'User';
+
+                if (!error && userData) {
+                    if (role === "parent") {
+                        window.location.href = "parent-dashboard.html";
+                    } else {
+                        window.location.href = "home.html";
+                    }
+                } else {
+                    // If there's no user record, redirect them to login page
+                    window.location.href = 'index.html';
+                }
+            }
+        };
+        
+        // This redirect bridge is for handling invitation links from the old flow.
+        // It's separate from the login functionality.
+        (function () {
+            const params = new URLSearchParams(window.location.search);
+            if (params.get("type") === "invite") {
+                const redirectUrl =
+                    "https://rahimkhan1991.github.io/test-swimcouch/set-password.html?" +
+                    params.toString();
+                window.location.replace(redirectUrl);
+            }
+        })();
+
+        if ("serviceWorker" in navigator) {
+            navigator.serviceWorker.register("sw.js")
+                .then(() => console.log("Service Worker Registered"));
+        }
+    </script>
 </body>
 </html>
