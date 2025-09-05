@@ -216,13 +216,20 @@ let currentReport = null;
 let sessionSettings = { enabled: false, length: 4 };
 
 // 🔹 Load admin session settings
+// 🔹 Load admin session settings
 async function loadSettings() {
-  const { data, error } = await supabase.from("settings").select("session_enabled, session_length").single();
+  const { data, error } = await supabase
+    .from("companies")
+    .select("session_enabled, session_length_days")
+    .eq("id", 1) // TODO: replace with the correct company_id (dynamic if needed)
+    .single();
+
   if (!error && data) {
     sessionSettings.enabled = data.session_enabled;
-    sessionSettings.length = data.session_length;
+    sessionSettings.length = data.session_length_days;
   }
 }
+
 
 // Toggle custom date inputs
 function toggleCustomRange() {
