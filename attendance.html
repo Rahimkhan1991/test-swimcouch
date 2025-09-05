@@ -5,82 +5,211 @@
   <title>Attendance & Performance</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
   <style>
     :root {
-      --primary-color: #007bff;
-      --background-color: #f0f4f8;
-      --card-background: #ffffff;
-      --text-color: #333;
-      --shadow-light: 0 4px 8px rgba(0, 0, 0, 0.05);
-      --input-background: #f7f7f7;
-      --input-border: #ddd;
+      --primary: #4f46e5;
+      --primary-dark: #3730a3;
+      --bg: #f8fafc;
+      --card-bg: rgba(255, 255, 255, 0.9);
+      --text: #1f2937;
+      --muted: #6b7280;
+      --success: #22c55e;
+      --error: #ef4444;
+      --shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
     }
+
     body {
-      font-family: 'Segoe UI', sans-serif;
+      font-family: "Inter", sans-serif;
       margin: 0;
       padding: 20px;
-      background-color: var(--background-color);
-      color: var(--text-color);
+      background: var(--bg);
+      color: var(--text);
       display: flex;
       flex-direction: column;
       align-items: center;
       min-height: 100vh;
     }
-    .container { width: 100%; max-width: 800px; }
+
+    .container {
+      width: 100%;
+      max-width: 900px;
+    }
+
     .page-title {
-      font-size: 1.8rem; font-weight: 600;
-      color: var(--primary-color);
-      margin: 0 0 25px 0; text-align: center;
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: var(--primary);
+      margin: 0 0 20px;
+      text-align: center;
     }
+
     .section {
-      background: var(--card-background);
-      border-radius: 12px;
-      padding: 25px 20px;
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: var(--shadow);
       margin-bottom: 20px;
-      box-shadow: var(--shadow-light);
     }
-    .top-controls {
-      display: flex; flex-wrap: wrap; gap: 10px;
+
+    /* Controls */
+    .controls-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 12px;
+      margin-bottom: 15px;
     }
+
     input[type="date"], select {
-      width: 100%; padding: 12px; margin-bottom: 16px;
-      border-radius: 8px; border: 1px solid var(--input-border);
-      background-color: var(--input-background);
-      color: var(--text-color); box-sizing: border-box;
-    }
-    label { font-weight: 500; margin-bottom: 8px; display: block; }
-    .student-card {
-      background: var(--input-background);
-      padding: 15px; margin-bottom: 15px;
+      padding: 12px;
       border-radius: 10px;
-      box-shadow: inset 0 0 5px rgba(0,0,0,0.05);
+      border: 1px solid #e5e7eb;
+      background: #fff;
+      font-size: 0.95rem;
+      transition: border 0.2s, box-shadow 0.2s;
+    }
+    input[type="date"]:focus, select:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(79,70,229,0.2);
+    }
+
+    /* Toggle switch */
+    .toggle-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 42px;
+      height: 22px;
+    }
+    .switch input { display: none; }
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: #ccc;
+      border-radius: 22px;
+      transition: .3s;
+    }
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 16px;
+      width: 16px;
+      left: 3px;
+      bottom: 3px;
+      background: white;
+      border-radius: 50%;
+      transition: .3s;
+    }
+    input:checked + .slider {
+      background-color: var(--primary);
+    }
+    input:checked + .slider:before {
+      transform: translateX(20px);
+    }
+
+    /* Student cards */
+    .student-card {
+      background: var(--card-bg);
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 15px;
+      box-shadow: var(--shadow);
     }
     .student-header {
-      display: flex; justify-content: space-between; align-items: center;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
     }
-    .student-name { font-weight: bold; font-size: 1.1rem; }
-    .performance-inputs {
-      margin-top: 10px; display: flex; flex-wrap: wrap; gap: 10px;
+    .student-name {
+      font-weight: 600;
+      font-size: 1.05rem;
     }
-    .performance-inputs label { font-size: 0.9rem; flex: 1 1 150px; }
-    .performance-inputs select, .performance-inputs input[type="text"] {
-      width: 100%; padding: 6px; border-radius: 6px;
-      border: 1px solid var(--input-border); background: #fff;
+
+    /* Stars */
+    .stars {
+      display: flex;
+      gap: 4px;
+      font-size: 1.2rem;
+      cursor: pointer;
+      color: #d1d5db;
     }
-    .status-message {
-      background: #28a745; color: white;
-      text-align: center; padding: 10px;
-      border-radius: 6px; margin-top: 10px;
+    .stars .active {
+      color: #facc15;
     }
-    .btn, .back-button {
-      width: 100%; background-color: var(--primary-color);
-      color: white; padding: 12px; font-size: 16px;
-      border: none; border-radius: 10px;
-      cursor: pointer; transition: background-color 0.2s;
+
+    .notes-input {
       margin-top: 10px;
     }
-    .btn:hover, .back-button:hover { background-color: #0056b3; }
+    .notes-input input {
+      width: 100%;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #e5e7eb;
+    }
+
+    /* Floating save button */
+    .fab {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 50px;
+      padding: 14px 24px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: var(--shadow);
+      transition: background 0.3s;
+    }
+    .fab:hover { background: var(--primary-dark); }
+
+    /* Back button */
+    .back-button {
+      width: 100%;
+      background: var(--primary);
+      color: #fff;
+      padding: 12px;
+      font-size: 1rem;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      margin-top: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      transition: background 0.3s;
+    }
+    .back-button:hover { background: var(--primary-dark); }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: -60px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--success);
+      color: white;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      box-shadow: var(--shadow);
+      transition: bottom 0.4s;
+      z-index: 1000;
+    }
+    .toast.error { background: var(--error); }
+    .toast.show { bottom: 20px; }
   </style>
 </head>
 <body>
@@ -88,214 +217,194 @@
     <h1 class="page-title">Attendance & Performance</h1>
 
     <div class="section">
-      <div class="top-controls">
+      <div class="controls-grid">
         <input type="date" id="attendanceDate">
         <select id="dayFilter">
           <option value="">All Days</option>
-          <option value="Monday">Monday</option>
-          <option value="Tuesday">Tuesday</option>
-          <option value="Wednesday">Wednesday</option>
-          <option value="Thursday">Thursday</option>
-          <option value="Friday">Friday</option>
-          <option value="Saturday">Saturday</option>
-          <option value="Sunday">Sunday</option>
+          <option>Monday</option><option>Tuesday</option><option>Wednesday</option>
+          <option>Thursday</option><option>Friday</option>
+          <option>Saturday</option><option>Sunday</option>
         </select>
-        <select id="classFilter">
-          <option value="">All Classes</option>
-        </select>
-        <label><input type="checkbox" id="markAll" onchange="markAllPresent()"> Mark All Present</label>
+        <select id="classFilter"><option value="">All Classes</option></select>
       </div>
 
-      <div id="studentList" class="student-list"></div>
-      <button class="btn" onclick="saveAttendance()">Submit Attendance</button>
+      <div class="toggle-wrapper">
+        <label class="switch">
+          <input type="checkbox" id="markAll" onchange="markAllPresent()">
+          <span class="slider"></span>
+        </label>
+        <span>Mark All Present</span>
+      </div>
+
+      <div id="studentList"></div>
     </div>
 
-    <button class="back-button" onclick="window.history.back()"><i class="fa-solid fa-arrow-left"></i> Back</button>
+    <button class="back-button" onclick="window.history.back()">
+      <i class="fa fa-arrow-left"></i> Back
+    </button>
   </div>
 
+  <!-- Floating Save Button -->
+  <button class="fab" onclick="saveAttendance()">Save Attendance</button>
+
+  <!-- Toast -->
+  <div id="toast" class="toast"></div>
+
 <script>
-const SUPABASE_URL = 'https://ndishfwnkzdedfcywcle.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5kaXNoZndua3pkZWRmY3l3Y2xlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYwOTk0MjcsImV4cCI6MjA3MTY3NTQyN30.CXQSfhR0MVLF40v2Tp-BcENBpHpPshG9Ys3zLYiBQaM';
+const SUPABASE_URL = "https://ndishfwnkzdedfcywcle.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5kaXNoZndua3pkZWRmY3l3Y2xlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYwOTk0MjcsImV4cCI6MjA3MTY3NTQyN30.CXQSfhR0MVLF40v2Tp-BcENBpHpPshG9Ys3zLYiBQaM";
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-document.getElementById('attendanceDate').valueAsDate = new Date();
+document.getElementById("attendanceDate").valueAsDate = new Date();
 
-function showMessage(msg, type = "success") {
-  const old = document.querySelector('.status-message');
-  if (old) old.remove();
-  const el = document.createElement('div');
-  el.className = 'status-message';
-  el.style.background = type === "error" ? "#dc3545" : "#28a745";
-  el.textContent = msg;
-  document.querySelector('.section').appendChild(el);
-  setTimeout(() => el.remove(), 3000);
+/* Toast */
+function showMessage(msg, type="success") {
+  const toast = document.getElementById("toast");
+  toast.textContent = msg;
+  toast.className = "toast " + (type === "error" ? "error" : "");
+  toast.classList.add("show");
+  setTimeout(() => toast.classList.remove("show"), 3000);
 }
 
+/* Auto select current day */
 function autoSelectCurrentDay() {
-  const dayFilter = document.getElementById('dayFilter');
+  const dayFilter = document.getElementById("dayFilter");
   if (!dayFilter.value) {
-    const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+    const days = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
     dayFilter.value = days[new Date().getDay()];
   }
 }
-function resetMarkAll() { document.getElementById('markAll').checked = false; }
-document.getElementById('dayFilter').addEventListener('change', () => { resetMarkAll(); loadStudents(); });
-document.getElementById('classFilter').addEventListener('change', () => { resetMarkAll(); loadStudents(); });
-document.getElementById('attendanceDate').addEventListener('change', () => { resetMarkAll(); loadStudents(); });
+function resetMarkAll(){ document.getElementById("markAll").checked = false; }
+document.getElementById("dayFilter").addEventListener("change", ()=>{resetMarkAll(); loadStudents();});
+document.getElementById("classFilter").addEventListener("change", ()=>{resetMarkAll(); loadStudents();});
+document.getElementById("attendanceDate").addEventListener("change", ()=>{resetMarkAll(); loadStudents();});
 
-// Load class options
+/* Load class options */
 async function loadClassOptions() {
-  try {
-    const { data: classes, error } = await supabase.from('classes').select('id, name').order('name');
-    if (error) throw error;
-    const classFilter = document.getElementById('classFilter');
-    classFilter.innerHTML = '<option value="">All Classes</option>';
-    classes.forEach(cls => {
-      const option = document.createElement('option');
-      option.value = cls.id;
-      option.textContent = cls.name;
-      classFilter.appendChild(option);
-    });
-  } catch (err) { console.error("Error loading class options:", err.message); }
+  const { data: classes, error } = await supabase.from("classes").select("id,name").order("name");
+  if (error) return console.error(error.message);
+  const sel = document.getElementById("classFilter");
+  sel.innerHTML = "<option value=''>All Classes</option>";
+  classes.forEach(c=>{
+    const opt=document.createElement("option");
+    opt.value=c.id; opt.textContent=c.name;
+    sel.appendChild(opt);
+  });
 }
 
-// Load & filter students
+/* Load & filter students */
 async function loadStudents() {
   try {
-    const selectedDay = document.getElementById('dayFilter').value;
-    const selectedClassId = document.getElementById('classFilter').value;
-
-    let query = supabase.from('students').select(`id, name, day, class_id, classes ( name )`);
-    if (selectedClassId) query = query.eq('class_id', selectedClassId);
-    let { data: students, error } = await query;
-    if (error) throw error;
-    if (selectedDay) {
-      students = students.filter(s => Array.isArray(s.day) && s.day.includes(selectedDay));
-    }
-    const { data: metrics } = await supabase.from('performance_metrics').select('id, name');
-    await displayStudents(students, metrics || []);
-  } catch (error) {
-    showMessage('Error loading students: ' + error.message, "error");
-  }
+    const day=document.getElementById("dayFilter").value;
+    const classId=document.getElementById("classFilter").value;
+    let query=supabase.from("students").select(`id,name,day,class_id,classes(name)`);
+    if(classId) query=query.eq("class_id",classId);
+    let { data: students,error }=await query;
+    if(error) throw error;
+    if(day) students=students.filter(s=>Array.isArray(s.day)&&s.day.includes(day));
+    const { data: metrics }=await supabase.from("performance_metrics").select("id,name");
+    await displayStudents(students, metrics||[]);
+  } catch(e){ showMessage("Error loading students: "+e.message,"error"); }
 }
 
-// Show students + metrics
+/* Display students */
 async function displayStudents(students, metrics) {
-  const list = document.getElementById('studentList');
-  list.innerHTML = '';
-  if (students.length === 0) {
-    list.innerHTML = '<p>No students found for this day.</p>';
-    return;
-  }
-  const date = document.getElementById('attendanceDate').value;
-  const { data: todaysRecords } = await supabase.from('attendance').select('student_id, id').eq('date', date);
-  const attendedMap = {};
-  if (todaysRecords) todaysRecords.forEach(r => attendedMap[r.student_id] = r.id);
+  const list=document.getElementById("studentList");
+  list.innerHTML="";
+  if(students.length===0){ list.innerHTML="<p>No students found.</p>"; return; }
+  const date=document.getElementById("attendanceDate").value;
+  const { data: todays }=await supabase.from("attendance").select("student_id,id").eq("date",date);
+  const attended={}; if(todays) todays.forEach(r=>attended[r.student_id]=r.id);
 
-  students.forEach(student => {
-    const card = document.createElement('div');
-    card.className = 'student-card';
-    card.innerHTML = `
+  students.forEach(st=>{
+    const card=document.createElement("div");
+    card.className="student-card";
+    card.innerHTML=`
       <div class="student-header">
-        <div class="student-name">${student.name}</div>
-        <input type="checkbox" class="mark-present" data-id="${student.id}" ${attendedMap[student.id] ? 'checked' : ''}>
+        <div class="student-name">${st.name}</div>
+        <input type="checkbox" class="mark-present" data-id="${st.id}" ${attended[st.id]?"checked":""}>
       </div>
     `;
-    // performance fields
-    const perfDiv = document.createElement('div');
-    perfDiv.className = 'performance-inputs';
-    metrics.forEach(metric => {
-      perfDiv.innerHTML += `
-        <label>${metric.name}:
-          <select class="performance-score" data-metric-id="${metric.id}" data-student-id="${student.id}">
-            <option value="">--</option>
-            <option value="1">⭐</option>
-            <option value="2">⭐⭐</option>
-            <option value="3">⭐⭐⭐</option>
-            <option value="4">⭐⭐⭐⭐</option>
-            <option value="5">⭐⭐⭐⭐⭐</option>
-          </select>
-        </label>
+
+    const perfDiv=document.createElement("div");
+    metrics.forEach(m=>{
+      const row=document.createElement("div");
+      row.innerHTML=`
+        <label>${m.name}:</label>
+        <div class="stars" data-metric-id="${m.id}" data-student-id="${st.id}">
+          ${[1,2,3,4,5].map(i=>`<i class="fa fa-star" data-value="${i}"></i>`).join("")}
+        </div>
       `;
+      perfDiv.appendChild(row);
     });
-    perfDiv.innerHTML += `
-      <label>Notes:
-        <input type="text" class="performance-notes" data-student-id="${student.id}">
-      </label>
-    `;
+    perfDiv.innerHTML+=`
+      <div class="notes-input">
+        <input type="text" class="performance-notes" data-student-id="${st.id}" placeholder="Notes...">
+      </div>`;
     card.appendChild(perfDiv);
     list.appendChild(card);
+  });
+
+  /* Star click logic */
+  document.querySelectorAll(".stars").forEach(stars=>{
+    stars.addEventListener("click",e=>{
+      if(e.target.dataset.value){
+        const val=parseInt(e.target.dataset.value);
+        stars.querySelectorAll("i").forEach(star=>{
+          star.classList.toggle("active", parseInt(star.dataset.value)<=val);
+        });
+        stars.dataset.score=val;
+      }
+    });
   });
 }
 
 function markAllPresent() {
-  const checked = document.getElementById('markAll').checked;
-  document.querySelectorAll('.mark-present').forEach(cb => cb.checked = checked);
+  const checked=document.getElementById("markAll").checked;
+  document.querySelectorAll(".mark-present").forEach(cb=>cb.checked=checked);
 }
 
-// Save attendance + performance
-async function saveAttendance() {
+/* Save attendance + performance */
+async function saveAttendance(){
   try {
-    const date = document.getElementById('attendanceDate').value;
-    const { data: { session } } = await supabase.auth.getSession();
-    const user = session?.user;
-    if (!user) return showMessage('Your session has expired. Please log in again.', "error");
-    if (!date) return showMessage('Please select a date', "error");
+    const date=document.getElementById("attendanceDate").value;
+    const { data:{session} }=await supabase.auth.getSession();
+    const user=session?.user;
+    if(!user) return showMessage("Session expired","error");
+    if(!date) return showMessage("Select a date","error");
 
-    const { data: companyData, error: companyError } = await supabase
-      .from('users').select('company_id').eq('id', user.id).single();
-    if (companyError || !companyData) throw new Error('Could not fetch company info for user.');
+    const { data: comp, error: cErr }=await supabase.from("users").select("company_id").eq("id",user.id).single();
+    if(cErr||!comp) throw new Error("No company info");
+    const company_id=comp.company_id;
 
-    const company_id = companyData.company_id;
-    const checkboxes = document.querySelectorAll('.mark-present');
-    const attendanceRecords = [];
-    checkboxes.forEach(cb => {
-      if (cb.checked) {
-        attendanceRecords.push({ date, student_id: cb.dataset.id, status: 'Present', user_id: user.id, company_id });
+    const records=[];
+    document.querySelectorAll(".mark-present").forEach(cb=>{
+      if(cb.checked) records.push({date,student_id:cb.dataset.id,status:"Present",user_id:user.id,company_id});
+    });
+    const { data: saved,error }=await supabase.from("attendance").upsert(records,{onConflict:"date,student_id,company_id"}).select();
+    if(error) throw error;
+    const map={}; saved.forEach(a=>map[a.student_id]=a.id);
+
+    const perfData=[];
+    document.querySelectorAll(".stars").forEach(stars=>{
+      const score=stars.dataset.score;
+      if(score){
+        const sid=stars.dataset.studentId;
+        const mid=stars.dataset.metricId;
+        const aid=map[sid];
+        const notes=document.querySelector(`.performance-notes[data-student-id="${sid}"]`)?.value||null;
+        perfData.push({attendance_id:aid,metric_id:mid,score,notes});
       }
     });
-
-    const { data: savedAttendance, error } = await supabase.from('attendance').upsert(attendanceRecords, {
-      onConflict: 'date, student_id, company_id'
-    }).select();
-    if (error) throw error;
-
-    // map student -> attendance_id
-    const attendanceMap = {};
-    savedAttendance.forEach(a => attendanceMap[a.student_id] = a.id);
-
-    // collect performance data
-    const performanceData = [];
-    document.querySelectorAll('.performance-score').forEach(select => {
-      if (select.value) {
-        const studentId = select.dataset.studentId;
-        const metricId = select.dataset.metricId;
-        const score = select.value;
-        const attendanceId = attendanceMap[studentId];
-        const notesInput = document.querySelector(`.performance-notes[data-student-id="${studentId}"]`);
-        const notes = notesInput ? notesInput.value : null;
-        performanceData.push({ attendance_id: attendanceId, metric_id: metricId, score, notes });
-      }
-    });
-
-    if (performanceData.length > 0) {
-      const { error: perfError } = await supabase.from('performance_records').upsert(performanceData, {
-        onConflict: 'attendance_id,metric_id'
-      });
-      if (perfError) throw perfError;
+    if(perfData.length){
+      const { error: pErr }=await supabase.from("performance_records").upsert(perfData,{onConflict:"attendance_id,metric_id"});
+      if(pErr) throw pErr;
     }
-
-    showMessage('Attendance & Performance saved successfully!');
-  } catch (e) {
-    showMessage('Error saving: ' + e.message, "error");
-  }
+    showMessage("Attendance & Performance saved!");
+  } catch(e){ showMessage("Error saving: "+e.message,"error"); }
 }
 
-window.onload = async () => {
-  autoSelectCurrentDay();
-  await loadClassOptions();
-  await loadStudents();
-};
+window.onload=async()=>{ autoSelectCurrentDay(); await loadClassOptions(); await loadStudents(); };
 </script>
 </body>
 </html>
