@@ -328,7 +328,8 @@ async function generateReport() {
       const stars = "★".repeat(Math.round(avg));
       perfSummaryHTML += `<tr><td>${metric}</td><td><span class="stars">${stars}</span></td></tr>`;
     }
-    perfSummaryHTML += "</tbody></table>`;
+    // This is the correct syntax
+perfSummaryHTML += `</tbody></table>`;
   }
 
   // Attendance rendering
