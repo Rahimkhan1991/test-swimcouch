@@ -1,229 +1,268 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-    <meta charset="UTF-8">
-    <title>Send SMS</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            padding: 15px;
-            margin: 0;
-            background: #f0f2f5;
-        }
-        h2 {
-            color: #007bff;
-            font-size: 22px;
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        .card {
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-            max-width: 600px;
-            margin: 0 auto 20px auto;
-        }
-        label {
-            font-weight: bold;
-            display: block;
-            margin-top: 10px;
-        }
-        select,
-        textarea,
-        input,
-        button {
-            width: 100%;
-            padding: 12px;
-            margin-top: 6px;
-            border-radius: 8px;
-            border: 1px solid #ccc;
-            font-size: 16px;
-            box-sizing: border-box;
-        }
-        textarea {
-            resize: vertical;
-        }
-        button {
-            background-color: #28a745;
-            color: white;
-            border: none;
-            font-weight: bold;
-            margin-top: 15px;
-        }
-        button:hover {
-            background-color: #218838;
-        }
-        .template-buttons {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-top: 6px;
-        }
-        .template-buttons button {
-            flex: 1;
-            background-color: #007bff;
-            margin: 0;
-        }
-        .template-buttons button:hover {
-            background-color: #0056b3;
-        }
-        .footer-buttons {
-            text-align: center;
-            margin-top: 20px;
-        }
-        .footer-buttons button {
-            width: 100%; /* Corrected width for alignment */
-            background-color: #007bff;
-            padding: 10px 16px;
-            margin: 5px;
-            box-sizing: border-box; /* Ensures padding is included in the width */
-        }
-        .footer-buttons button:last-child {
-            background-color: #007bff;
-        }
-        @media (max-width: 250px) {
-            h2 {
-                font-size: 20px;
-            }
-            .card {
-                padding: 15px;
-            }
-            select,
-            textarea,
-            input,
-            button {
-                font-size: 15px;
-            }
-            .template-buttons button {
-                font-size: 14px;
-                padding: 10px;
-            }
-            .footer-buttons button {
-                width: 25%;
-                margin: 8px 0;
-            }
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>📩 Send SMS / WhatsApp</title>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #2563eb;
+      --secondary: #34c759;
+      --bg: #f0f4f8;
+      --card: #ffffffdd;
+      --shadow: 0 6px 16px rgba(0,0,0,0.08);
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Inter', sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: var(--bg);
+      color: #1f2937;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    h2 {
+      text-align: center;
+      color: var(--primary);
+      margin-bottom: 20px;
+      font-weight: 700;
+    }
+    .card {
+      max-width: 600px;
+      width: 100%;
+      background: var(--card);
+      padding: 25px;
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+    }
+    label {
+      font-weight: 600;
+      margin-top: 15px;
+      display: block;
+      color: #374151;
+      font-size: 0.95rem;
+    }
+    select, textarea, input {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid #d1d5db;
+      font-size: 1rem;
+      margin-top: 6px;
+      background: #fff;
+      transition: border 0.2s ease, box-shadow 0.2s ease;
+    }
+    select:focus, textarea:focus, input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(37,99,235,0.15);
+      outline: none;
+    }
+    textarea { resize: vertical; }
+    .template-buttons {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+    .template-buttons button {
+      flex: 1;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      padding: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: transform 0.2s;
+    }
+    .template-buttons button:hover { transform: translateY(-2px); }
+    .send-btn {
+      width: 100%;
+      margin-top: 20px;
+      background: var(--secondary);
+      border: none;
+      padding: 14px;
+      border-radius: 12px;
+      font-weight: 600;
+      color: #fff;
+      font-size: 1rem;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    .send-btn:hover { transform: translateY(-2px); }
+    .footer-buttons {
+      max-width: 600px;
+      width: 100%;
+      margin: 20px auto 0;
+      text-align: center;
+    }
+    .back-button {
+      width: 100%;
+      background: var(--primary);
+      padding: 12px;
+      border-radius: 12px;
+      border: none;
+      color: #fff;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .back-button:hover { background: #1e40af; }
+    @media (max-width: 480px) {
+      .template-buttons { flex-direction: column; }
+      .template-buttons button { width: 100%; }
+    }
+  </style>
 </head>
 <body>
-    <h2>Send SMS / WhatsApp Message</h2>
-    <div class="card">
-        <label for="studentSelect">Select Student:</label>
-        <select id="studentSelect" onchange="fillPhone()">
-            <option value="">-- Select Student --</option>
-        </select>
-        <label for="phone">Phone Number:</label>
-        <input type="tel" id="phone" placeholder="+62...">
-        <label>Use Template:</label>
-        <div class="template-buttons">
-            <button onclick="setTemplate('fee')">
-                <span class="material-icons" style="vertical-align: middle; margin-right: 6px;">
-                    payments
-                </span> Fee Reminder
-            </button>
-            <button onclick="setTemplate('absent')">
-                <span class="material-icons" style="vertical-align: middle; margin-right: 6px;">
-                    block
-                </span> Absent Alert
-            </button>
-            <button onclick="setTemplate('custom')">
-                <span class="material-icons" style="vertical-align: middle; margin-right: 6px;">
-                    tune
-                </span>Custom
-            </button>
-        </div>
-        <label for="message">Message:</label>
-        <textarea id="message" rows="5" placeholder="Your message..."></textarea>
-        <button onclick="sendWhatsApp()">
-                <span class="material-icons" style="vertical-align: middle; margin-right: 6px;">
-                    send
-                </span>️ Send WhatsApp
-            </button>
+  <h2>📩 Send SMS / WhatsApp Message</h2>
+  <div class="card">
+    <label for="classSelect">Select Class:</label>
+    <select id="classSelect" onchange="loadStudentsByClass()">
+      <option value="">-- Select Class --</option>
+    </select>
+
+    <label for="studentSelect">Select Student:</label>
+    <select id="studentSelect" onchange="fillPhone()">
+      <option value="">-- Select Student --</option>
+    </select>
+
+    <label for="phone">Phone Number:</label>
+    <input type="tel" id="phone" placeholder="+62...">
+
+    <label>Use Template:</label>
+    <div class="template-buttons">
+      <button onclick="setTemplate('fee')">
+        <span class="material-icons">payments</span> Fee Reminder
+      </button>
+      <button onclick="setTemplate('absent')">
+        <span class="material-icons">block</span> Absent Alert
+      </button>
+      <button onclick="setTemplate('custom')">
+        <span class="material-icons">tune</span> Custom
+      </button>
     </div>
-   <div class="footer-buttons">
+
+    <label for="message">Message:</label>
+    <textarea id="message" rows="5" placeholder="Your message..."></textarea>
+
+    <button class="send-btn" onclick="sendWhatsApp()">
+      <span class="material-icons">send</span> Send WhatsApp
+    </button>
+  </div>
+
+  <div class="footer-buttons">
     <button onclick="history.back()" class="back-button">⬅️ Back</button>
-</div>
+  </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script>
-        const SUPABASE_URL = 'https://ndishfwnkzdedfcywcle.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5kaXNoZndua3pkZWRmY3l3Y2xlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYwOTk0MjcsImV4cCI6MjA3MTY3NTQyN30.CXQSfhR0MVLF40v2Tp-BcENBpHpPshG9Ys3zLYiBQaM';
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const SUPABASE_URL = 'https://ndishfwnkzdedfcywcle.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5kaXNoZndua3pkZWRmY3l3Y2xlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYwOTk0MjcsImV4cCI6MjA3MTY3NTQyN30.CXQSfhR0MVLF40v2Tp-BcENBpHpPshG9Ys3zLYiBQaM';
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        async function loadStudents() {
-            const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-            if (sessionError || !session) {
-                console.error('Session error:', sessionError?.message);
-                window.location.href = 'index.html';
-                return;
-            }
-            const user = session.user;
+    let company_id = null;
 
-            const { data: companyData, error: companyError } = await supabase
-                .from('users')
-                .select('company_id')
-                .eq('id', user.id)
-                .single();
+    async function init() {
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !session) {
+        window.location.href = 'index.html';
+        return;
+      }
+      const user = session.user;
 
-            if (companyError || !companyData) {
-                console.error('Error fetching company info:', companyError?.message);
-                return;
-            }
-            const company_id = companyData.company_id;
+      const { data: companyData, error: companyError } = await supabase
+        .from('users')
+        .select('company_id')
+        .eq('id', user.id)
+        .single();
 
-            const { data: students, error: studentsError } = await supabase
-                .from('students')
-                .select('name, phone')
-                .eq('company_id', company_id);
+      if (companyError || !companyData) return;
+      company_id = companyData.company_id;
 
-            if (studentsError) {
-                console.error('Error fetching students:', studentsError.message);
-                return;
-            }
+      await loadClasses();
+    }
 
-            const select = document.getElementById("studentSelect");
-            students.forEach(s => {
-                const opt = document.createElement("option");
-                opt.value = s.phone;
-                opt.textContent = s.name;
-                select.appendChild(opt);
-            });
-        }
+    async function loadClasses() {
+      const { data: classes, error } = await supabase
+        .from('classes')
+        .select('id, name')
+        .eq('company_id', company_id);
 
-        function fillPhone() {
-            const phone = document.getElementById("studentSelect").value;
-            document.getElementById("phone").value = phone;
-        }
+      if (error) return;
 
-        function setTemplate(type) {
-            const selectedOption = document.getElementById("studentSelect").selectedOptions[0];
-            const studentName = selectedOption && selectedOption.value !== "" ? selectedOption.textContent : "Student";
-            let msg = "";
-            if (type === "fee") {
-                msg = `Hello ${studentName},\n\nThis is a reminder to pay your outstanding swimming class fees.\nThank you!`;
-            } else if (type === "absent") {
-                msg = `Hello ${studentName},\n\nYou have been marked as absent today. Please inform us if there is a valid reason.\n- Coach Beqy`;
-            } else {
-                msg = "";
-            }
-            document.getElementById("message").value = msg;
-        }
+      const select = document.getElementById("classSelect");
+      classes.forEach(c => {
+        const opt = document.createElement("option");
+        opt.value = c.id;
+        opt.textContent = c.name;
+        select.appendChild(opt);
+      });
+    }
 
-        function sendWhatsApp() {
-            const phone = document.getElementById("phone").value.replace(/\D/g, '');
-            const message = encodeURIComponent(document.getElementById("message").value);
-            if (!phone || !message) {
-                alert("Phone number and message are required.");
-                return;
-            }
-            const link = `https://wa.me/${phone}?text=${message}`;
-            window.open(link, "_blank");
-        }
+    async function loadStudentsByClass() {
+      const classId = document.getElementById("classSelect").value;
+      const select = document.getElementById("studentSelect");
+      select.innerHTML = '<option value="">-- Select Student --</option>';
 
-        window.onload = loadStudents;
-    </script>
+      if (!classId) return;
+
+      const { data: students, error } = await supabase
+        .from('students')
+        .select('name, phone')
+        .eq('company_id', company_id)
+        .eq('class_id', classId);
+
+      if (error) return;
+
+      students.forEach(s => {
+        const opt = document.createElement("option");
+        opt.value = s.phone;
+        opt.textContent = s.name;
+        select.appendChild(opt);
+      });
+    }
+
+    function fillPhone() {
+      document.getElementById("phone").value = document.getElementById("studentSelect").value;
+    }
+
+    function setTemplate(type) {
+      const selectedOption = document.getElementById("studentSelect").selectedOptions[0];
+      const studentName = selectedOption && selectedOption.value !== "" ? selectedOption.textContent : "Student";
+      let msg = "";
+      if (type === "fee") {
+        msg = `Hello ${studentName},\n\nThis is a reminder to pay your outstanding swimming class fees.\nThank you!`;
+      } else if (type === "absent") {
+        msg = `Hello ${studentName},\n\nYou have been marked as absent today. Please inform us if there is a valid reason.\n- Coach Beqy`;
+      }
+      document.getElementById("message").value = msg;
+    }
+
+    function sendWhatsApp() {
+      const phone = document.getElementById("phone").value.replace(/\D/g, '');
+      const message = encodeURIComponent(document.getElementById("message").value);
+      if (!phone || !message) {
+        alert("Phone number and message are required.");
+        return;
+      }
+      window.open(`https://wa.me/${phone}?text=${message}`, "_blank");
+    }
+
+    window.onload = init;
+  </script>
 </body>
 </html>
