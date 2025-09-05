@@ -105,7 +105,25 @@
       font-size: 0.9rem;
       color: var(--muted);
     }
-
+.back-btn {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 12px 24px;
+  background: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  transition: background 0.3s;
+  z-index: 100;
+}
+.back-btn:hover {
+  background: #0056b3;
+}
     /* Floating add button */
     .fab {
       position: fixed;
@@ -266,7 +284,9 @@
       </div>
     </div>
   </div>
-
+<button class="back-btn" id="backBtn">
+  <i class="fa fa-arrow-left"></i> Back
+</button>
   <!-- Floating Add Button -->
   <button class="fab" id="addStudentBtn"><i class="fa fa-plus"></i></button>
 
@@ -439,7 +459,12 @@
       studentDetailsModal.style.display = "none";
       renderStudents(searchInput.value, selectedClassId);
     }
+// ... (existing event listeners)
 
+// Back button event listener
+document.getElementById("backBtn").onclick = () => window.history.back();
+
+// ... (rest of your script)
     // Event bindings
     document.getElementById("closeDetailsBtn").onclick = () => studentDetailsModal.style.display = "none";
     document.getElementById("editBtn").onclick = openEditForm;
