@@ -292,7 +292,8 @@ async function generateReport() {
   // Fetch student info
   const { data: student } = await supabase.from("students")
     .select("id, name, phone, classes(name)").eq("id", studentId).single();
-  currentReport = { student };
+   currentReport = { student, attendance };
+
 
   // Fetch attendance
   let query = supabase.from("attendance").select("id,date,status").eq("student_id", studentId);
