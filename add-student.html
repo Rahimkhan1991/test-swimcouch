@@ -8,7 +8,6 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
   <style>
-    /* ===== VARIABLES ===== */
     :root {
       --bg-gradient: linear-gradient(135deg, #6d83f2, #8e44ad);
       --card-bg: rgba(255, 255, 255, 0.12);
@@ -20,18 +19,30 @@
       --error: #e74c3c;
     }
 
-    /* ===== RESET ===== */
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: "Inter", sans-serif;
       background: var(--bg-gradient);
       color: var(--text-color);
       min-height: 100vh;
-      display: flex; align-items: center; justify-content: center;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: flex-start;
       padding: 20px;
     }
 
-    /* ===== CARD ===== */
+    .header-box {
+      display: flex; align-items: center; gap: 15px;
+      margin-bottom: 20px;
+    }
+    .header-box img {
+      height: 48px; width: 48px;
+      border-radius: 50%; object-fit: cover;
+      display: none;
+    }
+    .header-box h1 {
+      font-size: 1.4rem; font-weight: 600;
+    }
+
     .form-card {
       background: var(--card-bg);
       backdrop-filter: blur(20px);
@@ -49,7 +60,6 @@
       font-weight: 600;
     }
 
-    /* ===== INPUTS ===== */
     .form-group {
       position: relative;
       margin-bottom: 20px;
@@ -81,7 +91,6 @@
       color: var(--accent);
     }
 
-    /* ===== CHIPS (Days) ===== */
     .chips-container {
       display: flex;
       flex-wrap: wrap;
@@ -96,11 +105,8 @@
       font-size: 14px;
       transition: background 0.2s;
     }
-    .chip.selected {
-      background: var(--accent);
-    }
+    .chip.selected { background: var(--accent); }
 
-    /* ===== DROPDOWN (Classes) ===== */
     .dropdown {
       position: relative;
       margin-bottom: 20px;
@@ -134,7 +140,6 @@
     }
     .dropdown.active .dropdown-list { display: block; }
 
-    /* ===== BUTTONS ===== */
     button {
       width: 100%;
       padding: 14px;
@@ -153,7 +158,6 @@
     }
     button:hover { background: var(--accent-hover); }
 
-    /* ===== TOASTS ===== */
     #toastContainer {
       position: fixed;
       top: 20px; right: 20px;
@@ -171,7 +175,6 @@
     .toast.success { background: var(--success); }
     .toast.error { background: var(--error); }
 
-    /* ===== ANIMATIONS ===== */
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px);} to { opacity: 1; transform: translateY(0);} }
     @keyframes slideIn { from { transform: translateX(20px); opacity: 0;} to { transform: translateX(0); opacity: 1;} }
   </style>
@@ -179,28 +182,30 @@
 <body>
   <div id="toastContainer"></div>
 
+  <!-- Dynamic Company Header -->
+  <div class="header-box">
+    <img id="headerLogo" alt="Logo">
+    <h1 id="companyNameDisplay">Add Student</h1>
+  </div>
+
   <div class="form-card">
     <h2><i class="fa-solid fa-user-plus"></i> Add Student</h2>
 
-    <!-- NAME -->
     <div class="form-group">
       <input type="text" id="name" required placeholder=" " />
       <label for="name">Student Name *</label>
     </div>
 
-    <!-- PHONE -->
     <div class="form-group">
       <input type="tel" id="phone" required placeholder=" " />
       <label for="phone">Phone *</label>
     </div>
 
-    <!-- PARENT EMAIL -->
     <div class="form-group">
       <input type="email" id="parentEmail" placeholder=" " />
       <label for="parentEmail">Parent Email</label>
     </div>
 
-    <!-- DAYS -->
     <label style="font-size:14px; margin-bottom:6px; display:block;">Day(s) Assigned</label>
     <div class="chips-container" id="daysChips">
       <div class="chip" data-day="Monday">Monday</div>
@@ -212,7 +217,6 @@
       <div class="chip" data-day="Sunday">Sunday</div>
     </div>
 
-    <!-- FEES -->
     <div class="form-group">
       <input type="number" id="totalFee" required placeholder=" " />
       <label for="totalFee">Total Fee *</label>
@@ -226,20 +230,23 @@
       <label for="balanceFee">Balance Fee</label>
     </div>
 
-    <!-- CLASS -->
     <div class="dropdown" id="classDropdown">
       <div class="dropdown-btn">Select Class</div>
-      <div class="dropdown-list" id="classList">
-        <!-- classes dynamically populated -->
-      </div>
+      <div class="dropdown-list" id="classList"></div>
     </div>
 
-    <!-- BUTTONS -->
     <button id="addBtn"><i class="fa-solid fa-check"></i> Add Student</button>
     <button id="backBtn" style="margin-top:12px; background:#444;"><i class="fa-solid fa-arrow-left"></i> Back</button>
   </div>
 
   <script>
+    /* === Supabase Config === */
+    const SUPABASE_URL = 'https://ndishfwnkzdedfcywcle.supabase.co';
+    const SUPABASE_ANON_KEY ='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5kaXNoZndua3pkZWRmY3l3Y2xlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYwOTk0MjcsImV4cCI6MjA3MTY3NTQyN30.CXQSfhR0MVLF40v2Tp-BcENBpHpPshG9Ys3zLYiBQaM';
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    let currentCompanyId = null;
+    let selectedClass = null;
+
     /* === Toast === */
     function showToast(msg, type="success") {
       const toast = document.createElement("div");
@@ -249,7 +256,40 @@
       setTimeout(() => toast.remove(), 3000);
     }
 
-    /* === Balance Calculation === */
+    /* === Session & Header === */
+    async function getSessionUser() {
+      const { data: { session }, error } = await supabase.auth.getSession();
+      if (error || !session) {
+        window.location.href = 'index.html';
+        return null;
+      }
+      return session.user;
+    }
+
+    async function loadDynamicHeader(user) {
+      const { data, error } = await supabase
+        .from('users')
+        .select('company_id, companies(display_name, logo_url)')
+        .eq('id', user.id)
+        .single();
+
+      if (error || !data || !data.companies) {
+        console.error("Error fetching company data:", error?.message);
+        return;
+      }
+
+      currentCompanyId = data.company_id;
+      document.getElementById("companyNameDisplay").textContent =
+        data.companies.display_name || "Add Student";
+
+      if (data.companies.logo_url) {
+        const logo = document.getElementById("headerLogo");
+        logo.src = data.companies.logo_url;
+        logo.style.display = "inline-block";
+      }
+    }
+
+    /* === Balance === */
     const totalFee = document.getElementById("totalFee");
     const initialPayment = document.getElementById("initialPayment");
     const balanceFee = document.getElementById("balanceFee");
@@ -261,48 +301,155 @@
     totalFee.addEventListener("input", updateBalance);
     initialPayment.addEventListener("input", updateBalance);
 
-    /* === Day Chips === */
-    const daysChips = document.getElementById("daysChips");
-    daysChips.addEventListener("click", (e) => {
+    /* === Days Chips === */
+    function getSelectedDays() {
+      return [...document.querySelectorAll(".chip.selected")].map(c => c.dataset.day);
+    }
+    document.getElementById("daysChips").addEventListener("click", e => {
       if (e.target.classList.contains("chip")) {
         e.target.classList.toggle("selected");
       }
     });
 
-    /* === Dropdown === */
+    /* === Class Dropdown === */
     const classDropdown = document.getElementById("classDropdown");
     const classBtn = classDropdown.querySelector(".dropdown-btn");
     const classList = document.getElementById("classList");
-    let selectedClass = null;
 
     classBtn.addEventListener("click", () => {
       classDropdown.classList.toggle("active");
     });
 
-    // Dummy classes (replace with Supabase fetch)
-    ["Math", "Science", "English"].forEach(c => {
-      const div = document.createElement("div");
-      div.textContent = c;
-      div.addEventListener("click", () => {
-        selectedClass = c;
-        classBtn.textContent = "Class: " + c;
-        classDropdown.classList.remove("active");
+    async function fetchClasses() {
+      if (!currentCompanyId) return;
+      const { data, error } = await supabase
+        .from('classes')
+        .select('id, name')
+        .eq('company_id', currentCompanyId)
+        .order('name');
+
+      if (error) {
+        console.error("Error fetching classes:", error.message);
+        return;
+      }
+
+      classList.innerHTML = "";
+      data.forEach(cls => {
+        const div = document.createElement("div");
+        div.textContent = cls.name;
+        div.addEventListener("click", () => {
+          selectedClass = cls;
+          classBtn.textContent = "Class: " + cls.name;
+          classDropdown.classList.remove("active");
+        });
+        classList.appendChild(div);
       });
-      classList.appendChild(div);
-    });
+    }
+
+    /* === Invite Parent via Edge Function === */
+    async function createParentAccount(email, companyId) {
+      if (!email || !companyId) return;
+      const { error } = await supabase.functions.invoke('invite-parent', {
+        body: { email, companyId }
+      });
+      if (error) console.error("Error inviting parent:", error.message);
+    }
 
     /* === Add Student === */
-    document.getElementById("addBtn").addEventListener("click", () => {
+    async function addStudent(user) {
       const name = document.getElementById("name").value.trim();
       const phone = document.getElementById("phone").value.trim();
-      if (!name || !phone || !selectedClass) {
+      const parentEmail = document.getElementById("parentEmail").value.trim();
+      const days = getSelectedDays();
+      const total = parseFloat(totalFee.value) || 0;
+      const initial = parseFloat(initialPayment.value) || 0;
+      const balance = total - initial;
+
+      if (!name || !phone || days.length === 0 || !selectedClass) {
         showToast("Please fill all required fields.", "error");
         return;
       }
-      showToast("Student added successfully!", "success");
-    });
+      if (initial > total) {
+        showToast("Initial payment cannot exceed total fee.", "error");
+        return;
+      }
 
-    document.getElementById("backBtn").addEventListener("click", () => history.back());
+      // check duplicates
+      const { data: existing, error: fetchError } = await supabase
+        .from('students')
+        .select('name, phone')
+        .eq('company_id', currentCompanyId);
+      if (fetchError) {
+        showToast("Error checking duplicates", "error");
+        return;
+      }
+      if (existing.some(s => s.name.toLowerCase() === name.toLowerCase())) {
+        showToast("Student name already exists.", "error");
+        return;
+      }
+      if (existing.some(s => s.phone === phone)) {
+        showToast("Phone already exists.", "error");
+        return;
+      }
+
+      // insert student
+      const { data: studentData, error: studentError } = await supabase
+        .from('students')
+        .insert([{
+          name, phone,
+          parent_email: parentEmail || null,
+          day: days,
+          totalFee: total,
+          initialPayment: initial,
+          balanceFee: balance,
+          class_id: selectedClass.id,
+          user_id: user.id,
+          company_id: currentCompanyId
+        }])
+        .select();
+
+      if (studentError) {
+        showToast("Error adding student", "error");
+        return;
+      }
+
+      // insert fee
+      const { error: feeError } = await supabase
+        .from('fees')
+        .insert([{
+          student_id: studentData[0].id,
+          amount: initial,
+          date: new Date().toISOString().split("T")[0],
+          user_id: user.id,
+          company_id: currentCompanyId
+        }]);
+      if (feeError) {
+        showToast("Error saving fee record", "error");
+        return;
+      }
+
+      if (parentEmail) {
+        await createParentAccount(parentEmail, currentCompanyId);
+      }
+
+      showToast("Student added successfully!", "success");
+      setTimeout(() => window.location.href = "view-students.html", 1500);
+    }
+
+    /* === Init === */
+    window.onload = async () => {
+      const user = await getSessionUser();
+      if (!user) return;
+      await loadDynamicHeader(user);
+      await fetchClasses();
+
+      document.getElementById("addBtn").addEventListener("click", () => addStudent(user));
+      document.getElementById("backBtn").addEventListener("click", () => history.back());
+
+      document.addEventListener("click", e => {
+        if (!classDropdown.contains(e.target)) classDropdown.classList.remove("active");
+      });
+    };
   </script>
 </body>
 </html>
