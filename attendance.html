@@ -150,7 +150,7 @@
       margin-top: 10px;
     }
     .notes-input input {
-      width: 100%;
+      width: 90%;
       padding: 10px;
       border-radius: 8px;
       border: 1px solid #e5e7eb;
@@ -239,13 +239,15 @@
       <div id="studentList"></div>
     </div>
 
+     <button class="back-button" onclick="saveAttendance()">
+      Save Attendance
+    </button>
+
     <button class="back-button" onclick="window.history.back()">
       <i class="fa fa-arrow-left"></i> Back
     </button>
   </div>
 
-  <!-- Floating Save Button -->
-  <button class="fab" onclick="saveAttendance()">Save Attendance</button>
 
   <!-- Toast -->
   <div id="toast" class="toast"></div>
