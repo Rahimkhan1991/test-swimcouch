@@ -216,13 +216,33 @@ let currentReport = null;
 let sessionSettings = { enabled: false, length: 4 };
 
 // 🔹 Load admin session settings
+// 🔹 Load admin session settings (from companies table)
 async function loadSettings() {
-  const { data, error } = await supabase.from("settings").select("session_enabled, session_length").single();
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) return;
+
+  // get user's company_id
+  const { data: userData } = await supabase
+    .from("users")
+    .select("company_id")
+    .eq("id", session.user.id)
+    .single();
+
+  if (!userData) return;
+
+  // load session settings from that company
+  const { data, error } = await supabase
+    .from("companies")
+    .select("session_enabled, session_length_days")
+    .eq("id", userData.company_id)
+    .single();
+
   if (!error && data) {
     sessionSettings.enabled = data.session_enabled;
-    sessionSettings.length = data.session_length;
+    sessionSettings.length = data.session_length_days;
   }
 }
+
 
 // Toggle custom date inputs
 function toggleCustomRange() {
