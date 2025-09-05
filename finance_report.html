@@ -3,305 +3,429 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>💰 Finance Dashboard</title>
+  <title>📊 Student Report (fixed students loading)</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.2/html2pdf.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
   <style>
     :root {
-      --primary: #2563eb;
-      --secondary: #34c759;
-      --warning: #facc15;
-      --danger: #ef4444;
-      --bg: #f0f4f8;
-      --card: #ffffffdd;
-      --shadow: 0 6px 16px rgba(0,0,0,0.08);
+      --primary: #34c759;
+      --accent: #2563eb;
+      --bg-gradient: linear-gradient(135deg, #f0fff4, #e6f7ff);
+      --card-bg: rgba(255,255,255,0.9);
+      --shadow: 0 6px 20px rgba(0,0,0,0.08);
     }
     * { box-sizing: border-box; }
     body {
-      font-family: 'Inter', sans-serif;
       margin: 0;
       padding: 20px;
-      background: var(--bg);
+      font-family: 'Inter', sans-serif;
+      background: var(--bg-gradient);
       color: #1f2937;
+    }
+    .container {
+      max-width: 1000px;
+      margin: auto;
+      background: var(--card-bg);
+      border-radius: 18px;
+      padding: 25px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(12px);
     }
     h1 {
       text-align: center;
-      color: var(--primary);
+      color: var(--accent);
       margin-bottom: 25px;
+      font-weight: 700;
       font-size: 28px;
     }
-    .grid {
+    .filter-panel {
+      background: #ffffffd9;
+      border-radius: 14px;
+      padding: 20px;
+      margin-bottom: 25px;
+      box-shadow: var(--shadow);
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 20px;
-      margin-bottom: 30px;
+      gap: 15px;
+      grid-template-columns: repeat(auto-fit,minmax(220px,1fr));
     }
-    .card {
-      background: var(--card);
-      border-radius: 16px;
-      padding: 20px;
-      box-shadow: var(--shadow);
-      text-align: center;
-      transition: transform 0.2s;
-    }
-    .card:hover { transform: translateY(-4px); }
-    .card h3 { margin: 10px 0; font-size: 1rem; font-weight: 600; }
-    .card p { font-size: 1.4rem; font-weight: 700; margin: 0; }
-    .chart-section {
-      margin: 30px auto;
-      padding: 20px;
+    label { font-weight: 600; font-size: 0.9rem; color: #374151; }
+    select, input[type="date"] {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid #d1d5db;
+      font-size: 0.95rem;
       background: #fff;
-      border-radius: 16px;
-      box-shadow: var(--shadow);
-    }
-    canvas { max-width: 100%; }
-    h2 {
-      text-align: center;
-      margin-bottom: 15px;
       color: #111827;
     }
-    .table-container {
-      margin-top: 30px;
-      background: #fff;
-      border-radius: 16px;
-      box-shadow: var(--shadow);
-      padding: 20px;
+    .footer-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+      margin: 10px 0 20px;
     }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 10px;
-    }
-    th, td {
-      padding: 12px;
-      border-bottom: 1px solid #e5e7eb;
-      text-align: left;
-      font-size: 0.95rem;
-    }
-    th { background: #f9fafb; font-weight: 600; color: #374151; }
-    tr:hover { background: #f3f4f6; }
-    .badge {
-      padding: 4px 10px;
-      border-radius: 8px;
-      font-size: 0.8rem;
-      font-weight: 600;
+    .btn, .btn-back {
+      flex: 1;
+      padding: 12px 20px;
+      font-size: 1rem;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
       color: #fff;
+      background: linear-gradient(135deg, var(--primary), #2ecc71);
+      transition: transform 0.2s ease;
     }
-    .badge.pending { background: var(--warning); color: #111; }
-    .badge.paid { background: var(--secondary); }
-    .back-btn {
-      display: block;
-      margin: 30px auto 10px;
-      padding: 14px 28px;
-      background: var(--primary);
-      color: white;
-      text-decoration: none;
-      border-radius: 10px;
-      text-align: center;
-      font-weight: 600;
+    .btn:hover, .btn-back:hover { transform: translateY(-2px); }
+    .btn-back {
+      background: linear-gradient(135deg, var(--accent), #1e40af);
+      width: 100%;
+      margin-top: 20px;
     }
-    .back-btn:hover { background: #1e40af; }
+    .report {
+      margin-top: 20px;
+      padding: 25px;
+      border-radius: 16px;
+      background: #f9fafb;
+      box-shadow: var(--shadow);
+    }
+    .report-title { text-align: center; font-size: 20px; font-weight: 600; color: #111827; }
+    .summary-grid { display:flex; gap:20px; justify-content:center; flex-wrap:wrap; margin:25px 0; }
+    .kpi { background:#fff; border-radius:12px; padding:18px; flex:1; min-width:150px; text-align:center; box-shadow:var(--shadow); }
+    .kpi .value { font-size:24px; font-weight:700; color:var(--accent); }
+    .kpi .label { font-size:14px; color:#6b7280; }
+    .report-table { width:100%; border-collapse:collapse; margin-top:15px; border-radius:12px; overflow:hidden; }
+    .report-table th, .report-table td { padding:12px; border-bottom:1px solid #e5e7eb; font-size:0.95rem; text-align:left; }
+    .report-table th { background:#eff6ff; color:var(--accent); font-weight:600; }
+    .report-table tr:nth-child(even){ background:#f9fafb; }
+    .badge { display:inline-block; padding:4px 10px; border-radius:8px; font-size:0.8rem; font-weight:600; color:white; }
+    .badge.present { background:var(--primary); } .badge.absent { background:#ef4444; } .stars { color:#facc15; font-size:0.9rem; }
+    @media (max-width:650px) {
+      .footer-buttons { flex-direction: column; } .btn { width:100%; } .summary-grid { flex-direction: column; }
+    }
   </style>
 </head>
 <body>
-  <h1>💰 Finance Dashboard</h1>
+  <div class="container">
+    <h1>📊 Student Report</h1>
 
-  <!-- Summary -->
-  <div class="grid">
-    <div class="card">
-      <h3>Total Collected</h3>
-      <p id="totalIncome">Rp0</p>
+    <!-- Filter Panel -->
+    <div class="filter-panel">
+      <div>
+        <label for="classSelect">Class</label>
+        <select id="classSelect"></select>
+      </div>
+
+      <div>
+        <label for="studentSelect">Student</label>
+        <select id="studentSelect"></select>
+      </div>
+
+      <div>
+        <label for="rangeSelect">Date Range</label>
+        <select id="rangeSelect" onchange="toggleCustomRange()">
+          <option value="all">All Time</option>
+          <option value="thisMonth">This Month</option>
+          <option value="lastMonth">Last Month</option>
+          <option value="custom">Custom Range</option>
+        </select>
+      </div>
+
+      <div id="customRange" style="display:none;">
+        <label>Start Date</label>
+        <input type="date" id="startDate">
+        <label>End Date</label>
+        <input type="date" id="endDate">
+      </div>
     </div>
-    <div class="card">
-      <h3>Total Expected</h3>
-      <p id="expectedIncome">Rp0</p>
+
+    <!-- Action Buttons -->
+    <div class="footer-buttons">
+      <button class="btn" onclick="generateReport()">Generate Report</button>
+      <button class="btn" onclick="downloadPDF()">Download PDF</button>
+      <button class="btn" onclick="sendWhatsApp()">Send WhatsApp</button>
     </div>
-    <div class="card">
-      <h3>Total Pending</h3>
-      <p id="pendingIncome">Rp0</p>
-    </div>
-    <div class="card">
-      <h3>Collection Rate</h3>
-      <p id="collectionRate">0%</p>
-    </div>
-  </div>
 
-  <!-- Pie Chart -->
-  <div class="chart-section">
-    <h2>Collection Status</h2>
-    <canvas id="financeChart" height="280"></canvas>
-  </div>
+    <div id="reportOutput"></div>
 
-  <!-- Trend Chart -->
-  <div class="chart-section">
-    <h2>Last 30 Days Fee Collection</h2>
-    <canvas id="trendChart" height="250"></canvas>
+    <!-- Back -->
+    <button class="btn-back" onclick="history.back()">⬅️ Back</button>
   </div>
-
-  <!-- Top Pending Students -->
-  <div class="table-container">
-    <h2>📌 Top Pending Students</h2>
-    <table>
-      <thead>
-        <tr>
-          <th>Student</th>
-          <th>Total Fee</th>
-          <th>Paid</th>
-          <th>Pending</th>
-        </tr>
-      </thead>
-      <tbody id="pendingTable"></tbody>
-    </table>
-  </div>
-
-  <a href="home.html" class="back-btn">⬅️ Back to Home</a>
 
 <script>
-  const SUPABASE_URL = 'https://ndishfwnkzdedfcywcle.supabase.co';
-  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5kaXNoZndua3pkZWRmY3l3Y2xlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYwOTk0MjcsImV4cCI6MjA3MTY3NTQyN30.CXQSfhR0MVLF40v2Tp-BcENBpHpPshG9Ys3zLYiBQaM';
-  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const SUPABASE_URL = "https://ndishfwnkzdedfcywcle.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5kaXNoZndua3pkZWRmY3l3Y2xlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYwOTk0MjcsImV4cCI6MjA3MTY3NTQyN30.CXQSfhR0MVLF40v2Tp-BcENBpHpPshG9Ys3zLYiBQaM";
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  async function calculateFinanceSummary(company_id) {
-    const { data: students, error: studentsError } = await supabase
-      .from('students')
-      .select('id, name, totalFee')
-      .eq('company_id', company_id);
+let currentReport = null;
+let sessionSettings = { enabled: false, length: 4 };
+let currentCompanyId = null;
 
-    const { data: fees, error: feesError } = await supabase
-      .from('fees')
-      .select('student_id, amount')
-      .eq('company_id', company_id);
+// 🔹 Load admin session settings (keeps your original logic)
+async function loadSettings() {
+  const { data, error } = await supabase.from("settings").select("session_enabled, session_length").single();
+  if (!error && data) {
+    sessionSettings.enabled = data.session_enabled;
+    sessionSettings.length = data.session_length;
+  }
+}
 
-    if (studentsError || feesError) {
-      console.error("Error fetching finance data:", studentsError || feesError);
-      return;
-    }
+function toggleCustomRange() {
+  document.getElementById("customRange").style.display =
+    document.getElementById("rangeSelect").value === "custom" ? "block" : "none";
+}
 
-    let totalCollected = 0;
-    const paidMap = {};
-    fees.forEach(f => {
-      totalCollected += Number(f.amount || 0);
-      paidMap[f.student_id] = (paidMap[f.student_id] || 0) + Number(f.amount || 0);
-    });
+// ------------------ FIXED: class/student population ------------------
+async function populateClasses() {
+  const select = document.getElementById("classSelect");
+  select.innerHTML = '<option value="">-- Select Class --</option>';
+  if (!currentCompanyId) return;
+  const { data, error } = await supabase
+    .from("classes")
+    .select("id, name")
+    .eq("company_id", currentCompanyId)
+    .order("name", { ascending: true });
+  if (error) {
+    console.error("Error loading classes:", error.message);
+    return;
+  }
+  data.forEach(c => {
+    const opt = document.createElement("option");
+    opt.value = c.id;
+    opt.textContent = c.name;
+    select.appendChild(opt);
+  });
+}
 
-    const totalExpected = students.reduce((sum, s) => sum + Number(s.totalFee || 0), 0);
-    const totalPending = Math.max(totalExpected - totalCollected, 0);
-    const collectionRate = totalExpected ? ((totalCollected / totalExpected) * 100).toFixed(1) : 0;
+// classId optional; if provided, filter students by class; always filter by company_id
+async function populateStudents(classId = null) {
+  const select = document.getElementById("studentSelect");
+  select.innerHTML = '<option value="">-- Select Student --</option>';
+  // clear phone input (avoid stale phone when switching class)
+  const phoneEl = document.getElementById("phone");
+  if (phoneEl) phoneEl.value = "";
 
-    document.getElementById("totalIncome").textContent = "Rp" + totalCollected.toLocaleString();
-    document.getElementById("expectedIncome").textContent = "Rp" + totalExpected.toLocaleString();
-    document.getElementById("pendingIncome").textContent = "Rp" + totalPending.toLocaleString();
-    document.getElementById("collectionRate").textContent = collectionRate + "%";
+  if (!currentCompanyId) return;
+  let query = supabase.from("students").select("id, name, phone").eq("company_id", currentCompanyId);
+  if (classId) query = query.eq("class_id", classId);
+  query = query.order("name", { ascending: true });
 
-    drawChart(totalCollected, totalPending);
-    renderPendingTable(students, paidMap);
+  const { data, error } = await query;
+  if (error) {
+    console.error("Error loading students:", error.message);
+    return;
+  }
+  (data || []).forEach(s => {
+    const opt = document.createElement("option");
+    opt.value = s.id;                // student id (generateReport expects id)
+    opt.textContent = s.name;
+    opt.dataset.phone = s.phone || ""; // store phone in data attribute for fillPhone()
+    select.appendChild(opt);
+  });
+}
+
+function fillPhone() {
+  const selected = document.getElementById("studentSelect").selectedOptions[0];
+  const phone = selected?.dataset?.phone || "";
+  // if there's an input with id "phone" (some versions had it), fill it
+  const phoneInput = document.getElementById("phone");
+  if (phoneInput) phoneInput.value = phone;
+}
+
+// ------------------ Report logic (unchanged, minor robustness) ------------------
+async function generateReport() {
+  const studentId = document.getElementById("studentSelect").value;
+  const reportDiv = document.getElementById("reportOutput");
+  reportDiv.innerHTML = "";
+  if (!studentId) return reportDiv.innerHTML = "<p>Please select a student.</p>";
+
+  await loadSettings(); // ensure latest settings loaded
+
+  // Fetch student info
+  const { data: student, error: studentError } = await supabase.from("students")
+    .select("id, name, phone, classes(name)")
+    .eq("id", studentId)
+    .single();
+  if (studentError || !student) {
+    reportDiv.innerHTML = "<p>Error fetching student details.</p>";
+    console.error(studentError);
+    return;
+  }
+  currentReport = { student };
+
+  // Fetch attendance
+  let query = supabase.from("attendance").select("id,date,status").eq("student_id", studentId).order("date",{ascending:true});
+  const range = document.getElementById("rangeSelect").value;
+  const today = new Date();
+  let startDate, endDate;
+  if (range === "thisMonth") {
+    startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+    endDate = new Date(today.getFullYear(), today.getMonth()+1, 0);
+  } else if (range === "lastMonth") {
+    startDate = new Date(today.getFullYear(), today.getMonth()-1, 1);
+    endDate = new Date(today.getFullYear(), today.getMonth(), 0);
+  } else if (range === "custom") {
+    const s = document.getElementById("startDate").value;
+    const e = document.getElementById("endDate").value;
+    if (s) startDate = new Date(s);
+    if (e) endDate = new Date(e);
+  }
+  if (startDate && endDate) query = query.gte("date", startDate.toISOString()).lte("date", endDate.toISOString());
+  const { data: attendance } = await query;
+  if (!attendance || attendance.length === 0) return reportDiv.innerHTML = "<p>No records found.</p>";
+
+  // Fetch performances
+  const { data: performances } = await supabase.from("performance_records")
+    .select("id,score,notes,attendance_id,performance_metrics(name)")
+    .in("attendance_id", attendance.map(a=>a.id));
+
+  const perfMap = {};
+  (performances || []).forEach(p => {
+    if (!perfMap[p.attendance_id]) perfMap[p.attendance_id] = [];
+    perfMap[p.attendance_id].push(p);
+  });
+
+  // Summaries
+  const presentCount = attendance.filter(r => r.status === "Present").length;
+  let sessionsCompleted = 0, daysRemaining = 0;
+  if (sessionSettings.enabled) {
+    sessionsCompleted = Math.floor(presentCount / sessionSettings.length);
+    daysRemaining = sessionSettings.length - (presentCount % sessionSettings.length);
+    if (daysRemaining === sessionSettings.length) daysRemaining = 0;
   }
 
-  function drawChart(collected, pending) {
-    const ctx = document.getElementById("financeChart").getContext("2d");
-    if (window.myChart) window.myChart.destroy();
-    window.myChart = new Chart(ctx, {
-      type: "doughnut",
-      data: {
-        labels: ["Collected", "Pending"],
-        datasets: [{
-          data: [collected, pending],
-          backgroundColor: ["#34c759", "#facc15"]
-        }]
-      },
-      options: {
-        plugins: {
-          legend: { position: "bottom" }
+  // Performance summary
+  const summaryMap = {};
+  (performances || []).forEach(p => {
+    const metric = p.performance_metrics?.name || "Metric";
+    if (!summaryMap[metric]) summaryMap[metric] = { total: 0, count: 0 };
+    if (p.score != null) { summaryMap[metric].total += p.score; summaryMap[metric].count++; }
+  });
+  let perfSummaryHTML = "";
+  if (Object.keys(summaryMap).length > 0) {
+    perfSummaryHTML = `<h3>⭐ Performance Summary</h3><table class="report-table"><thead><tr><th>Metric</th><th>Average</th></tr></thead><tbody>`;
+    for (const [metric, val] of Object.entries(summaryMap)) {
+      const avg = (val.total / val.count).toFixed(1);
+      const stars = "★".repeat(Math.round(avg));
+      perfSummaryHTML += `<tr><td>${metric}</td><td><span class="stars">${stars}</span></td></tr>`;
+    }
+    perfSummaryHTML += `</tbody></table>`;
+  }
+
+  // Attendance rendering (grouped by session if enabled)
+  let attendanceHTML = "";
+  if (sessionSettings.enabled) {
+    let sessionNum = 1;
+    for (let i = 0; i < attendance.length; i += sessionSettings.length) {
+      const chunk = attendance.slice(i, i + sessionSettings.length);
+      attendanceHTML += `<h4 style="margin-top:15px; color:#2563eb;">📦 Session ${sessionNum}</h4>`;
+      attendanceHTML += `<table class="report-table"><thead><tr><th>Date</th><th>Status</th><th>Performance</th></tr></thead><tbody>`;
+      chunk.forEach(att => {
+        let perfHtml = "";
+        if (perfMap[att.id]) {
+          perfHtml = "<ul style='margin:5px 0 0 15px;'>";
+          perfMap[att.id].forEach(p => {
+            perfHtml += `<li>${p.performance_metrics?.name}: ${"★".repeat(p.score||0)} ${p.notes?`(${p.notes})`:""}</li>`;
+          });
+          perfHtml += "</ul>";
         }
-      }
-    });
-  }
-
-  async function drawTrendChart(company_id) {
-    const { data: fees, error } = await supabase
-      .from('fees')
-      .select('amount, date')
-      .eq('company_id', company_id);
-
-    if (error) return;
-
-    const today = new Date();
-    const last30Days = [];
-    for (let i = 29; i >= 0; i--) {
-      const d = new Date();
-      d.setDate(today.getDate() - i);
-      last30Days.push(d.toISOString().split("T")[0]);
+        attendanceHTML += `<tr>
+          <td>${new Date(att.date).toLocaleDateString()}</td>
+          <td><span class="badge ${att.status === "Present" ? "present" : "absent"}">${att.status}</span></td>
+          <td>${perfHtml || "—"}</td>
+        </tr>`;
+      });
+      attendanceHTML += `</tbody></table>`;
+      sessionNum++;
     }
-
-    const dailyCollection = {};
-    fees.forEach(f => {
-      const feeDate = f.date?.split("T")[0] || "";
-      if (last30Days.includes(feeDate)) {
-        dailyCollection[feeDate] = (dailyCollection[feeDate] || 0) + Number(f.amount || 0);
+  } else {
+    attendanceHTML = `<table class="report-table"><thead><tr><th>Date</th><th>Status</th><th>Performance</th></tr></thead><tbody>`;
+    attendance.forEach(att => {
+      let perfHtml = "";
+      if (perfMap[att.id]) {
+        perfHtml = "<ul style='margin:5px 0 0 15px;'>";
+        perfMap[att.id].forEach(p => {
+          perfHtml += `<li>${p.performance_metrics?.name}: ${"★".repeat(p.score||0)} ${p.notes?`(${p.notes})`:""}</li>`;
+        });
+        perfHtml += "</ul>";
       }
+      attendanceHTML += `<tr>
+        <td>${new Date(att.date).toLocaleDateString()}</td>
+        <td><span class="badge ${att.status === "Present" ? "present" : "absent"}">${att.status}</span></td>
+        <td>${perfHtml || "—"}</td>
+      </tr>`;
     });
-
-    const ctx = document.getElementById("trendChart").getContext("2d");
-    if (window.trendChart) window.trendChart.destroy();
-    window.trendChart = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: last30Days,
-        datasets: [{
-          label: 'Daily Fee Collected (Rp)',
-          data: last30Days.map(d => dailyCollection[d] || 0),
-          borderColor: '#2563eb',
-          backgroundColor: 'rgba(37, 99, 235, 0.1)',
-          tension: 0.3,
-          fill: true
-        }]
-      },
-      options: {
-        scales: { y: { beginAtZero: true } }
-      }
-    });
+    attendanceHTML += "</tbody></table>";
   }
 
-  function renderPendingTable(students, paidMap) {
-    const tbody = document.getElementById("pendingTable");
-    tbody.innerHTML = "";
-    const pendingData = students.map(s => {
-      const paid = paidMap[s.id] || 0;
-      const pending = (s.totalFee || 0) - paid;
-      return { name: s.name, total: s.totalFee || 0, paid, pending };
-    }).filter(s => s.pending > 0)
-      .sort((a,b) => b.pending - a.pending)
-      .slice(0, 10);
+  // Render report
+  reportDiv.innerHTML = `
+    <div class="report">
+      <div class="report-title">📋 Report for ${student.name}</div>
+      <p><strong>Class:</strong> ${student.classes?.name || "N/A"}</p>
+      <p><strong>Phone:</strong> ${student.phone || "N/A"}</p>
+      <div class="summary-grid">
+        <div class="kpi"><div class="value">${presentCount}</div><div class="label">Total Presents</div></div>
+        ${sessionSettings.enabled ? `
+          <div class="kpi"><div class="value">${sessionsCompleted}</div><div class="label">Sessions</div></div>
+          <div class="kpi"><div class="value">${daysRemaining}</div><div class="label">Days to Next</div></div>` : ""}
+      </div>
+      ${perfSummaryHTML}
+      <h3 style="margin-top:20px;">📅 Attendance Details</h3>
+      ${attendanceHTML}
+    </div>`;
+}
 
-    pendingData.forEach(s => {
-      tbody.innerHTML += `
-        <tr>
-          <td>${s.name}</td>
-          <td>Rp${s.total.toLocaleString()}</td>
-          <td>Rp${s.paid.toLocaleString()}</td>
-          <td><span class="badge pending">Rp${s.pending.toLocaleString()}</span></td>
-        </tr>
-      `;
-    });
+function downloadPDF(){
+  const reportDiv = document.getElementById("reportOutput");
+  if (!reportDiv.innerHTML.trim()) return alert("Generate the report first.");
+  html2pdf().from(reportDiv).set({
+    margin:0.5, filename:"StudentReport.pdf",
+    html2canvas:{scale:2},
+    jsPDF:{unit:"in", format:"letter", orientation:"portrait"}
+  }).save();
+}
+
+function sendWhatsApp(){
+  const student = currentReport?.student;
+  if (!student || !student.phone) return alert("No phone number available.");
+  // get total presents from the KPI card with a safer selector:
+  const presentEl = document.querySelector(".kpi .value");
+  const presents = presentEl ? presentEl.textContent : "0";
+  const message = `Hello ${student.name}, your attendance & performance report is ready. ✅ Total Presents: ${presents}`;
+  window.open(`https://wa.me/${student.phone.replace(/\D/g,'')}?text=${encodeURIComponent(message)}`, "_blank");
+}
+
+// ------------------ initialization ------------------
+async function init() {
+  // get session & company id
+  const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+  if (sessionError || !session) {
+    console.error("No session:", sessionError?.message);
+    window.location.href = "index.html";
+    return;
   }
-
-  window.onload = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) { window.location.href = "index.html"; return; }
-
-    const { data: companyData } = await supabase
-      .from("users")
-      .select("company_id")
-      .eq("id", session.user.id)
-      .single();
-
-    if (!companyData) return;
-
-    const company_id = companyData.company_id;
-    await calculateFinanceSummary(company_id);
-    await drawTrendChart(company_id);
+  const user = session.user;
+  const { data: companyData, error: companyError } = await supabase
+    .from("users")
+    .select("company_id")
+    .eq("id", user.id)
+    .single();
+  if (companyError || !companyData) {
+    console.error("Could not fetch company_id:", companyError?.message);
+    return;
   }
+  currentCompanyId = companyData.company_id;
+
+  // populate lists AFTER we know company_id
+  await populateClasses();
+  await populateStudents(); // load all students by default
+  // wire up class change
+  document.getElementById("classSelect").addEventListener("change", e => populateStudents(e.target.value));
+}
+
+window.onload = init;
 </script>
 </body>
 </html>
