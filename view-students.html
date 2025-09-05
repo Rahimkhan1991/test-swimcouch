@@ -124,6 +124,7 @@
       box-shadow: var(--shadow);
       font-size: 1.5rem;
       transition: background 0.3s;
+      z-index: 150;
     }
     .fab:hover { background: var(--primary-dark); }
 
@@ -137,13 +138,16 @@
       justify-content: center;
       align-items: center;
       z-index: 100;
+      padding: 10px;
     }
     .modal-content {
       background: var(--card-bg);
-      padding: 25px;
+      padding: 20px;
       border-radius: 12px;
       max-width: 500px;
-      width: 90%;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
     }
     .modal-content h3 {
       text-align: center;
@@ -167,12 +171,15 @@
       justify-content: flex-end;
       gap: 10px;
       margin-top: 20px;
+      flex-wrap: wrap;
     }
     .modal-buttons button {
-      padding: 8px 16px;
+      flex: 1;
+      padding: 10px;
       border: none;
       border-radius: 8px;
       cursor: pointer;
+      min-width: 100px;
     }
     .close-btn { background: #ccc; }
     .save-btn { background: var(--primary); color: #fff; }
@@ -203,8 +210,10 @@
 
     @media(max-width:600px) {
       body { padding: 10px; }
-      .modal-content { padding: 20px; }
+      .student-card { flex-direction: column; align-items: flex-start; }
+      .modal-content { padding: 15px; }
       .modal-buttons { flex-direction: column; }
+      .modal-buttons button { width: 100%; }
     }
   </style>
 </head>
@@ -273,8 +282,8 @@
     let selectedClassId = null;
     let debounceTimer = null;
 
-    const studentList = document.getElementById("studentList");
     const searchInput = document.getElementById("searchInput");
+    const studentList = document.getElementById("studentList");
     const classFilterContainer = document.getElementById("classFilterContainer");
     const studentDetailsModal = document.getElementById("studentDetailsModal");
     const modalStudentName = document.getElementById("modalStudentName");
@@ -304,7 +313,7 @@
       const { data: students, error } = await query;
       if (error) return showToast("Error loading students", false);
 
-      if (!students.length) {
+      if (!students?.length) {
         studentList.innerHTML = "<p>No students found.</p>";
         return;
       }
@@ -318,16 +327,15 @@
         card.className = "student-card";
         card.addEventListener("click", () => openStudentDetails(s, feeMap));
 
-        const info = document.createElement("div");
-        info.className = "student-info";
-        info.innerHTML = `
-          <p class="student-name">${s.name}</p>
-          <p class="details-summary">
-            Class: ${s.classes?.name || "N/A"} | Days: ${Array.isArray(s.day) ? s.day.join(", ") : "N/A"}
-          </p>
+        card.innerHTML = `
+          <div class="student-info">
+            <p class="student-name">${s.name}</p>
+            <p class="details-summary">
+              Class: ${s.classes?.name || "N/A"} | Days: ${Array.isArray(s.day) ? s.day.join(", ") : "N/A"}
+            </p>
+          </div>
         `;
 
-        card.appendChild(info);
         studentList.appendChild(card);
       });
     }
@@ -385,6 +393,26 @@
       studentDetailsModal.style.display = "flex";
     }
 
+    async function openEditForm() {
+      studentDetailsModal.style.display = "none";
+      editFormModal.style.display = "flex";
+
+      const { data: student, error } = await supabase.from("students").select("*").eq("id", currentStudentId).single();
+      if (error) return showToast("Error loading student", false);
+
+      document.getElementById("editName").value = student.name || "";
+      document.getElementById("editPhone").value = student.phone || "";
+      document.getElementById("editTotalFee").value = student.totalFee || "";
+      document.getElementById("editInitialPayment").value = student.initialPayment || "";
+
+      document.querySelectorAll("#editDaysCheckboxes input").forEach(cb => cb.checked = false);
+      const days = Array.isArray(student.day) ? student.day : (student.day ? [student.day] : []);
+      days.forEach(d => {
+        const cb = document.querySelector(`#editDaysCheckboxes input[value="${d}"]`);
+        if (cb) cb.checked = true;
+      });
+    }
+
     async function saveEdit() {
       const updated = {
         name: document.getElementById("editName").value,
@@ -414,10 +442,7 @@
 
     // Event bindings
     document.getElementById("closeDetailsBtn").onclick = () => studentDetailsModal.style.display = "none";
-    document.getElementById("editBtn").onclick = () => {
-      studentDetailsModal.style.display = "none";
-      editFormModal.style.display = "flex";
-    };
+    document.getElementById("editBtn").onclick = openEditForm;
     document.getElementById("cancelEditBtn").onclick = () => editFormModal.style.display = "none";
     document.getElementById("saveEditBtn").onclick = saveEdit;
     document.getElementById("deleteBtn").onclick = deleteStudent;
