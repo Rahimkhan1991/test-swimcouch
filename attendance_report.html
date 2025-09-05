@@ -1,403 +1,391 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Student Attendance & Performance Report</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.2/html2pdf.bundle.min.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<style>
-* { box-sizing: border-box; }
-body {
-  margin: 0;
-  padding: 20px;
-  font-family: 'Inter', sans-serif;
-  background: linear-gradient(135deg, #e0f7fa, #fce4ec);
-  color: #2c3e50;
-}
-.container {
-  max-width: 950px;
-  margin: auto;
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: 16px;
-  padding: 30px 25px;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-  backdrop-filter: blur(10px);
-}
-h1 {
-  text-align: center;
-  color: #1e88e5;
-  margin-bottom: 25px;
-  font-weight: 600;
-  font-size: 28px;
-}
-label {
-  display: block;
-  font-weight: 600;
-  margin: 12px 0 6px;
-  color: #374151;
-}
-select, input[type="date"] {
-  width: 100%;
-  padding: 10px;
-  font-size: 1em;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  background-color: #fff;
-  margin-bottom: 12px;
-}
-.footer-buttons {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  justify-content: center;
-  margin: 15px 0 25px;
-}
-.footer-buttons button,
-.btn-back {
-  padding: 12px 20px;
-  font-size: 1em;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  background-color: #3b82f6;
-  color: white;
-  transition: background 0.3s ease;
-}
-.footer-buttons button:hover,
-.btn-back:hover {
-  background-color: #2563eb;
-}
-.report {
-  margin-top: 25px;
-  padding: 25px;
-  border-radius: 14px;
-  background: #f9fafb;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
-}
-.report-title {
-  text-align: center;
-  margin-bottom: 20px;
-  font-size: 20px;
-  font-weight: 600;
-  color: #374151;
-}
-.subtle { font-size: 14px; color: #6b7280; display: block; margin-top: 4px; }
-.summary-grid {
-  display: flex;
-  gap: 20px;
-  justify-content: center;
-  margin-top: 20px;
-  flex-wrap: wrap;
-}
-.kpi {
-  background: #fff;
-  border-radius: 10px;
-  padding: 16px;
-  flex: 1;
-  min-width: 120px;
-  text-align: center;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-}
-.kpi .value { font-size: 20px; font-weight: 600; color: #1e40af; }
-.kpi .label { font-size: 13px; color: #4b5563; }
-.report-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 18px;
-}
-.report-table th, .report-table td {
-  padding: 10px;
-  border-bottom: 1px solid #e5e7eb;
-  text-align: left;
-  font-size: 0.95em;
-  vertical-align: top;
-}
-.report-table th {
-  background-color: #e0f2fe;
-  color: #1e3a8a;
-}
-.report-table tr:nth-child(even) { background-color: #f1f5f9; }
-.btn-back {
-  display: block;
-  margin: 30px auto 0;
-  background-color: #29d846;
-  width: 95%;
-}
-@media (max-width: 600px) {
-  .container { padding: 20px 15px; }
-  .footer-buttons { flex-direction: column; gap: 10px; }
-  .footer-buttons button { width: 100%; }
-}
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>🏅 Student Report</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.2/html2pdf.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #34c759;
+      --accent: #2563eb;
+      --bg-gradient: linear-gradient(135deg, #f0fff4, #e6f7ff);
+      --card-bg: rgba(255,255,255,0.9);
+      --shadow: 0 6px 20px rgba(0,0,0,0.08);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: 'Inter', sans-serif;
+      background: var(--bg-gradient);
+      color: #1f2937;
+    }
+    .container {
+      max-width: 1000px;
+      margin: auto;
+      background: var(--card-bg);
+      border-radius: 18px;
+      padding: 25px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(12px);
+    }
+    h1 {
+      text-align: center;
+      color: var(--accent);
+      margin-bottom: 25px;
+      font-weight: 700;
+      font-size: 28px;
+    }
+    /* Filters */
+    .filter-panel {
+      background: #ffffffd9;
+      border-radius: 14px;
+      padding: 20px;
+      margin-bottom: 25px;
+      box-shadow: var(--shadow);
+      display: grid;
+      gap: 15px;
+    }
+    label {
+      font-weight: 600;
+      font-size: 0.9rem;
+      margin-bottom: 5px;
+      display: block;
+      color: #374151;
+    }
+    select, input[type="date"] {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid #d1d5db;
+      font-size: 0.95rem;
+      background: #fff;
+      color: #111827;
+    }
+    /* Buttons */
+    .footer-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+      margin: 10px 0 20px;
+    }
+    .btn, .btn-back {
+      flex: 1;
+      padding: 12px 20px;
+      font-size: 1rem;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      color: #fff;
+      background: linear-gradient(135deg, var(--primary), #2ecc71);
+      transition: transform 0.2s ease;
+    }
+    .btn:hover, .btn-back:hover {
+      transform: translateY(-2px);
+    }
+    .btn-back {
+      background: linear-gradient(135deg, var(--accent), #1e40af);
+      width: 100%;
+      margin-top: 20px;
+    }
+    /* Report */
+    .report {
+      margin-top: 20px;
+      padding: 25px;
+      border-radius: 16px;
+      background: #f9fafb;
+      box-shadow: var(--shadow);
+    }
+    .report-title {
+      text-align: center;
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      color: #111827;
+    }
+    .summary-grid {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin: 25px 0;
+    }
+    .kpi {
+      background: #fff;
+      border-radius: 12px;
+      padding: 18px;
+      flex: 1;
+      min-width: 150px;
+      text-align: center;
+      box-shadow: var(--shadow);
+    }
+    .kpi .value { font-size: 24px; font-weight: 700; color: var(--accent); }
+    .kpi .label { font-size: 14px; color: #6b7280; }
+    /* Table */
+    .report-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .report-table th, .report-table td {
+      padding: 12px;
+      border-bottom: 1px solid #e5e7eb;
+      font-size: 0.95rem;
+      text-align: left;
+    }
+    .report-table th {
+      background: #eff6ff;
+      color: var(--accent);
+      font-weight: 600;
+    }
+    .report-table tr:nth-child(even) { background: #f9fafb; }
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: white;
+    }
+    .badge.present { background: var(--primary); }
+    .badge.absent { background: #ef4444; }
+    .stars { color: #facc15; font-size: 0.9rem; }
+    @media (max-width: 650px) {
+      .footer-buttons { flex-direction: column; }
+      .btn { width: 100%; }
+      .summary-grid { flex-direction: column; }
+    }
+  </style>
 </head>
 <body>
-<div class="container">
-  <h1>📄 Student Attendance & Performance Report</h1>
+  <div class="container">
+    <h1>📊 Student Report</h1>
 
-  <label for="classSelect">Select Class:</label>
-  <select id="classSelect"></select>
+    <!-- Filter Panel -->
+    <div class="filter-panel">
+      <div>
+        <label for="classSelect">Class</label>
+        <select id="classSelect"></select>
+      </div>
+      <div>
+        <label for="studentSelect">Student</label>
+        <select id="studentSelect"></select>
+      </div>
+      <div>
+        <label for="rangeSelect">Date Range</label>
+        <select id="rangeSelect" onchange="toggleCustomRange()">
+          <option value="all">All Time</option>
+          <option value="thisMonth">This Month</option>
+          <option value="lastMonth">Last Month</option>
+          <option value="custom">Custom Range</option>
+        </select>
+      </div>
+      <div id="customRange" style="display:none;">
+        <label>Start Date</label>
+        <input type="date" id="startDate">
+        <label>End Date</label>
+        <input type="date" id="endDate">
+      </div>
+    </div>
 
-  <label for="studentSelect">Select Student:</label>
-  <select id="studentSelect"></select>
+    <!-- Action Buttons -->
+    <div class="footer-buttons">
+      <button class="btn" onclick="generateReport()">Generate Report</button>
+      <button class="btn" onclick="downloadPDF()">Download PDF</button>
+      <button class="btn" onclick="sendWhatsApp()">Send WhatsApp</button>
+    </div>
 
-  <label for="rangeSelect">Select Date Range:</label>
-  <select id="rangeSelect" onchange="toggleCustomRange()">
-    <option value="all">All Time</option>
-    <option value="thisMonth">This Month</option>
-    <option value="lastMonth">Last Month</option>
-    <option value="custom">Custom Range</option>
-  </select>
+    <div id="reportOutput"></div>
 
-  <div id="customRange" style="display:none;">
-    <label>Start Date:</label>
-    <input type="date" id="startDate">
-    <label>End Date:</label>
-    <input type="date" id="endDate">
+    <!-- Back -->
+    <button class="btn-back" onclick="history.back()">⬅️ Back</button>
   </div>
-
-  <div class="footer-buttons">
-    <button onclick="generateReport()">Generate Report</button>
-    <button onclick="downloadPDF()">Download PDF</button>
-    <button onclick="sendWhatsApp()">Send via WhatsApp</button>
-  </div>
-
-  <div id="reportOutput"></div>
-</div>
-
-<button class="btn-back" onclick="history.back()">⬅️ Back</button>
 
 <script>
-const SUPABASE_URL = 'https://ndishfwnkzdedfcywcle.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5kaXNoZndua3pkZWRmY3l3Y2xlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYwOTk0MjcsImV4cCI6MjA3MTY3NTQyN30.CXQSfhR0MVLF40v2Tp-BcENBpHpPshG9Ys3zLYiBQaM'; // replace
+const SUPABASE_URL = "https://ndishfwnkzdedfcywcle.supabase.co";
+const SUPABASE_ANON_KEY = "YOUR_KEY";
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 let currentReport = null;
+let sessionSettings = { enabled: false, length: 4 };
 
-async function checkUserSession() {
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) window.location.href = 'index.html';
+// 🔹 Load admin session settings
+async function loadSettings() {
+  const { data, error } = await supabase.from("settings").select("session_enabled, session_length").single();
+  if (!error && data) {
+    sessionSettings.enabled = data.session_enabled;
+    sessionSettings.length = data.session_length;
+  }
 }
-checkUserSession();
 
+// Toggle custom date inputs
+function toggleCustomRange() {
+  document.getElementById("customRange").style.display =
+    document.getElementById("rangeSelect").value === "custom" ? "block" : "none";
+}
+
+// Populate dropdowns
 async function populateClasses() {
   const { data, error } = await supabase.from("classes").select("id, name");
   const select = document.getElementById("classSelect");
   select.innerHTML = '<option value="">-- Select Class --</option>';
-  if (error) return console.error(error.message);
-  data.forEach(cls => {
-    const opt = document.createElement("option");
-    opt.value = cls.id;
-    opt.textContent = cls.name;
-    select.appendChild(opt);
-  });
+  if (!error && data) {
+    data.forEach(cls => {
+      const opt = document.createElement("option");
+      opt.value = cls.id;
+      opt.textContent = cls.name;
+      select.appendChild(opt);
+    });
+  }
 }
-async function populateStudents(classId = null) {
+async function populateStudents(classId=null) {
   let query = supabase.from("students").select("id, name");
   if (classId) query = query.eq("class_id", classId);
   const { data, error } = await query;
   const select = document.getElementById("studentSelect");
   select.innerHTML = '<option value="">-- Select Student --</option>';
-  if (error) return console.error(error.message);
-  data.forEach(stu => {
-    const opt = document.createElement("option");
-    opt.value = stu.id;
-    opt.textContent = stu.name;
-    select.appendChild(opt);
-  });
-}
-function toggleCustomRange() {
-  const range = document.getElementById("rangeSelect").value;
-  document.getElementById("customRange").style.display = range === "custom" ? "block" : "none";
+  if (!error && data) {
+    data.forEach(stu => {
+      const opt = document.createElement("option");
+      opt.value = stu.id;
+      opt.textContent = stu.name;
+      select.appendChild(opt);
+    });
+  }
 }
 
+// Generate report
 async function generateReport() {
   const studentId = document.getElementById("studentSelect").value;
   const reportDiv = document.getElementById("reportOutput");
   reportDiv.innerHTML = "";
+  if (!studentId) return reportDiv.innerHTML = "<p>Please select a student.</p>";
 
-  if (!studentId) {
-    reportDiv.innerHTML = "<p>Please select a student.</p>";
-    return;
-  }
+  await loadSettings(); // ensure latest settings loaded
 
-  // Fetch student
-  const { data: student, error: studentError } = await supabase
-    .from("students")
-    .select("id, name, phone, classes(name)")
-    .eq("id", studentId)
-    .single();
-  if (studentError) {
-    reportDiv.innerHTML = "<p>Error fetching student details.</p>";
-    return;
-  }
-
+  // Fetch student info
+  const { data: student } = await supabase.from("students")
+    .select("id, name, phone, classes(name)").eq("id", studentId).single();
   currentReport = { student };
 
-  // Attendance query
-  let query = supabase.from("attendance").select("id, date, status").eq("student_id", studentId);
+  // Fetch attendance
+  let query = supabase.from("attendance").select("id,date,status").eq("student_id", studentId);
   const range = document.getElementById("rangeSelect").value;
   const today = new Date();
   let startDate, endDate;
   if (range === "thisMonth") {
     startDate = new Date(today.getFullYear(), today.getMonth(), 1);
-    endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+    endDate = new Date(today.getFullYear(), today.getMonth()+1, 0);
   } else if (range === "lastMonth") {
-    startDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+    startDate = new Date(today.getFullYear(), today.getMonth()-1, 1);
     endDate = new Date(today.getFullYear(), today.getMonth(), 0);
   } else if (range === "custom") {
     startDate = new Date(document.getElementById("startDate").value);
     endDate = new Date(document.getElementById("endDate").value);
   }
-  if (startDate && endDate) {
-    query = query.gte("date", startDate.toISOString()).lte("date", endDate.toISOString());
-  }
-  const { data: attendance, error: attendanceError } = await query;
-  if (attendanceError) {
-    reportDiv.innerHTML = "<p>Error fetching attendance data.</p>";
-    return;
-  }
-  if (!attendance || attendance.length === 0) {
-    reportDiv.innerHTML = "<p>No attendance records found.</p>";
-    return;
-  }
+  if (startDate && endDate) query = query.gte("date", startDate.toISOString()).lte("date", endDate.toISOString());
+  const { data: attendance } = await query;
+  if (!attendance || attendance.length===0) return reportDiv.innerHTML="<p>No records found.</p>";
 
-  // Fetch performance
-  const { data: performances, error: perfError } = await supabase
-    .from("performance_records")
-    .select(`
-      id,
-      score,
-      notes,
-      attendance_id,
-      performance_metrics(name)
-    `)
-    .in("attendance_id", attendance.map(a => a.id));
-  if (perfError) console.error("Performance fetch error:", perfError.message);
+  // Fetch performances
+  const { data: performances } = await supabase.from("performance_records")
+    .select("id,score,notes,attendance_id,performance_metrics(name)")
+    .in("attendance_id", attendance.map(a=>a.id));
 
   const perfMap = {};
-  if (performances) {
-    performances.forEach(p => {
-      if (!perfMap[p.attendance_id]) perfMap[p.attendance_id] = [];
-      perfMap[p.attendance_id].push(p);
-    });
+  performances?.forEach(p=>{
+    if (!perfMap[p.attendance_id]) perfMap[p.attendance_id]=[];
+    perfMap[p.attendance_id].push(p);
+  });
+
+  // Summaries
+  const presentCount = attendance.filter(r=>r.status==="Present").length;
+  let sessionsCompleted = 0, daysRemaining = 0;
+  if (sessionSettings.enabled) {
+    sessionsCompleted = Math.floor(presentCount/sessionSettings.length);
+    daysRemaining = sessionSettings.length - (presentCount % sessionSettings.length);
+    if (daysRemaining === sessionSettings.length) daysRemaining = 0;
   }
 
-  // Performance summary (avg per metric)
+  // Performance summary
   const summaryMap = {};
-  performances?.forEach(p => {
+  performances?.forEach(p=>{
     const metric = p.performance_metrics.name;
-    if (!summaryMap[metric]) summaryMap[metric] = { total: 0, count: 0 };
-    if (p.score != null) {
-      summaryMap[metric].total += p.score;
-      summaryMap[metric].count++;
-    }
+    if (!summaryMap[metric]) summaryMap[metric] = { total:0,count:0 };
+    if (p.score!=null){ summaryMap[metric].total+=p.score; summaryMap[metric].count++; }
   });
   let perfSummaryHTML = "";
-  if (Object.keys(summaryMap).length > 0) {
-    perfSummaryHTML = `<h3 style="margin-top:25px;">⭐ Performance Summary</h3>
-    <table class="report-table">
-      <thead><tr><th>Metric</th><th>Average Score</th></tr></thead><tbody>`;
-    for (const [metric, val] of Object.entries(summaryMap)) {
-      const avg = (val.total / val.count).toFixed(2);
-      perfSummaryHTML += `<tr><td>${metric}</td><td>${avg}</td></tr>`;
+  if (Object.keys(summaryMap).length>0){
+    perfSummaryHTML = `<h3>⭐ Performance Summary</h3><table class="report-table"><thead><tr><th>Metric</th><th>Average</th></tr></thead><tbody>`;
+    for (const [metric,val] of Object.entries(summaryMap)){
+      const avg = (val.total/val.count).toFixed(1);
+      const stars = "★".repeat(Math.round(avg));
+      perfSummaryHTML += `<tr><td>${metric}</td><td><span class="stars">${stars}</span></td></tr>`;
     }
     perfSummaryHTML += "</tbody></table>";
   }
 
-  // Attendance KPIs
-  const presentDates = attendance.filter(r => r.status === "Present").map(r => r.date);
-  const totalPresent = presentDates.length;
-  const sessionsCompleted = Math.floor(totalPresent / 4);
-  const remainingForNext = 4 - (totalPresent % 4);
+  // Attendance table
+  const rows = attendance.map(att=>{
+    let perfHtml = "";
+    if (perfMap[att.id]){
+      perfHtml = "<ul style='margin:5px 0 0 15px;'>";
+      perfMap[att.id].forEach(p=>{
+        perfHtml += `<li>${p.performance_metrics.name}: ${"★".repeat(p.score||0)} ${p.notes?`(${p.notes})`:""}</li>`;
+      });
+      perfHtml += "</ul>";
+    }
+    return `<tr>
+      <td>${new Date(att.date).toLocaleDateString()}</td>
+      <td><span class="badge ${att.status==="Present"?"present":"absent"}">${att.status}</span></td>
+      <td>${perfHtml||"—"}</td>
+    </tr>`;
+  }).join("");
 
-  // Group by session
-  const grouped = [];
-  for (let i = 0; i < attendance.length; i += 4) {
-    grouped.push(attendance.slice(i, i + 4));
-  }
-
-  let sessionTable = "";
-  grouped.forEach((session, idx) => {
-    let rows = session.map(att => {
-      let perfHtml = "";
-      if (perfMap[att.id]) {
-        perfHtml = "<ul style='margin:5px 0 0 15px;'>";
-        perfMap[att.id].forEach(p => {
-          perfHtml += `<li><strong>${p.performance_metrics.name}:</strong> ${p.score || "N/A"} ${p.notes ? `(${p.notes})` : ""}</li>`;
-        });
-        perfHtml += "</ul>";
-      }
-      return `<tr>
-        <td>${new Date(att.date).toLocaleDateString()}</td>
-        <td>${att.status}</td>
-        <td>${perfHtml || "—"}</td>
-      </tr>`;
-    }).join("");
-    sessionTable += `
-      <tr style="background:#f0f9ff;font-weight:600;">
-        <td colspan="3">Session ${idx + 1}</td>
-      </tr>
-      ${rows}
-    `;
-  });
-
-  const html = `
+  reportDiv.innerHTML = `
     <div class="report">
-      <div class="report-title">
-        📊 Attendance & Performance Report
-        <span class="subtle">${student.classes?.name || "No Class"}</span>
-      </div>
-      <p><strong>👤 Name:</strong> ${student.name}</p>
-      <p><strong>📞 Phone:</strong> ${student.phone || "N/A"}</p>
+      <div class="report-title">📋 Report for ${student.name}</div>
+      <p><strong>Class:</strong> ${student.classes?.name||"N/A"}</p>
+      <p><strong>Phone:</strong> ${student.phone||"N/A"}</p>
       <div class="summary-grid">
-        <div class="kpi"><div class="value">${totalPresent}</div><div class="label">Total Presents</div></div>
-        <div class="kpi"><div class="value">${sessionsCompleted}</div><div class="label">Sessions Completed</div></div>
-        <div class="kpi"><div class="value">${remainingForNext === 4 ? 0 : remainingForNext}</div><div class="label">Days Left for Next Session</div></div>
+        <div class="kpi"><div class="value">${presentCount}</div><div class="label">Total Presents</div></div>
+        ${sessionSettings.enabled?`
+        <div class="kpi"><div class="value">${sessionsCompleted}</div><div class="label">Sessions</div></div>
+        <div class="kpi"><div class="value">${daysRemaining}</div><div class="label">Days to Next</div></div>`:""}
       </div>
       ${perfSummaryHTML}
-      <h3 style="margin-top:20px;">📅 Session Breakdown</h3>
-      <table class="report-table">
-        <thead><tr><th>Date</th><th>Status</th><th>Performance</th></tr></thead>
-        <tbody>${sessionTable || "<tr><td colspan='3'>No records.</td></tr>"}</tbody>
-      </table>
+      <h3 style="margin-top:20px;">📅 Attendance Details</h3>
+      <table class="report-table"><thead><tr><th>Date</th><th>Status</th><th>Performance</th></tr></thead><tbody>${rows}</tbody></table>
     </div>`;
-  reportDiv.innerHTML = html;
-  currentReport.attendance = attendance;
-  currentReport.performances = performances;
 }
 
-function downloadPDF() {
-  const reportDiv = document.getElementById("reportOutput");
-  if (!reportDiv.innerHTML.trim()) {
-    alert("Please generate the report first.");
-    return;
-  }
-  const opt = {
-    margin: 0.5,
-    filename: 'AttendancePerformanceReport.pdf',
-    html2canvas: { scale: 2 },
-    jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
-  };
-  html2pdf().from(reportDiv).set(opt).save();
+function downloadPDF(){
+  const reportDiv=document.getElementById("reportOutput");
+  if(!reportDiv.innerHTML.trim()) return alert("Generate the report first.");
+  html2pdf().from(reportDiv).set({
+    margin:0.5,filename:"StudentReport.pdf",
+    html2canvas:{scale:2},
+    jsPDF:{unit:"in",format:"letter",orientation:"portrait"}
+  }).save();
+}
+function sendWhatsApp(){
+  const student=currentReport?.student;
+  if(!student||!student.phone) return alert("No phone number available.");
+  const totalPresent=currentReport.attendance.filter(r=>r.status==="Present").length;
+  const message=`Hello ${student.name}, your attendance & performance report is ready. ✅ Total Presents: ${totalPresent}`;
+  window.open(`https://wa.me/${student.phone.replace(/\D/g,'')}?text=${encodeURIComponent(message)}`,"_blank");
 }
 
-function sendWhatsApp() {
-  const student = currentReport?.student;
-  if (!student || !student.phone) {
-    alert("Phone number not available for the selected student.");
-    return;
-  }
-  const totalPresent = currentReport.attendance.filter(r=>r.status==="Present").length;
-  const message = `Hello ${student.name}, your attendance & performance report is ready. ✅ Total Presents: ${totalPresent}`;
-  const encoded = encodeURIComponent(message);
-  window.open(`https://wa.me/${student.phone.replace(/\D/g,'')}?text=${encoded}`, "_blank");
-}
-
+// Init
 populateClasses();
 populateStudents();
-document.getElementById("classSelect").addEventListener("change", e => populateStudents(e.target.value));
+document.getElementById("classSelect").addEventListener("change",e=>populateStudents(e.target.value));
 </script>
 </body>
 </html>
