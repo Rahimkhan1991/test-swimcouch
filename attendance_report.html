@@ -216,33 +216,13 @@ let currentReport = null;
 let sessionSettings = { enabled: false, length: 4 };
 
 // 🔹 Load admin session settings
-// 🔹 Load admin session settings (from companies table)
 async function loadSettings() {
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) return;
-
-  // get user's company_id
-  const { data: userData } = await supabase
-    .from("users")
-    .select("company_id")
-    .eq("id", session.user.id)
-    .single();
-
-  if (!userData) return;
-
-  // load session settings from that company
-  const { data, error } = await supabase
-    .from("companies")
-    .select("session_enabled, session_length_days")
-    .eq("id", userData.company_id)
-    .single();
-
+  const { data, error } = await supabase.from("settings").select("session_enabled, session_length").single();
   if (!error && data) {
     sessionSettings.enabled = data.session_enabled;
-    sessionSettings.length = data.session_length_days;
+    sessionSettings.length = data.session_length;
   }
 }
-
 
 // Toggle custom date inputs
 function toggleCustomRange() {
@@ -292,11 +272,10 @@ async function generateReport() {
   // Fetch student info
   const { data: student } = await supabase.from("students")
     .select("id, name, phone, classes(name)").eq("id", studentId).single();
-   currentReport = { student, attendance };
-
+  currentReport = { student };
 
   // Fetch attendance
-  let query = supabase.from("attendance").select("id,date,status").eq("student_id", studentId);
+  let query = supabase.from("attendance").select("id,date,status").eq("student_id", studentId).order("date",{ascending:true});
   const range = document.getElementById("rangeSelect").value;
   const today = new Date();
   let startDate, endDate;
@@ -349,26 +328,57 @@ async function generateReport() {
       const stars = "★".repeat(Math.round(avg));
       perfSummaryHTML += `<tr><td>${metric}</td><td><span class="stars">${stars}</span></td></tr>`;
     }
-    perfSummaryHTML += "</tbody></table>";
+    perfSummaryHTML += "</tbody></table>`;
   }
 
-  // Attendance table
-  const rows = attendance.map(att=>{
-    let perfHtml = "";
-    if (perfMap[att.id]){
-      perfHtml = "<ul style='margin:5px 0 0 15px;'>";
-      perfMap[att.id].forEach(p=>{
-        perfHtml += `<li>${p.performance_metrics.name}: ${"★".repeat(p.score||0)} ${p.notes?`(${p.notes})`:""}</li>`;
+  // Attendance rendering
+  let attendanceHTML = "";
+  if (sessionSettings.enabled) {
+    let sessionNum = 1;
+    for (let i = 0; i < attendance.length; i += sessionSettings.length) {
+      const chunk = attendance.slice(i, i + sessionSettings.length);
+      attendanceHTML += `<h4 style="margin-top:15px; color:#2563eb;">📦 Session ${sessionNum}</h4>`;
+      attendanceHTML += `<table class="report-table">
+        <thead><tr><th>Date</th><th>Status</th><th>Performance</th></tr></thead><tbody>`;
+      chunk.forEach(att => {
+        let perfHtml = "";
+        if (perfMap[att.id]){
+          perfHtml = "<ul style='margin:5px 0 0 15px;'>";
+          perfMap[att.id].forEach(p=>{
+            perfHtml += `<li>${p.performance_metrics.name}: ${"★".repeat(p.score||0)} ${p.notes?`(${p.notes})`:""}</li>`;
+          });
+          perfHtml += "</ul>";
+        }
+        attendanceHTML += `<tr>
+          <td>${new Date(att.date).toLocaleDateString()}</td>
+          <td><span class="badge ${att.status==="Present"?"present":"absent"}">${att.status}</span></td>
+          <td>${perfHtml||"—"}</td>
+        </tr>`;
       });
-      perfHtml += "</ul>";
+      attendanceHTML += "</tbody></table>";
+      sessionNum++;
     }
-    return `<tr>
-      <td>${new Date(att.date).toLocaleDateString()}</td>
-      <td><span class="badge ${att.status==="Present"?"present":"absent"}">${att.status}</span></td>
-      <td>${perfHtml||"—"}</td>
-    </tr>`;
-  }).join("");
+  } else {
+    attendanceHTML = `<table class="report-table"><thead><tr><th>Date</th><th>Status</th><th>Performance</th></tr></thead><tbody>`;
+    attendance.forEach(att=>{
+      let perfHtml = "";
+      if (perfMap[att.id]){
+        perfHtml = "<ul style='margin:5px 0 0 15px;'>";
+        perfMap[att.id].forEach(p=>{
+          perfHtml += `<li>${p.performance_metrics.name}: ${"★".repeat(p.score||0)} ${p.notes?`(${p.notes})`:""}</li>`;
+        });
+        perfHtml += "</ul>";
+      }
+      attendanceHTML += `<tr>
+        <td>${new Date(att.date).toLocaleDateString()}</td>
+        <td><span class="badge ${att.status==="Present"?"present":"absent"}">${att.status}</span></td>
+        <td>${perfHtml||"—"}</td>
+      </tr>`;
+    });
+    attendanceHTML += "</tbody></table>";
+  }
 
+  // Render report
   reportDiv.innerHTML = `
     <div class="report">
       <div class="report-title">📋 Report for ${student.name}</div>
@@ -382,7 +392,7 @@ async function generateReport() {
       </div>
       ${perfSummaryHTML}
       <h3 style="margin-top:20px;">📅 Attendance Details</h3>
-      <table class="report-table"><thead><tr><th>Date</th><th>Status</th><th>Performance</th></tr></thead><tbody>${rows}</tbody></table>
+      ${attendanceHTML}
     </div>`;
 }
 
@@ -398,8 +408,7 @@ function downloadPDF(){
 function sendWhatsApp(){
   const student=currentReport?.student;
   if(!student||!student.phone) return alert("No phone number available.");
-  const totalPresent=currentReport.attendance.filter(r=>r.status==="Present").length;
-  const message=`Hello ${student.name}, your attendance & performance report is ready. ✅ Total Presents: ${totalPresent}`;
+  const message=`Hello ${student.name}, your attendance & performance report is ready. ✅ Total Presents: ${document.querySelector(".kpi .value").textContent}`;
   window.open(`https://wa.me/${student.phone.replace(/\D/g,'')}?text=${encodeURIComponent(message)}`,"_blank");
 }
 
