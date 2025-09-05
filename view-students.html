@@ -1,560 +1,437 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>View Students</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <style>
-        :root {
-            --primary-color: #007bff;
-            --background-color: #f0f4f8;
-            --card-background: #ffffff;
-            --text-color: #333;
-            --shadow-light: 0 4px 8px rgba(0, 0, 0, 0.05);
-            --shadow-hover: 0 8px 16px rgba(0, 0, 0, 0.1);
-            --input-background: #f7f7f7;
-            --input-border: #ddd;
-        }
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>View Students</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 
-        body {
-            font-family: 'Segoe UI', sans-serif;
-            margin: 0;
-            padding: 20px;
-            background-color: var(--background-color);
-            color: var(--text-color);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
-        }
+  <style>
+    :root {
+      --primary: #007bff;
+      --primary-dark: #0056b3;
+      --bg: #f4f6fa;
+      --card-bg: #fff;
+      --text: #333;
+      --muted: #777;
+      --shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+    }
 
-        .container {
-            width: 100%;
-            max-width: 600px;
-        }
+    body {
+      font-family: "Segoe UI", sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: var(--bg);
+      color: var(--text);
+    }
 
-        h2 {
-            text-align: center;
-            color: var(--primary-color);
-            margin-top: 0;
-            margin-bottom: 20px;
-            font-size: 1.75rem;
-        }
+    .container {
+      max-width: 700px;
+      margin: 0 auto;
+    }
 
-        /* --- New Search Bar & Class Filters --- */
-        .search-container {
-            position: relative;
-            width: 100%;
-            margin-bottom: 20px;
-        }
+    h2 {
+      text-align: center;
+      color: var(--primary);
+      margin: 0 0 20px;
+    }
 
-        .search-container input {
-            width: 100%;
-            padding: 12px 40px 12px 15px;
-            border-radius: 25px;
-            border: 1px solid #ccc;
-            font-size: 1rem;
-            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.06);
-            box-sizing: border-box;
-        }
+    /* Search */
+    .search-container {
+      position: relative;
+      margin-bottom: 15px;
+    }
+    .search-container input {
+      width: 100%;
+      padding: 12px 40px 12px 15px;
+      border-radius: 25px;
+      border: 1px solid #ddd;
+      font-size: 1rem;
+    }
+    .search-container .fa-search {
+      position: absolute;
+      right: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+    }
 
-        .search-container .fa-search {
-            position: absolute;
-            right: 15px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #777;
-        }
+    /* Filters */
+    .class-filter-container {
+      display: flex;
+      overflow-x: auto;
+      padding: 10px 0;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .class-filter-btn {
+      flex-shrink: 0;
+      padding: 6px 14px;
+      border-radius: 20px;
+      border: 1px solid #ddd;
+      background: var(--card-bg);
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: 0.2s;
+    }
+    .class-filter-btn.active,
+    .class-filter-btn:hover {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
 
-        .class-filter-container {
-            width: 100%;
-            overflow-x: auto;
-            white-space: nowrap;
-            padding: 10px 0;
-            margin-bottom: 15px;
-            -webkit-overflow-scrolling: touch;
-        }
+    /* Student cards */
+    .student-card {
+      background: var(--card-bg);
+      padding: 15px 20px;
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      margin-bottom: 15px;
+      display: flex;
+      justify-content: space-between;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    .student-card:hover { transform: translateY(-2px); }
+    .student-info .student-name {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--primary);
+      margin: 0;
+    }
+    .student-info .details-summary {
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
 
-        .class-filter-container::-webkit-scrollbar {
-            display: none;
-        }
+    /* Floating add button */
+    .fab {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: var(--primary);
+      color: #fff;
+      border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      cursor: pointer;
+      box-shadow: var(--shadow);
+      font-size: 1.5rem;
+      transition: background 0.3s;
+    }
+    .fab:hover { background: var(--primary-dark); }
 
-        .class-filter-btn {
-            background-color: var(--card-background);
-            border: 1px solid #ccc;
-            border-radius: 20px;
-            padding: 8px 16px;
-            margin-right: 10px;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-size: 0.9rem;
-            display: inline-block;
-            color: var(--text-color);
-        }
+    /* Modals */
+    .modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(4px);
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+    }
+    .modal-content {
+      background: var(--card-bg);
+      padding: 25px;
+      border-radius: 12px;
+      max-width: 500px;
+      width: 90%;
+    }
+    .modal-content h3 {
+      text-align: center;
+      margin-top: 0;
+      color: var(--primary);
+    }
+    .modal-details p { margin: 6px 0; }
 
-        .class-filter-btn.active, .class-filter-btn:hover {
-            background-color: var(--primary-color);
-            color: white;
-            border-color: var(--primary-color);
-            box-shadow: var(--shadow-light);
-        }
+    /* Inputs */
+    input[type="text"], input[type="number"] {
+      width: 100%;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+      margin-bottom: 12px;
+    }
 
-        /* --- Simplified Student List Cards --- */
-        .student-card {
-            background-color: var(--card-background);
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 15px;
-            box-shadow: var(--shadow-light);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            transition: transform 0.2s, box-shadow 0.2s;
-            cursor: pointer;
-        }
+    /* Buttons */
+    .modal-buttons {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    .modal-buttons button {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .close-btn { background: #ccc; }
+    .save-btn { background: var(--primary); color: #fff; }
+    .edit-btn { background: #ffc107; }
+    .delete-btn { background: #dc3545; color: #fff; }
 
-        .student-card:hover {
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-hover);
-        }
+    /* Toasts */
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--primary);
+      color: #fff;
+      padding: 12px 20px;
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s, transform 0.3s;
+      z-index: 200;
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(-10px);
+      pointer-events: auto;
+    }
 
-        .student-info {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .student-info .student-name {
-            font-size: 1.2rem;
-            font-weight: 600;
-            color: var(--primary-color);
-            margin: 0;
-        }
-
-        .student-info .details-summary {
-            font-size: 0.9rem;
-            color: #777;
-        }
-
-        /* --- Buttons --- */
-        .back-button {
-            width: 100%;
-            background-color: var(--primary-color);
-            color: white;
-            padding: 12px;
-            font-size: 16px;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: background-color 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            margin-top: 20px;
-        }
-
-        .back-button:hover {
-            background-color: #0056b3;
-        }
-
-        /* --- Modal Styles --- */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(5px);
-            justify-content: center;
-            align-items: center;
-            z-index: 100;
-        }
-        
-        .modal-content {
-            background-color: var(--card-background);
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: var(--shadow-hover);
-            width: 90%;
-            max-width: 450px;
-        }
-
-        .modal-content h3 {
-            text-align: center;
-            color: var(--primary-color);
-            margin-top: 0;
-            margin-bottom: 20px;
-            font-size: 1.5rem;
-        }
-
-        .modal-details p {
-            font-size: 1rem;
-            line-height: 1.6;
-            margin: 0 0 10px;
-        }
-
-        .modal-details p strong {
-            color: var(--primary-color);
-        }
-
-        .modal-buttons {
-            display: flex;
-            justify-content: flex-end;
-            margin-top: 20px;
-            gap: 10px;
-        }
-
-        .modal-buttons button {
-            padding: 10px 20px;
-            font-size: 1rem;
-            border-radius: 8px;
-            border: none;
-            cursor: pointer;
-            width: auto;
-        }
-
-        .close-btn {
-            background-color: #ccc;
-            color: #333;
-        }
-
-        .edit-btn {
-            background-color: #ffc107;
-            color: #333;
-        }
-
-        .delete-btn {
-            background-color: #dc3545;
-            color: #fff;
-        }
-
-        /* --- Responsive Styles --- */
-        @media (max-width: 600px) {
-            body { padding: 10px; }
-            .container { max-width: 100%; }
-            .search-container input { padding: 12px 35px 12px 12px; }
-            h2 { font-size: 1.5rem; }
-            .student-card { padding: 15px; }
-            .modal-content { padding: 20px; }
-            .modal-buttons { flex-direction: column; }
-        }
-    </style>
+    @media(max-width:600px) {
+      body { padding: 10px; }
+      .modal-content { padding: 20px; }
+      .modal-buttons { flex-direction: column; }
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <h2>Student List</h2>
+  <div class="container">
+    <h2>Student List</h2>
 
-        <div class="search-container">
-            <input type="text" id="searchInput" placeholder="Search by name...">
-            <i class="fa-solid fa-search"></i>
-        </div>
-
-        <div class="class-filter-container" id="classFilterContainer">
-            </div>
-
-        <div id="studentList">
-            </div>
-        
-        <button onclick="history.back()" class="back-button"><i class="fa-solid fa-arrow-left"></i> Back</button>
+    <div class="search-container">
+      <input type="text" id="searchInput" placeholder="Search by name...">
+      <i class="fa fa-search"></i>
     </div>
 
-    <div id="studentDetailsModal" class="modal">
-        <div class="modal-content">
-            <h3 id="modalStudentName">Student Details</h3>
-            <div id="modalDetails" class="modal-details">
-                </div>
-            <div class="modal-buttons">
-                <button class="delete-btn" onclick="deleteStudent()"><i class="fa-solid fa-trash-can"></i> Delete</button>
-                <button class="edit-btn" onclick="openEditMode()"><i class="fa-solid fa-pen-to-square"></i> Edit</button>
-                <button class="close-btn" onclick="closeModal()">Close</button>
-            </div>
-        </div>
+    <div id="classFilterContainer" class="class-filter-container"></div>
+    <div id="studentList"></div>
+  </div>
+
+  <!-- Student Details Modal -->
+  <div id="studentDetailsModal" class="modal">
+    <div class="modal-content">
+      <h3 id="modalStudentName">Details</h3>
+      <div id="modalDetails" class="modal-details"></div>
+      <div class="modal-buttons">
+        <button class="delete-btn" id="deleteBtn"><i class="fa fa-trash"></i> Delete</button>
+        <button class="edit-btn" id="editBtn"><i class="fa fa-pen"></i> Edit</button>
+        <button class="close-btn" id="closeDetailsBtn">Close</button>
+      </div>
     </div>
+  </div>
 
-    <div id="editFormModal" class="modal">
-        <div class="modal-content">
-            <h3>Edit Student</h3>
-            <label>Name</label>
-            <input type="text" id="editName" placeholder="Name">
-            <label>Phone</label>
-            <input type="text" id="editPhone" placeholder="Phone">
-            <label>Total Fee</label>
-            <input type="number" id="editTotalFee" placeholder="Total Fee">
-            <label>Initial Payment</label>
-            <input type="number" id="editInitialPayment" placeholder="Initial Payment">
-            <label>Assigned Days</label>
-            <div class="days-checkboxes" id="editDaysCheckboxes">
-                <label><input type="checkbox" value="Monday"> Mon</label>
-                <label><input type="checkbox" value="Tuesday"> Tue</label>
-                <label><input type="checkbox" value="Wednesday"> Wed</label>
-                <label><input type="checkbox" value="Thursday"> Thu</label>
-                <label><input type="checkbox" value="Friday"> Fri</label>
-                <label><input type="checkbox" value="Saturday"> Sat</label>
-                <label><input type="checkbox" value="Sunday"> Sun</label>
-            </div>
-            <div class="modal-buttons">
-                <button class="close-btn" onclick="closeEditFormModal()">Cancel</button>
-                <button class="save-btn" onclick="saveEdit()"><i class="fa-solid fa-floppy-disk"></i> Save</button>
-            </div>
-        </div>
+  <!-- Edit Modal -->
+  <div id="editFormModal" class="modal">
+    <div class="modal-content">
+      <h3>Edit Student</h3>
+      <input type="text" id="editName" placeholder="Name">
+      <input type="text" id="editPhone" placeholder="Phone">
+      <input type="number" id="editTotalFee" placeholder="Total Fee">
+      <input type="number" id="editInitialPayment" placeholder="Initial Payment">
+      <div id="editDaysCheckboxes">
+        <label><input type="checkbox" value="Monday"> Mon</label>
+        <label><input type="checkbox" value="Tuesday"> Tue</label>
+        <label><input type="checkbox" value="Wednesday"> Wed</label>
+        <label><input type="checkbox" value="Thursday"> Thu</label>
+        <label><input type="checkbox" value="Friday"> Fri</label>
+        <label><input type="checkbox" value="Saturday"> Sat</label>
+        <label><input type="checkbox" value="Sunday"> Sun</label>
+      </div>
+      <div class="modal-buttons">
+        <button class="close-btn" id="cancelEditBtn">Cancel</button>
+        <button class="save-btn" id="saveEditBtn"><i class="fa fa-save"></i> Save</button>
+      </div>
     </div>
+  </div>
 
-    <script>
-        const SUPABASE_URL = 'https://ndishfwnkzdedfcywcle.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5kaXNoZndua3pkZWRmY3l3Y2xlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYwOTk0MjcsImV4cCI6MjA3MTY3NTQyN30.CXQSfhR0MVLF40v2Tp-BcENBpHpPshG9Ys3zLYiBQaM';
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  <!-- Floating Add Button -->
+  <button class="fab" id="addStudentBtn"><i class="fa fa-plus"></i></button>
 
-        let currentStudentId = null;
-        let selectedClassId = null;
-        let debounceTimer = null;
+  <!-- Toast -->
+  <div id="toast" class="toast"></div>
 
-        async function checkUserSession() {
-            const { data: { session } } = await supabase.auth.getSession();
-            if (!session) {
-                window.location.href = 'index.html';
-            }
-        }
-        checkUserSession();
+  <script>
+    const SUPABASE_URL = "https://ndishfwnkzdedfcywcle.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5kaXNoZndua3pkZWRmY3l3Y2xlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYwOTk0MjcsImV4cCI6MjA3MTY3NTQyN30.CXQSfhR0MVLF40v2Tp-BcENBpHpPshG9Ys3zLYiBQaM";
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        async function renderStudents(searchQuery = '', classFilterId = null) {
-            const studentList = document.getElementById("studentList");
-            studentList.innerHTML = "";
+    let currentStudentId = null;
+    let selectedClassId = null;
+    let debounceTimer = null;
 
-            let query = supabase
-                .from('students')
-                .select('*, classes(name)')
-                .order('name', { ascending: true });
+    const studentList = document.getElementById("studentList");
+    const searchInput = document.getElementById("searchInput");
+    const classFilterContainer = document.getElementById("classFilterContainer");
+    const studentDetailsModal = document.getElementById("studentDetailsModal");
+    const modalStudentName = document.getElementById("modalStudentName");
+    const modalDetails = document.getElementById("modalDetails");
+    const editFormModal = document.getElementById("editFormModal");
+    const toast = document.getElementById("toast");
 
-            if (searchQuery) {
-                query = query.ilike('name', `%${searchQuery}%`);
-            }
-            if (classFilterId) {
-                query = query.eq('class_id', classFilterId);
-            }
+    function showToast(msg, success = true) {
+      toast.textContent = msg;
+      toast.style.background = success ? "var(--primary)" : "#dc3545";
+      toast.classList.add("show");
+      setTimeout(() => toast.classList.remove("show"), 3000);
+    }
 
-            const { data: students, error: studentsError } = await query;
-            
-            if (studentsError) {
-                console.error('Error fetching students:', studentsError.message);
-                studentList.innerHTML = '<p>Error loading students.</p>';
-                return;
-            }
+    async function checkUserSession() {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) window.location.href = "index.html";
+    }
 
-            if (students.length === 0) {
-                studentList.innerHTML = '<p>No students found.</p>';
-                return;
-            }
+    async function renderStudents(search = "", classId = null) {
+      studentList.innerHTML = "";
 
-            const { data: fees, error: feesError } = await supabase.from('fees').select('student_id, amount');
-            const feeMap = {};
-            if (fees) {
-                fees.forEach(fee => {
-                    feeMap[fee.student_id] = (feeMap[fee.student_id] || 0) + fee.amount;
-                });
-            }
+      let query = supabase.from("students").select("*, classes(name)").order("name");
+      if (search) query = query.ilike("name", `%${search}%`);
+      if (classId) query = query.eq("class_id", classId);
 
-            students.forEach(student => {
-                const card = document.createElement("div");
-                card.className = "student-card";
-                card.onclick = () => openStudentDetailsModal(student.id, student, feeMap);
-                
-                const studentInfo = document.createElement("div");
-                studentInfo.className = "student-info";
-                
-                const studentName = document.createElement("p");
-                studentName.className = "student-name";
-                studentName.textContent = student.name;
-                
-                const summaryDetails = document.createElement("p");
-                summaryDetails.className = "details-summary";
-                const className = student.classes ? student.classes.name : 'N/A';
-                const days = Array.isArray(student.day) ? student.day.join(', ') : 'N/A';
-                summaryDetails.innerHTML = `Class: ${className} | Days: ${days}`;
+      const { data: students, error } = await query;
+      if (error) return showToast("Error loading students", false);
 
-                studentInfo.appendChild(studentName);
-                studentInfo.appendChild(summaryDetails);
-                card.appendChild(studentInfo);
-                studentList.appendChild(card);
-            });
-        }
+      if (!students.length) {
+        studentList.innerHTML = "<p>No students found.</p>";
+        return;
+      }
 
-        async function renderClassFilters() {
-            const classFilterContainer = document.getElementById('classFilterContainer');
-            classFilterContainer.innerHTML = '';
-            
-            const { data: classes, error } = await supabase.from('classes').select('id, name');
-            if (error) {
-                console.error('Error fetching classes:', error.message);
-                return;
-            }
+      const { data: fees } = await supabase.from("fees").select("student_id, amount");
+      const feeMap = {};
+      fees?.forEach(f => feeMap[f.student_id] = (feeMap[f.student_id] || 0) + f.amount);
 
-            const allBtn = document.createElement('button');
-            allBtn.className = 'class-filter-btn active';
-            allBtn.textContent = 'All Students';
-            allBtn.onclick = () => {
-                selectedClassId = null;
-                document.querySelectorAll('.class-filter-btn').forEach(btn => btn.classList.remove('active'));
-                allBtn.classList.add('active');
-                renderStudents(document.getElementById('searchInput').value);
-            };
-            classFilterContainer.appendChild(allBtn);
+      students.forEach(s => {
+        const card = document.createElement("div");
+        card.className = "student-card";
+        card.addEventListener("click", () => openStudentDetails(s, feeMap));
 
-            classes.forEach(cls => {
-                const btn = document.createElement('button');
-                btn.className = 'class-filter-btn';
-                btn.textContent = cls.name;
-                btn.onclick = () => {
-                    selectedClassId = cls.id;
-                    document.querySelectorAll('.class-filter-btn').forEach(btn => btn.classList.remove('active'));
-                    btn.classList.add('active');
-                    renderStudents(document.getElementById('searchInput').value, selectedClassId);
-                };
-                classFilterContainer.appendChild(btn);
-            });
-        }
+        const info = document.createElement("div");
+        info.className = "student-info";
+        info.innerHTML = `
+          <p class="student-name">${s.name}</p>
+          <p class="details-summary">
+            Class: ${s.classes?.name || "N/A"} | Days: ${Array.isArray(s.day) ? s.day.join(", ") : "N/A"}
+          </p>
+        `;
 
-        async function openStudentDetailsModal(studentId, studentData = null, feeMap = null) {
-            currentStudentId = studentId;
-            const studentDetailsModal = document.getElementById("studentDetailsModal");
-            const modalStudentName = document.getElementById("modalStudentName");
-            const modalDetails = document.getElementById("modalDetails");
-            
-            let student = studentData;
-            if (!student) {
-                const { data, error } = await supabase.from('students').select('*, classes(name)').eq('id', studentId).single();
-                if (error) {
-                    alert("Error fetching student details: " + error.message);
-                    return;
-                }
-                student = data;
-            }
-            
-            let totalPaid = feeMap ? feeMap[student.id] || 0 : 0;
-            if (!feeMap) {
-                const { data: fees } = await supabase.from('fees').select('amount').eq('student_id', studentId);
-                if (fees) {
-                    totalPaid = fees.reduce((sum, fee) => sum + fee.amount, 0);
-                }
-            }
+        card.appendChild(info);
+        studentList.appendChild(card);
+      });
+    }
 
-            const total = parseFloat(student.totalFee) || 0;
-            const pending = Math.max(total - totalPaid, 0);
-            const className = student.classes ? student.classes.name : 'N/A';
-            const days = Array.isArray(student.day) ? student.day.join(', ') : 'N/A';
+    async function renderClassFilters() {
+      classFilterContainer.innerHTML = "";
 
-            modalStudentName.textContent = student.name;
-            modalDetails.innerHTML = `
-                <p><strong>Phone:</strong> ${student.phone}</p>
-                <p><strong>Class:</strong> ${className}</p>
-                <p><strong>Assigned Days:</strong> ${days}</p>
-                <p><strong>Total Fee:</strong> ${total}</p>
-                <p><strong>Paid:</strong> ${totalPaid}</p>
-                <p><strong>Balance:</strong> ${Math.round(pending)}</p>
-            `;
-            
-            studentDetailsModal.style.display = "flex";
-        }
+      const { data: classes } = await supabase.from("classes").select("id, name");
 
-        function openEditMode() {
-            closeModal();
-            const studentId = currentStudentId;
-            const editFormModal = document.getElementById("editFormModal");
-            
-            supabase.from('students').select('*').eq('id', studentId).single().then(({ data: student, error }) => {
-                if (error) {
-                    alert("Error fetching student data: " + error.message);
-                    return;
-                }
+      const allBtn = document.createElement("button");
+      allBtn.textContent = "All";
+      allBtn.className = "class-filter-btn active";
+      allBtn.onclick = () => {
+        selectedClassId = null;
+        setActiveFilter(allBtn);
+        renderStudents(searchInput.value);
+      };
+      classFilterContainer.appendChild(allBtn);
 
-                document.getElementById("editName").value = student.name || "";
-                document.getElementById("editPhone").value = student.phone || "";
-                document.getElementById("editTotalFee").value = student.totalFee || "";
-                document.getElementById("editInitialPayment").value = student.initialPayment || "";
+      classes?.forEach(c => {
+        const btn = document.createElement("button");
+        btn.textContent = c.name;
+        btn.className = "class-filter-btn";
+        btn.onclick = () => {
+          selectedClassId = c.id;
+          setActiveFilter(btn);
+          renderStudents(searchInput.value, selectedClassId);
+        };
+        classFilterContainer.appendChild(btn);
+      });
+    }
 
-                document.querySelectorAll("#editDaysCheckboxes input").forEach(cb => cb.checked = false);
-                const days = Array.isArray(student.day) ? student.day : [student.day];
-                days.forEach(day => {
-                    const cb = document.querySelector(`#editDaysCheckboxes input[value="${day}"]`);
-                    if (cb) cb.checked = true;
-                });
-            });
-            
-            editFormModal.style.display = "flex";
-        }
+    function setActiveFilter(btn) {
+      document.querySelectorAll(".class-filter-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+    }
 
-        function closeModal() {
-            document.getElementById("studentDetailsModal").style.display = "none";
-        }
-        
-        function closeEditFormModal() {
-            document.getElementById("editFormModal").style.display = "none";
-        }
+    function openStudentDetails(student, feeMap) {
+      currentStudentId = student.id;
+      modalStudentName.textContent = student.name;
 
-        async function saveEdit() {
-            const name = document.getElementById("editName").value;
-            const phone = document.getElementById("editPhone").value;
-            const totalFee = parseFloat(document.getElementById("editTotalFee").value) || 0;
-            const initialPayment = parseFloat(document.getElementById("editInitialPayment").value) || 0;
-            const balanceFee = totalFee - initialPayment;
+      const totalPaid = feeMap[student.id] || 0;
+      const total = student.totalFee || 0;
+      const balance = Math.max(total - totalPaid, 0);
 
-            const selectedDays = [];
-            document.querySelectorAll("#editDaysCheckboxes input:checked").forEach(cb => {
-                selectedDays.push(cb.value);
-            });
+      modalDetails.innerHTML = `
+        <p><strong>Phone:</strong> ${student.phone}</p>
+        <p><strong>Class:</strong> ${student.classes?.name || "N/A"}</p>
+        <p><strong>Days:</strong> ${Array.isArray(student.day) ? student.day.join(", ") : "N/A"}</p>
+        <p><strong>Total Fee:</strong> ${total}</p>
+        <p><strong>Paid:</strong> ${totalPaid}</p>
+        <p><strong>Balance:</strong> ${balance}</p>
+      `;
 
-            const updatedStudent = {
-                name: name,
-                phone: phone,
-                totalFee: totalFee,
-                initialPayment: initialPayment,
-                balanceFee: Math.round(balanceFee),
-                day: selectedDays
-            };
+      studentDetailsModal.style.display = "flex";
+    }
 
-            const { error } = await supabase.from('students').update(updatedStudent).eq('id', currentStudentId);
+    async function saveEdit() {
+      const updated = {
+        name: document.getElementById("editName").value,
+        phone: document.getElementById("editPhone").value,
+        totalFee: +document.getElementById("editTotalFee").value || 0,
+        initialPayment: +document.getElementById("editInitialPayment").value || 0,
+      };
+      updated.balanceFee = updated.totalFee - updated.initialPayment;
+      updated.day = Array.from(document.querySelectorAll("#editDaysCheckboxes input:checked")).map(cb => cb.value);
 
-            if (error) {
-                alert("Error saving changes: " + error.message);
-            } else {
-                alert("Student updated successfully!");
-                closeEditFormModal();
-                renderStudents(document.getElementById('searchInput').value, selectedClassId);
-            }
-        }
+      const { error } = await supabase.from("students").update(updated).eq("id", currentStudentId);
+      if (error) return showToast("Error updating student", false);
 
-        async function deleteStudent() {
-            if (!confirm("Are you sure you want to delete this student?")) {
-                return;
-            }
+      showToast("Student updated!");
+      editFormModal.style.display = "none";
+      renderStudents(searchInput.value, selectedClassId);
+    }
 
-            await supabase.from('fees').delete().eq('student_id', currentStudentId);
-            await supabase.from('attendance').delete().eq('student_id', currentStudentId);
+    async function deleteStudent() {
+      const { error } = await supabase.from("students").delete().eq("id", currentStudentId);
+      if (error) return showToast("Delete failed", false);
 
-            const { error } = await supabase.from('students').delete().eq('id', currentStudentId);
-            if (error) {
-                alert("Error deleting student: " + error.message);
-            } else {
-                alert("Student deleted successfully!");
-                closeModal();
-                renderStudents(document.getElementById('searchInput').value, selectedClassId);
-            }
-        }
-        
-        document.getElementById('searchInput').addEventListener('input', (e) => {
-            clearTimeout(debounceTimer);
-            debounceTimer = setTimeout(() => {
-                renderStudents(e.target.value, selectedClassId);
-            }, 300); // Debounce for 300ms
-        });
+      showToast("Student deleted");
+      studentDetailsModal.style.display = "none";
+      renderStudents(searchInput.value, selectedClassId);
+    }
 
-        renderClassFilters();
-        renderStudents();
-    </script>
+    // Event bindings
+    document.getElementById("closeDetailsBtn").onclick = () => studentDetailsModal.style.display = "none";
+    document.getElementById("editBtn").onclick = () => {
+      studentDetailsModal.style.display = "none";
+      editFormModal.style.display = "flex";
+    };
+    document.getElementById("cancelEditBtn").onclick = () => editFormModal.style.display = "none";
+    document.getElementById("saveEditBtn").onclick = saveEdit;
+    document.getElementById("deleteBtn").onclick = deleteStudent;
+    document.getElementById("addStudentBtn").onclick = () => window.location.href = "add-student.html";
+
+    searchInput.addEventListener("input", e => {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => renderStudents(e.target.value, selectedClassId), 300);
+    });
+
+    // Init
+    checkUserSession();
+    renderClassFilters();
+    renderStudents();
+  </script>
 </body>
 </html>
