@@ -1,228 +1,307 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Finance Report</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<style>
-body {
-font-family: Arial, sans-serif;
-background: #f0f4f8;
-padding: 20px;
-margin: 0;
-}
-h2 {
-color: #007bff;
-text-align: center;
-}
-.summary {
-display: flex;
-justify-content: center;
-flex-wrap: wrap;
-margin: 20px 0;
-gap: 15px;
-}
-.card {
-background: white;
-padding: 20px;
-border-radius: 10px;
-width: 280px;
-box-shadow: 0 0 10px rgba(0,0,0,0.1);
-text-align: center;
-}
-canvas {
-max-width: 100%;
-margin: 20px auto;
-display: block;
-}
-.back-btn {
-display: block;
-margin: 30px auto 10px;
-padding: 12px 25px;
-background-color: #007bff;
-color: white;
-text-decoration: none;
-border-radius: 8px;
-width: fit-content;
-text-align: center;
-}
-@media (max-width: 600px) {
-.card {
-width: 90%;
-}
-}
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>💰 Finance Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #2563eb;
+      --secondary: #34c759;
+      --warning: #facc15;
+      --danger: #ef4444;
+      --bg: #f0f4f8;
+      --card: #ffffffdd;
+      --shadow: 0 6px 16px rgba(0,0,0,0.08);
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Inter', sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: var(--bg);
+      color: #1f2937;
+    }
+    h1 {
+      text-align: center;
+      color: var(--primary);
+      margin-bottom: 25px;
+      font-size: 28px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+    .card {
+      background: var(--card);
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: var(--shadow);
+      text-align: center;
+      transition: transform 0.2s;
+    }
+    .card:hover { transform: translateY(-4px); }
+    .card h3 { margin: 10px 0; font-size: 1rem; font-weight: 600; }
+    .card p { font-size: 1.4rem; font-weight: 700; margin: 0; }
+    .chart-section {
+      margin: 30px auto;
+      padding: 20px;
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+    }
+    canvas { max-width: 100%; }
+    h2 {
+      text-align: center;
+      margin-bottom: 15px;
+      color: #111827;
+    }
+    .table-container {
+      margin-top: 30px;
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      padding: 20px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    th, td {
+      padding: 12px;
+      border-bottom: 1px solid #e5e7eb;
+      text-align: left;
+      font-size: 0.95rem;
+    }
+    th { background: #f9fafb; font-weight: 600; color: #374151; }
+    tr:hover { background: #f3f4f6; }
+    .badge {
+      padding: 4px 10px;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #fff;
+    }
+    .badge.pending { background: var(--warning); color: #111; }
+    .badge.paid { background: var(--secondary); }
+    .back-btn {
+      display: block;
+      margin: 30px auto 10px;
+      padding: 14px 28px;
+      background: var(--primary);
+      color: white;
+      text-decoration: none;
+      border-radius: 10px;
+      text-align: center;
+      font-weight: 600;
+    }
+    .back-btn:hover { background: #1e40af; }
+  </style>
 </head>
 <body>
-<h2>Finance Report</h2>
-<div class="summary">
-<div class="card">
-<h3>Total Collected</h3>
-<p id="totalIncome">Rp0</p>
-</div>
-<div class="card">
-<h3>Total Expected</h3>
-<p id="expectedIncome">Rp0</p>
-</div>
-<div class="card">
-<h3>Total Pending</h3>
-<p id="pendingIncome">Rp0</p>
-</div>
-</div>
-<canvas id="financeChart" height="300"></canvas>
-<h3 style="text-align:center; margin-top:30px;">Last 30 Days Fee Collection</h3>
-<canvas id="trendChart" height="200"></canvas>
-<a href="home.html" class="back-btn">⬅️ Backk to Home</a>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <h1>💰 Finance Dashboard</h1>
+
+  <!-- Summary -->
+  <div class="grid">
+    <div class="card">
+      <h3>Total Collected</h3>
+      <p id="totalIncome">Rp0</p>
+    </div>
+    <div class="card">
+      <h3>Total Expected</h3>
+      <p id="expectedIncome">Rp0</p>
+    </div>
+    <div class="card">
+      <h3>Total Pending</h3>
+      <p id="pendingIncome">Rp0</p>
+    </div>
+    <div class="card">
+      <h3>Collection Rate</h3>
+      <p id="collectionRate">0%</p>
+    </div>
+  </div>
+
+  <!-- Pie Chart -->
+  <div class="chart-section">
+    <h2>Collection Status</h2>
+    <canvas id="financeChart" height="280"></canvas>
+  </div>
+
+  <!-- Trend Chart -->
+  <div class="chart-section">
+    <h2>Last 30 Days Fee Collection</h2>
+    <canvas id="trendChart" height="250"></canvas>
+  </div>
+
+  <!-- Top Pending Students -->
+  <div class="table-container">
+    <h2>📌 Top Pending Students</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Student</th>
+          <th>Total Fee</th>
+          <th>Paid</th>
+          <th>Pending</th>
+        </tr>
+      </thead>
+      <tbody id="pendingTable"></tbody>
+    </table>
+  </div>
+
+  <a href="home.html" class="back-btn">⬅️ Back to Home</a>
+
 <script>
-    const SUPABASE_URL = 'https://ndishfwnkzdedfcywcle.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5kaXNoZndua3pkZWRmY3l3Y2xlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYwOTk0MjcsImV4cCI6MjA3MTY3NTQyN30.CXQSfhR0MVLF40v2Tp-BcENBpHpPshG9Ys3zLYiBQaM';
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  const SUPABASE_URL = 'https://ndishfwnkzdedfcywcle.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5kaXNoZndua3pkZWRmY3l3Y2xlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYwOTk0MjcsImV4cCI6MjA3MTY3NTQyN30.CXQSfhR0MVLF40v2Tp-BcENBpHpPshG9Ys3zLYiBQaM';
+  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    async function calculateFinanceSummary(company_id) {
-        // Fetch all students and their total fees from the database for the user's company
-        const { data: students, error: studentsError } = await supabase.from('students').select('totalFee').eq('company_id', company_id);
-        
-        // Fetch all fees collected from the database for the user's company
-        const { data: fees, error: feesError } = await supabase.from('fees').select('amount').eq('company_id', company_id);
+  async function calculateFinanceSummary(company_id) {
+    const { data: students, error: studentsError } = await supabase
+      .from('students')
+      .select('id, name, totalFee')
+      .eq('company_id', company_id);
 
-        if (studentsError || feesError) {
-            console.error("Error fetching finance data:", studentsError || feesError);
-            return;
-        }
+    const { data: fees, error: feesError } = await supabase
+      .from('fees')
+      .select('student_id, amount')
+      .eq('company_id', company_id);
 
-        const totalCollected = fees.reduce((sum, fee) => sum + Number(fee.amount || 0), 0);
-        const totalExpected = students.reduce((sum, student) => sum + Number(student.totalFee || 0), 0);
-        const totalPending = Math.max(totalExpected - totalCollected, 0);
-
-        document.getElementById("totalIncome").textContent = "Rp" + totalCollected.toLocaleString();
-        document.getElementById("expectedIncome").textContent = "Rp" + totalExpected.toLocaleString();
-        document.getElementById("pendingIncome").textContent = "Rp" + totalPending.toLocaleString();
-
-        drawChart(totalCollected, totalPending);
+    if (studentsError || feesError) {
+      console.error("Error fetching finance data:", studentsError || feesError);
+      return;
     }
 
-    async function drawChart(collected, pending) {
-        const ctx = document.getElementById("financeChart").getContext("2d");
-        if (window.myChart) window.myChart.destroy();
-        window.myChart = new Chart(ctx, {
-            type: "pie",
-            data: {
-                labels: ["Collected", "Pending"],
-                datasets: [{
-                    data: [collected, pending],
-                    backgroundColor: ["#28a745", "#ffc107"]
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: {
-                        position: "bottom"
-                    }
-                }
-            }
-        });
+    let totalCollected = 0;
+    const paidMap = {};
+    fees.forEach(f => {
+      totalCollected += Number(f.amount || 0);
+      paidMap[f.student_id] = (paidMap[f.student_id] || 0) + Number(f.amount || 0);
+    });
+
+    const totalExpected = students.reduce((sum, s) => sum + Number(s.totalFee || 0), 0);
+    const totalPending = Math.max(totalExpected - totalCollected, 0);
+    const collectionRate = totalExpected ? ((totalCollected / totalExpected) * 100).toFixed(1) : 0;
+
+    document.getElementById("totalIncome").textContent = "Rp" + totalCollected.toLocaleString();
+    document.getElementById("expectedIncome").textContent = "Rp" + totalExpected.toLocaleString();
+    document.getElementById("pendingIncome").textContent = "Rp" + totalPending.toLocaleString();
+    document.getElementById("collectionRate").textContent = collectionRate + "%";
+
+    drawChart(totalCollected, totalPending);
+    renderPendingTable(students, paidMap);
+  }
+
+  function drawChart(collected, pending) {
+    const ctx = document.getElementById("financeChart").getContext("2d");
+    if (window.myChart) window.myChart.destroy();
+    window.myChart = new Chart(ctx, {
+      type: "doughnut",
+      data: {
+        labels: ["Collected", "Pending"],
+        datasets: [{
+          data: [collected, pending],
+          backgroundColor: ["#34c759", "#facc15"]
+        }]
+      },
+      options: {
+        plugins: {
+          legend: { position: "bottom" }
+        }
+      }
+    });
+  }
+
+  async function drawTrendChart(company_id) {
+    const { data: fees, error } = await supabase
+      .from('fees')
+      .select('amount, date')
+      .eq('company_id', company_id);
+
+    if (error) return;
+
+    const today = new Date();
+    const last30Days = [];
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(today.getDate() - i);
+      last30Days.push(d.toISOString().split("T")[0]);
     }
 
-    async function drawTrendChart(company_id) {
-        const { data: fees, error } = await supabase.from('fees').select('amount, date').eq('company_id', company_id);
+    const dailyCollection = {};
+    fees.forEach(f => {
+      const feeDate = f.date?.split("T")[0] || "";
+      if (last30Days.includes(feeDate)) {
+        dailyCollection[feeDate] = (dailyCollection[feeDate] || 0) + Number(f.amount || 0);
+      }
+    });
 
-        if (error) {
-            console.error("Error fetching fees for trend chart:", error.message);
-            return;
-        }
+    const ctx = document.getElementById("trendChart").getContext("2d");
+    if (window.trendChart) window.trendChart.destroy();
+    window.trendChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: last30Days,
+        datasets: [{
+          label: 'Daily Fee Collected (Rp)',
+          data: last30Days.map(d => dailyCollection[d] || 0),
+          borderColor: '#2563eb',
+          backgroundColor: 'rgba(37, 99, 235, 0.1)',
+          tension: 0.3,
+          fill: true
+        }]
+      },
+      options: {
+        scales: { y: { beginAtZero: true } }
+      }
+    });
+  }
 
-        const today = new Date();
-        const last30Days = [];
-        for (let i = 29; i >= 0; i--) {
-            const date = new Date();
-            date.setDate(today.getDate() - i);
-            const dateStr = date.toISOString().split("T")[0];
-            last30Days.push(dateStr);
-        }
+  function renderPendingTable(students, paidMap) {
+    const tbody = document.getElementById("pendingTable");
+    tbody.innerHTML = "";
+    const pendingData = students.map(s => {
+      const paid = paidMap[s.id] || 0;
+      const pending = (s.totalFee || 0) - paid;
+      return { name: s.name, total: s.totalFee || 0, paid, pending };
+    }).filter(s => s.pending > 0)
+      .sort((a,b) => b.pending - a.pending)
+      .slice(0, 10);
 
-        const dailyCollection = {};
-        fees.forEach(fee => {
-            const feeDate = fee.date?.split("T")[0] || "";
-            if (last30Days.includes(feeDate)) {
-                dailyCollection[feeDate] = (dailyCollection[feeDate] || 0) + Number(fee.amount || 0);
-            }
-        });
+    pendingData.forEach(s => {
+      tbody.innerHTML += `
+        <tr>
+          <td>${s.name}</td>
+          <td>Rp${s.total.toLocaleString()}</td>
+          <td>Rp${s.paid.toLocaleString()}</td>
+          <td><span class="badge pending">Rp${s.pending.toLocaleString()}</span></td>
+        </tr>
+      `;
+    });
+  }
 
-        const chartLabels = last30Days;
-        const chartData = last30Days.map(date => dailyCollection[date] || 0);
+  window.onload = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) { window.location.href = "index.html"; return; }
 
-        const ctx = document.getElementById("trendChart").getContext("2d");
-        if (window.trendChart) window.trendChart.destroy();
-        window.trendChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: chartLabels,
-                datasets: [{
-                    label: 'Daily Fee Collected (Rp)',
-                    data: chartData,
-                    borderColor: '#007bff',
-                    backgroundColor: 'rgba(0, 123, 255, 0.1)',
-                    tension: 0.3,
-                    fill: true,
-                }]
-            },
-            options: {
-                scales: {
-                    x: {
-                        ticks: {
-                            maxTicksLimit: 7,
-                            callback: function(value, index) {
-                                return chartLabels[index].slice(5); // Show MM-DD
-                            }
-                        }
-                    },
-                    y: {
-                        beginAtZero: true
-                    }
-                },
-                plugins: {
-                    legend: {
-                        display: true,
-                        position: 'top'
-                    }
-                }
-            }
-        });
-    }
+    const { data: companyData } = await supabase
+      .from("users")
+      .select("company_id")
+      .eq("id", session.user.id)
+      .single();
 
-    window.onload = async () => {
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-        
-        // Handle no session or session error
-        if (sessionError || !session) {
-            console.error('Session error:', sessionError?.message);
-            window.location.href = 'index.html';
-            return;
-        }
+    if (!companyData) return;
 
-        const user = session.user;
-        
-        // Fetch company ID once
-        const { data: companyData, error: companyError } = await supabase
-            .from('users')
-            .select('company_id')
-            .eq('id', user.id)
-            .single();
-
-        if (companyError || !companyData) {
-            console.error('Error fetching company info:', companyError?.message);
-            return;
-        }
-
-        const company_id = companyData.company_id;
-
-        // Now call the other functions with the company_id
-        await calculateFinanceSummary(company_id);
-        await drawTrendChart(company_id);
-    };
+    const company_id = companyData.company_id;
+    await calculateFinanceSummary(company_id);
+    await drawTrendChart(company_id);
+  }
 </script>
 </body>
 </html>
