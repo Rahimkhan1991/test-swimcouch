@@ -312,12 +312,12 @@
 
             const { data, error } = await supabase
     .from("students")
-    .select(`
-        id, name, parent_email,
-        classes:class_id ( name )
-    `)
-    .eq("parent_email", currentParentEmail)
+    .select("id, name, parent_email, company_id, classes:class_id(name)")
+    .eq("parent_email", currentParentEmail.toLowerCase())
     .eq("company_id", currentCompanyId);
+
+console.log("Query result:", data, error);
+
 
 
             if (error) {
