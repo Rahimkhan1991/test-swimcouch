@@ -21,7 +21,7 @@
     
     .toggle-wrapper {
       display: flex;
-      justify-content: flex-end; /* moves it to the right */
+      justify-content: flex-end;
       align-items: center;
       gap: 8px;
       margin-bottom: 15px;
@@ -60,7 +60,6 @@
       margin-bottom: 20px;
     }
 
-    /* Controls */
     .controls-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -82,7 +81,6 @@
       box-shadow: 0 0 0 3px rgba(99,102,241,0.2);
     }
 
-    /* Toggle switch */
     .switch {
       position: relative;
       display: inline-block;
@@ -110,12 +108,8 @@
       transition: .3s;
       box-shadow: 0 2px 4px rgba(0,0,0,0.2);
     }
-    input:checked + .slider {
-      background-color: var(--primary);
-    }
-    input:checked + .slider:before {
-      transform: translateX(22px);
-    }
+    input:checked + .slider { background-color: var(--primary); }
+    input:checked + .slider:before { transform: translateX(22px); }
 
     .metrics.hidden { display: none; }
     .metrics {
@@ -124,7 +118,6 @@
       padding-top: 10px;
     }
 
-    /* Student cards */
     .student-card {
       background: var(--card-bg);
       border-radius: 16px;
@@ -144,7 +137,6 @@
       font-size: 1.1rem;
     }
 
-    /* Stars */
     .stars {
       display: flex;
       gap: 6px;
@@ -153,9 +145,7 @@
       color: #d1d5db;
       margin-bottom: 8px;
     }
-    .stars .active {
-      color: #facc15;
-    }
+    .stars .active { color: #facc15; }
 
     .notes-input input {
       width: 100%;
@@ -165,7 +155,6 @@
       margin-top: 6px;
     }
 
-    /* Buttons */
     .back-button, .save-button {
       width: 100%;
       background: var(--primary);
@@ -184,7 +173,6 @@
     }
     .back-button:hover, .save-button:hover { background: var(--primary-dark); }
 
-    /* Toast */
     .toast {
       position: fixed;
       bottom: -60px;
@@ -239,7 +227,6 @@
     </button>
   </div>
 
-  <!-- Toast -->
   <div id="toast" class="toast"></div>
 
 <script>
@@ -249,7 +236,6 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 document.getElementById("attendanceDate").valueAsDate = new Date();
 
-/* Toast */
 function showMessage(msg, type="success") {
   const toast = document.getElementById("toast");
   toast.textContent = msg;
@@ -258,7 +244,6 @@ function showMessage(msg, type="success") {
   setTimeout(() => toast.classList.remove("show"), 3000);
 }
 
-/* Load & filter students */
 async function loadStudents() {
   const day=document.getElementById("dayFilter").value;
   const classId=document.getElementById("classFilter").value;
@@ -271,15 +256,28 @@ async function loadStudents() {
   await displayStudents(students, metrics||[]);
 }
 
-/* Display students */
 async function displayStudents(students, metrics) {
   const list=document.getElementById("studentList");
   list.innerHTML="";
   if(students.length===0){ list.innerHTML="<p>No students found.</p>"; return; }
-  const date=document.getElementById("attendanceDate").addEventListener("change", loadStudents);
-  const { data: todays } = await supabase.from("attendance").select(` student_id,id,performance_records (metric_id,score,notes)`).eq("date", date);
-  const attended = {}; if(todays) {todays.forEach(r => {attended[r.student_id] = {attendanceId: r.id,records: r.performance_records || []};});}
 
+  let date=document.getElementById("attendanceDate").value;
+  if (!date) {
+    date=new Date().toISOString().split("T")[0];
+    document.getElementById("attendanceDate").value=date;
+  }
+
+  const { data: todays } = await supabase
+    .from("attendance")
+    .select(`student_id,id,performance_records (metric_id,score,notes)`)
+    .eq("date", date);
+
+  const attended = {};
+  if(todays) {
+    todays.forEach(r => {
+      attended[r.student_id] = {attendanceId: r.id, records: r.performance_records || []};
+    });
+  }
 
   students.forEach(st=>{
     const card=document.createElement("div");
@@ -295,30 +293,27 @@ async function displayStudents(students, metrics) {
     `;
 
     const perfDiv=document.createElement("div");
-    perfDiv.className="metrics hidden"; // collapsed by default
+    perfDiv.className="metrics hidden";
 
-   metrics.forEach(m => {
-  const existing = attended[st.id]?.records.find(rec => rec.metric_id === m.id);
-
-  const row=document.createElement("div");
-  row.innerHTML=`
-    <label>${m.name}:</label>
-    <div class="stars" data-metric-id="${m.id}" data-student-id="${st.id}" data-score="${existing?.score || ""}">
-      ${[1,2,3,4,5].map(i=>`
-        <i class="fa fa-star ${existing?.score >= i ? "active" : ""}" data-value="${i}"></i>
-      `).join("")}
-    </div>
-    <input type="text" class="performance-notes" data-student-id="${st.id}" placeholder="Notes..." value="${existing?.notes || ""}">
-  `;
-  perfDiv.appendChild(row);
-});
-
+    metrics.forEach(m => {
+      const existing = attended[st.id]?.records.find(rec => rec.metric_id === m.id);
+      const row=document.createElement("div");
+      row.innerHTML=`
+        <label>${m.name}:</label>
+        <div class="stars" data-metric-id="${m.id}" data-student-id="${st.id}" data-score="${existing?.score || ""}">
+          ${[1,2,3,4,5].map(i=>`
+            <i class="fa fa-star ${existing?.score >= i ? "active" : ""}" data-value="${i}"></i>
+          `).join("")}
+        </div>
+        <input type="text" class="performance-notes" data-student-id="${st.id}" placeholder="Notes..." value="${existing?.notes || ""}">
+      `;
+      perfDiv.appendChild(row);
+    });
 
     card.appendChild(perfDiv);
     list.appendChild(card);
   });
 
-  // expand/collapse on name click
   document.querySelectorAll(".student-name").forEach(name=>{
     name.addEventListener("click",()=>{
       const metricsDiv=name.closest(".student-card").querySelector(".metrics");
@@ -326,7 +321,6 @@ async function displayStudents(students, metrics) {
     });
   });
 
-  // reset metrics when unchecked
   document.querySelectorAll(".mark-present").forEach(cb=>{
     cb.addEventListener("change",()=>{
       const metricsDiv=cb.closest(".student-card").querySelector(".metrics");
@@ -339,7 +333,6 @@ async function displayStudents(students, metrics) {
     });
   });
 
-  // star rating
   document.querySelectorAll(".stars").forEach(stars=>{
     stars.addEventListener("click",e=>{
       if(e.target.dataset.value){
@@ -357,37 +350,21 @@ function markAllPresent() {
   const checked=document.getElementById("markAll").checked;
   document.querySelectorAll(".mark-present").forEach(cb=>{
     cb.checked=checked;
-    cb.dispatchEvent(new Event("change")); // trigger reset logic
+    cb.dispatchEvent(new Event("change"));
   });
 }
 
-/* Save attendance + performance */
 window.saveAttendance = async function () {
   const date = document.getElementById("attendanceDate").value;
-
-  // 1. Get logged-in user
   const { data: { user }, error: userError } = await supabase.auth.getUser();
-  if (userError || !user) {
-    showMessage("User not logged in", "error");
-    return;
-  }
+  if (userError || !user) { showMessage("User not logged in", "error"); return; }
 
-  // 2. Get company_id for this user
   const { data: profile, error: profileError } = await supabase
-    .from("users")
-    .select("company_id")
-    .eq("id", user.id)
-    .single();
-
-  if (profileError || !profile?.company_id) {
-    showMessage("Company ID not found", "error");
-    return;
-  }
+    .from("users").select("company_id").eq("id", user.id).single();
+  if (profileError || !profile?.company_id) { showMessage("Company ID not found", "error"); return; }
 
   const companyId = profile.company_id;
   const userId = user.id;
-
-  // 3. Process each student checkbox
   const checkboxes = document.querySelectorAll(".mark-present");
 
   for (const cb of checkboxes) {
@@ -406,19 +383,13 @@ window.saveAttendance = async function () {
         .select("id")
         .single();
 
-      if (error) {
-        console.error("Attendance error", error);
-        showMessage("Error saving attendance", "error");
-        return;
-      }
+      if (error) { console.error("Attendance error", error); showMessage("Error saving attendance", "error"); return; }
 
       const attendanceId = att.id;
-
-      // Save performance metrics
       const stars = document.querySelectorAll(`.stars[data-student-id="${studentId}"]`);
       for (const s of stars) {
         const metricId = s.dataset.metricId;
-        const score = s.dataset.score || null; // allow empty
+        const score = s.dataset.score || null;
         const notes = s.parentElement.querySelector(".performance-notes").value;
 
         await supabase.from("performance_records").upsert({
@@ -430,22 +401,14 @@ window.saveAttendance = async function () {
       }
 
     } else {
-      await supabase
-        .from("attendance")
-        .delete()
-        .eq("student_id", studentId)
-        .eq("date", date)
-        .eq("company_id", companyId);
+      await supabase.from("attendance").delete()
+        .eq("student_id", studentId).eq("date", date).eq("company_id", companyId);
     }
   }
 
   showMessage("Attendance saved successfully!");
-
-  // 🔄 Reload UI so stars & notes reflect saved data
   await loadStudents();
 };
-
-
 
 window.onload = () => {
   loadStudents();
@@ -453,7 +416,6 @@ window.onload = () => {
   document.getElementById("dayFilter").addEventListener("change", loadStudents);
   document.getElementById("classFilter").addEventListener("change", loadStudents);
 };
-
 </script>
 </body>
 </html>
