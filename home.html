@@ -163,8 +163,8 @@ body {
 /* WhatsApp floating */
 .whatsapp-float {
   position: fixed;
-  bottom: 80px;   /* ⬆️ was 30px, now 80px higher */
-  right: 30px;
+  bottom: calc(80px + 60px); /* 80px default + approx logout button height */
+  right: 20px;
   z-index: 1000;
   background-color: #25D366;
   border-radius: 50%;
