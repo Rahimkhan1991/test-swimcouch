@@ -36,14 +36,14 @@
     .company-header-box {
       display: flex; align-items: center; justify-content: center;
       background: var(--card-background);
-      border-radius: 12px; padding: 20px 25px;
-      box-shadow: var(--shadow-light); margin-bottom: 25px;
+      border-radius: 12px; padding: 15px 20px;
+      box-shadow: var(--shadow-light); margin-bottom: 20px;
     }
-    #pageTitle { font-size: 1.6rem; font-weight: 700; color: var(--primary-color); margin: 0; }
+    #pageTitle { font-size: 1.4rem; font-weight: 700; color: var(--primary-color); margin: 0; }
 
     .search-container { position: relative; margin-bottom: 20px; }
     .search-container input {
-      width: 85%; padding: 12px 40px 12px 15px;
+      width: 100%; padding: 12px 40px 12px 15px;
       border-radius: 25px; border: 1px solid #ccc; font-size: 1rem;
     }
     .search-container .fa-search {
@@ -71,21 +71,68 @@
     .student-name { font-weight: 600; font-size: 1.1rem; }
     .student-details-summary { font-size: 0.9rem; color: #777; }
 
+    /* === MODAL === */
     .modal {
-      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6);
-      backdrop-filter: blur(5px); justify-content: center; align-items: center; padding: 16px;
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(4px);
+      justify-content: center; align-items: center;
+      padding: 16px; z-index: 2000;
     }
     .modal-content {
-      background: var(--card-background); padding: 25px;
-      border-radius: 12px; width: 90%; max-width: 480px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+      background: var(--card-background);
+      border-radius: 16px;
+      width: 95%; max-width: 480px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+      display: flex; flex-direction: column;
+      max-height: 90vh;
+    }
+    .modal-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid #eee;
+    }
+    .modal-header h3 { margin: 0; font-size: 1.2rem; color: var(--primary-color); }
+
+    .modal-body {
+      padding: 20px;
+      overflow-y: auto;
+      flex: 1;
+    }
+    .fee-info p { margin: 6px 0; font-size: 0.95rem; }
+    .fee-info strong { color: var(--text-color); }
+
+    .payment-history {
+      margin-top: 15px;
+      max-height: 160px;
+      overflow-y: auto;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 10px;
+      background: #fafafa;
+    }
+    .payment-history li {
+      display: flex; justify-content: space-between;
+      align-items: center; padding: 6px 0;
+      border-bottom: 1px solid #eee; font-size: 0.9rem;
+    }
+    .payment-history li:last-child { border-bottom: none; }
+
+    .receipt-btn {
+      background: #ffc107; border: none; border-radius: 6px;
+      padding: 4px 8px; cursor: pointer;
+    }
+    .receipt-btn:hover { background: #e0a800; }
+
+    .modal-footer {
+      border-top: 1px solid #eee;
+      padding: 15px 20px;
+      display: flex; flex-direction: column; gap: 12px;
     }
 
     .btn {
       padding: 12px; border: none; border-radius: var(--btn-radius);
       cursor: pointer; font-weight: 600; display: inline-flex;
       align-items: center; justify-content: center; gap: 8px;
-      width: 100%;
     }
     .btn[disabled] { opacity: 0.6; cursor: not-allowed; }
     .btn-primary { background: var(--primary-color); color: #fff; }
@@ -93,17 +140,18 @@
     .btn-success { background: #28a745; color: #fff; }
     .btn-success:hover { background: #218838; }
 
-    .receipt-btn {
-      background: #ffc107; border: none; border-radius: 8px; padding: 4px 8px;
-      display: inline-flex; align-items: center; gap: 5px; cursor: pointer;
+    input[type="number"] {
+      width: 100%; padding: 10px;
+      border: 1px solid #ccc; border-radius: 8px;
+      margin-top: 5px; margin-bottom: 10px;
     }
-    .receipt-btn:hover { background: #e0a800; }
 
     .status-message {
       position: fixed; left: 50%; transform: translateX(-50%); bottom: 20px;
       background: var(--success-bg); color: var(--success-text);
       padding: 10px 14px; border-radius: 8px; min-width: 260px;
       box-shadow: var(--shadow-light);
+      z-index: 3000;
     }
     .status-message.error { background: #fdecea; color: #611a15; }
     .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; }
@@ -130,7 +178,7 @@
   <div id="studentList"></div>
 
   <!-- Back Button -->
-  <button onclick="history.back()" class="btn btn-primary">
+  <button onclick="history.back()" class="btn btn-primary" style="margin-top:10px;">
     <i class="fa-solid fa-arrow-left"></i> Back
   </button>
 </div>
@@ -141,16 +189,18 @@
     <div class="modal-header">
       <h3 id="modalStudentName"></h3>
     </div>
-    <div id="modalDetails"></div>
-    <div class="fee-form">
-      <label for="amount">Enter Amount to Collect:</label>
-      <input type="number" id="amount" placeholder="Enter amount" min="1" step="0.01">
+    <div class="modal-body">
+      <div id="modalDetails"></div>
+    </div>
+    <div class="modal-footer">
+      <div>
+        <label for="amount"><strong>Enter Amount to Collect:</strong></label>
+        <input type="number" id="amount" placeholder="Enter amount" min="1" step="0.01">
+      </div>
       <button id="collectBtn" class="btn btn-success">
         <i class="fa-solid fa-dollar-sign"></i> Collect Fee
       </button>
-    </div>
-    <div style="text-align:center; margin-top:20px;">
-      <button id="closeModalBtn" class="btn btn-primary" style="width:auto;">
+      <button id="closeModalBtn" class="btn btn-primary">
         <i class="fa-solid fa-xmark"></i> Close
       </button>
     </div>
@@ -285,18 +335,21 @@
 
     modalStudentName.textContent = student?.name ?? '';
     modalDetails.innerHTML = `
-      <p><strong>Total Fee:</strong> ${student?.totalFee ?? 0}</p>
-      <p><strong>Total Paid:</strong> ${totalPaid}</p>
-      <p><strong>Balance:</strong> ${pending}</p>
-      <p><strong>Recent Payments:</strong></p>
-      <ul>
-        ${fees?.length ? fees.map(f => `
-          <li>${f.date}: $${f.amount}
-            <a href="print-receipt.html?feeId=${f.id}" target="_blank">
-              <button class="receipt-btn"><i class="fa-solid fa-receipt"></i></button>
-            </a>
-          </li>`).join('') : '<li>No recent payments.</li>'}
-      </ul>
+      <div class="fee-info">
+        <p><strong>Total Fee:</strong> ${student?.totalFee ?? 0}</p>
+        <p><strong>Total Paid:</strong> ${totalPaid}</p>
+        <p><strong>Balance:</strong> ${pending}</p>
+        <p><strong>Recent Payments:</strong></p>
+        <ul class="payment-history">
+          ${fees?.length ? fees.map(f => `
+            <li>
+              <span>${f.date}: $${f.amount}</span>
+              <a href="print-receipt.html?feeId=${f.id}" target="_blank">
+                <button class="receipt-btn"><i class="fa-solid fa-receipt"></i></button>
+              </a>
+            </li>`).join('') : '<li>No recent payments.</li>'}
+        </ul>
+      </div>
     `;
     amountInput.value = pending > 0 ? pending : '';
     setLoading(collectBtn, false);
@@ -304,11 +357,19 @@
 
   function closeModal() {
     document.getElementById('feeModal').style.display = 'none';
-    document.getElementById('amount').value = ''; // reset input on close
+    document.getElementById('amount').value = '';
   }
 
   document.getElementById('closeModalBtn').addEventListener('click', closeModal);
   document.getElementById('collectBtn').addEventListener('click', collectFee);
+
+  // close on overlay or ESC
+  document.getElementById('feeModal').addEventListener('click', (e) => {
+    if (e.target.id === 'feeModal') closeModal();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeModal();
+  });
 
   // ========= Collect Fee =========
   async function collectFee() {
@@ -373,8 +434,7 @@
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return window.location.href = 'index.html';
 
-    // get company id from user
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from('users')
       .select('company_id')
       .eq('id', session.user.id).single();
