@@ -24,6 +24,7 @@
       padding: 20px;
       background: var(--bg);
       color: var(--text);
+      padding-bottom: 120px; /* space so content not hidden behind fixed buttons */
     }
 
     .container {
@@ -105,50 +106,42 @@
       font-size: 0.9rem;
       color: var(--muted);
     }
-.back-btn {
-  position: fixed;
-  bottom: 16px;          /* distance from bottom */
-  left: 16px;            /* distance from left */
-  right: 16px;           /* make it stretch across */
-  padding: 14px;
-  background: #6366F1;
-  color: #fff;
-  border: none;
-  border-radius: 10px;
-  cursor: pointer;
-  font-size: 1rem;
-  font-weight: 600;
-  text-align: center;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-  transition: background 0.3s;
-  z-index: 100;
-}
 
-.back-btn:hover {
-  background: #4f46e5;
-}
-
-    /* Floating add button */
-    .fab {
+    /* Fixed bottom stacked buttons */
+    .fixed-bottom-buttons {
       position: fixed;
-      bottom: 20px;
-      right: 20px;
+      bottom: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      z-index: 200;
+    }
+    .fixed-bottom-buttons button {
+      width: 90vw;
+      max-width: 400px;
+      padding: 14px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: 600;
+      text-align: center;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      transition: background 0.3s;
+    }
+    .fixed-bottom-buttons .back-btn {
+      background: #ccc;
+      color: var(--text);
+    }
+    .fixed-bottom-buttons .back-btn:hover { background: #bbb; }
+    .fixed-bottom-buttons .add-student-btn {
       background: var(--primary);
       color: #fff;
-      border-radius: 50%;
-      width: 60px;
-      height: 60px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border: none;
-      cursor: pointer;
-      box-shadow: var(--shadow);
-      font-size: 1.5rem;
-      transition: background 0.3s;
-      z-index: 150;
     }
-    .fab:hover { background: var(--primary-dark); }
+    .fixed-bottom-buttons .add-student-btn:hover { background: #4f46e5; }
 
     /* Modals */
     .modal {
@@ -187,7 +180,7 @@
       margin-bottom: 12px;
     }
 
-    /* Buttons */
+    /* Buttons inside modals */
     .modal-buttons {
       display: flex;
       justify-content: flex-end;
@@ -288,18 +281,23 @@
       </div>
     </div>
   </div>
-<button class="back-btn" id="backBtn">
-  <i class="fa fa-arrow-left"></i> Back
-</button>
-  <!-- Floating Add Button -->
-  <button class="fab" id="addStudentBtn"><i class="fa fa-plus"></i></button>
+
+  <!-- Fixed bottom buttons -->
+  <div class="fixed-bottom-buttons">
+    <button class="back-btn" id="backBtn">
+      <i class="fa fa-arrow-left"></i> Back
+    </button>
+    <button class="add-student-btn" id="addStudentBtn">
+      <i class="fa fa-plus"></i> Add Student
+    </button>
+  </div>
 
   <!-- Toast -->
   <div id="toast" class="toast"></div>
 
   <script>
     const SUPABASE_URL = "https://ndishfwnkzdedfcywcle.supabase.co";
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5kaXNoZndua3pkZWRmY3l3Y2xlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYwOTk0MjcsImV4cCI6MjA3MTY3NTQyN30.CXQSfhR0MVLF40v2Tp-BcENBpHpPshG9Ys3zLYiBQaM";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5kaXNoZndua3pkZWRmY3l3Y2xlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYwOTk0MjcsImV4cCI6MjA3MTY3NTQyN30.CXQSfhR0MVLF40v2Tp-BcENBpHpPshG9Ys3zLYiBQaM"; 
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     let currentStudentId = null;
@@ -314,6 +312,8 @@
     const modalDetails = document.getElementById("modalDetails");
     const editFormModal = document.getElementById("editFormModal");
     const toast = document.getElementById("toast");
+    const backBtn = document.getElementById("backBtn");
+    const addStudentBtn = document.getElementById("addStudentBtn");
 
     function showToast(msg, success = true) {
       toast.textContent = msg;
@@ -463,19 +463,16 @@
       studentDetailsModal.style.display = "none";
       renderStudents(searchInput.value, selectedClassId);
     }
-// ... (existing event listeners)
 
-// Back button event listener
-document.getElementById("backBtn").onclick = () => window.history.back();
-
-// ... (rest of your script)
     // Event bindings
     document.getElementById("closeDetailsBtn").onclick = () => studentDetailsModal.style.display = "none";
     document.getElementById("editBtn").onclick = openEditForm;
     document.getElementById("cancelEditBtn").onclick = () => editFormModal.style.display = "none";
     document.getElementById("saveEditBtn").onclick = saveEdit;
     document.getElementById("deleteBtn").onclick = deleteStudent;
-    document.getElementById("addStudentBtn").onclick = () => window.location.href = "add-student.html";
+
+    backBtn.onclick = () => window.history.back();
+    addStudentBtn.onclick = () => window.location.href = "add-student.html";
 
     searchInput.addEventListener("input", e => {
       clearTimeout(debounceTimer);
