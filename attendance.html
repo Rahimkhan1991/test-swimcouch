@@ -418,11 +418,12 @@ window.saveAttendance = async function () {
           const notes = s.parentElement.querySelector(".performance-notes").value;
 
           await supabase.from("performance_records").upsert({
-            attendance_id: attendanceId,
-            metric_id: metricId,
-            score,
-            notes
-          });
+          attendance_id: attendanceId,
+           metric_id: metricId,
+           score,
+           notes
+            }, { onConflict: "attendance_id,metric_id" });
+
         }
       }
 
