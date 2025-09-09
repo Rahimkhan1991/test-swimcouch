@@ -380,53 +380,57 @@
 
   // ========= Collect Fee =========
   async function collectFee() {
-    const amountInput = document.getElementById('amount');
-    const amount = parseFloat(amountInput.value);
-    const collectBtn = document.getElementById('collectBtn');
-    setLoading(collectBtn, true);
+  const amountInput = document.getElementById('amount');
+  const amount = parseFloat(amountInput.value);
+  const collectBtn = document.getElementById('collectBtn');
+  setLoading(collectBtn, true);
 
-    if (!currentStudentId || isNaN(amount) || amount <= 0) {
-      toast("Please enter a valid amount.", 'error');
-      return setLoading(collectBtn, false);
-    }
-
-    const { data: { session } } = await supabase.auth.getSession();
-    const user = session?.user;
-    if (!user) {
-      toast("Session expired. Please log in again.", 'error');
-      return setLoading(collectBtn, false);
-    }
-
-    const { data: student } = await supabase.from('students')
-      .select('totalFee').eq('id', currentStudentId).single();
-    const { data: fees } = await supabase.from('fees')
-      .select('amount').eq('student_id', currentStudentId);
-
-    const totalPaid = fees?.reduce((s, f) => s + f.amount, 0) ?? 0;
-    const pending = (student?.totalFee ?? 0) - totalPaid;
-
-    if (amount > pending) {
-      toast(`Payment exceeds pending fee. Remaining: ${pending}`, 'error');
-      return setLoading(collectBtn, false);
-    }
-
-    const { error } = await supabase.from('fees').insert([{
-      student_id: currentStudentId,
-      amount,
-      date: new Date().toISOString().split("T")[0],
-      user_id: user.id,
-      company_id: currentCompanyId
-    }]);
-
-    if (error) {
-      toast("Failed to collect fee: " + error.message, 'error');
-    } else {
-      toast("Fee collected successfully!");
-      amountInput.value = '';
-      openFeeModal(currentStudentId);
-    }
-    setLoading(collectBtn, false);
+  if (!currentStudentId || isNaN(amount) || amount <= 0) {
+    toast("Please enter a valid amount.", 'error');
+    setLoading(collectBtn, false); // FIX
+    return;
   }
+
+  const { data: { session } } = await supabase.auth.getSession();
+  const user = session?.user;
+  if (!user) {
+    toast("Session expired. Please log in again.", 'error');
+    setLoading(collectBtn, false); // FIX
+    return;
+  }
+
+  const { data: student } = await supabase.from('students')
+    .select('totalFee').eq('id', currentStudentId).single();
+  const { data: fees } = await supabase.from('fees')
+    .select('amount').eq('student_id', currentStudentId);
+
+  const totalPaid = fees?.reduce((s, f) => s + f.amount, 0) ?? 0;
+  const pending = (student?.totalFee ?? 0) - totalPaid;
+
+  if (amount > pending) {
+    toast(`Payment exceeds pending fee. Remaining: ${pending}`, 'error');
+    setLoading(collectBtn, false); // FIX
+    return;
+  }
+
+  const { error } = await supabase.from('fees').insert([{
+    student_id: currentStudentId,
+    amount,
+    date: new Date().toISOString().split("T")[0],
+    user_id: user.id,
+    company_id: currentCompanyId
+  }]);
+
+  if (error) {
+    toast("Failed to collect fee: " + error.message, 'error');
+  } else {
+    toast("Fee collected successfully!");
+    amountInput.value = '';
+    openFeeModal(currentStudentId);
+  }
+  setLoading(collectBtn, false); // ✅ always restore at the end
+}
+
 
   // ========= Events =========
   document.getElementById('searchInput').addEventListener('input', (e) => {
