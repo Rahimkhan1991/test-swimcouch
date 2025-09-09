@@ -277,8 +277,9 @@ async function displayStudents(students, metrics) {
   list.innerHTML="";
   if(students.length===0){ list.innerHTML="<p>No students found.</p>"; return; }
   const date=document.getElementById("attendanceDate").value;
-  const { data: todays }=await supabase.from("attendance").select("student_id,id").eq("date",date);
-  const attended={}; if(todays) todays.forEach(r=>attended[r.student_id]=r.id);
+  const { data: todays } = await supabase.from("attendance").select(` student_id,id,performance_records (metric_id,score,notes)`).eq("date", date);
+  const attended = {}; if(todays) {todays.forEach(r => {attended[r.student_id] = {attendanceId: r.id,records: r.performance_records || []};});}
+
 
   students.forEach(st=>{
     const card=document.createElement("div");
@@ -296,17 +297,22 @@ async function displayStudents(students, metrics) {
     const perfDiv=document.createElement("div");
     perfDiv.className="metrics hidden"; // collapsed by default
 
-    metrics.forEach(m=>{
-      const row=document.createElement("div");
-      row.innerHTML=`
-        <label>${m.name}:</label>
-        <div class="stars" data-metric-id="${m.id}" data-student-id="${st.id}">
-          ${[1,2,3,4,5].map(i=>`<i class="fa fa-star" data-value="${i}"></i>`).join("")}
-        </div>
-        <input type="text" class="performance-notes" data-student-id="${st.id}" placeholder="Notes...">
-      `;
-      perfDiv.appendChild(row);
-    });
+   metrics.forEach(m => {
+  const existing = attended[st.id]?.records.find(rec => rec.metric_id === m.id);
+
+  const row=document.createElement("div");
+  row.innerHTML=`
+    <label>${m.name}:</label>
+    <div class="stars" data-metric-id="${m.id}" data-student-id="${st.id}" data-score="${existing?.score || ""}">
+      ${[1,2,3,4,5].map(i=>`
+        <i class="fa fa-star ${existing?.score >= i ? "active" : ""}" data-value="${i}"></i>
+      `).join("")}
+    </div>
+    <input type="text" class="performance-notes" data-student-id="${st.id}" placeholder="Notes..." value="${existing?.notes || ""}">
+  `;
+  perfDiv.appendChild(row);
+});
+
 
     card.appendChild(perfDiv);
     list.appendChild(card);
