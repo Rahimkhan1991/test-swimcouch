@@ -418,6 +418,58 @@ console.log("Query result:", data, error);
             currentDate.setMonth(currentDate.getMonth() + offset);
             renderAttendanceCalendar();
         };
+        /* Save attendance + performance */
+async function saveAttendance() {
+  const date = document.getElementById("attendanceDate").value;
+
+  // Collect all marked students
+  const presentCheckboxes = document.querySelectorAll(".mark-present");
+  for (const cb of presentCheckboxes) {
+    const studentId = cb.dataset.id;
+    if (cb.checked) {
+      // Upsert attendance
+      const { data: att, error } = await supabase
+        .from("attendance")
+        .upsert({ student_id: studentId, date })
+        .select("id")
+        .single();
+
+      if (error) {
+        console.error("Attendance error", error);
+        showMessage("Error saving attendance", "error");
+        return;
+      }
+
+      const attendanceId = att.id;
+
+      // Save metrics for this student
+      const stars = document.querySelectorAll(`.stars[data-student-id="${studentId}"]`);
+      for (const s of stars) {
+        if (s.dataset.score) {
+          const metricId = s.dataset.metricId;
+          const score = s.dataset.score;
+          const notes = s.parentElement.querySelector(".performance-notes").value;
+
+          await supabase.from("performance_records").upsert({
+            attendance_id: attendanceId,
+            metric_id: metricId,
+            score,
+            notes
+          });
+        }
+      }
+    } else {
+      // If unchecked, delete attendance for that student on this date
+      await supabase.from("attendance")
+        .delete()
+        .eq("student_id", studentId)
+        .eq("date", date);
+    }
+  }
+
+  showMessage("Attendance saved successfully!");
+}
+
     async function logout() {
             const { error } = await supabase.auth.signOut();
             if (error) {
