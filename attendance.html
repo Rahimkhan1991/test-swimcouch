@@ -358,16 +358,46 @@ function markAllPresent() {
 /* Save attendance + performance */
 window.saveAttendance = async function () {
   const date = document.getElementById("attendanceDate").value;
+
+  // 1. Get logged-in user
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  if (userError || !user) {
+    showMessage("User not logged in", "error");
+    return;
+  }
+
+  // 2. Get company_id for this user
+  const { data: profile, error: profileError } = await supabase
+    .from("users")   // change to your actual profile/users table
+    .select("company_id")
+    .eq("id", user.id)
+    .single();
+
+  if (profileError || !profile?.company_id) {
+    showMessage("Company ID not found", "error");
+    return;
+  }
+
+  const companyId = profile.company_id;
+  const userId = user.id;
+
+  // 3. Process each student checkbox
   const checkboxes = document.querySelectorAll(".mark-present");
 
   for (const cb of checkboxes) {
     const studentId = cb.dataset.id;
 
     if (cb.checked) {
-      // Upsert attendance
+      // Upsert attendance with company_id + user_id
       const { data: att, error } = await supabase
         .from("attendance")
-        .upsert({ student_id: studentId, date, status: "Present" })
+        .upsert({
+          student_id: studentId,
+          company_id: companyId,
+          user_id: userId,
+          date,
+          status: "Present"
+        }, { onConflict: "date,student_id,company_id" }) // ✅ respect unique constraint
         .select("id")
         .single();
 
@@ -379,7 +409,7 @@ window.saveAttendance = async function () {
 
       const attendanceId = att.id;
 
-      // Save metrics
+      // Save performance metrics
       const stars = document.querySelectorAll(`.stars[data-student-id="${studentId}"]`);
       for (const s of stars) {
         if (s.dataset.score) {
@@ -395,18 +425,21 @@ window.saveAttendance = async function () {
           });
         }
       }
+
     } else {
-      // Remove attendance for that date
+      // Delete attendance if unchecked
       await supabase
         .from("attendance")
         .delete()
         .eq("student_id", studentId)
-        .eq("date", date);
+        .eq("date", date)
+        .eq("company_id", companyId); // ✅ include company filter
     }
   }
 
   showMessage("Attendance saved successfully!");
 };
+
 
 window.onload=()=>{ loadStudents(); };
 </script>
