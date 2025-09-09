@@ -71,16 +71,16 @@
     .student-name { font-weight: 600; font-size: 1.1rem; }
     .student-details-summary { font-size: 0.9rem; color: #777; }
 
+    /* Success Flash */
     .btn-success.flash-success {
-  background: #28a745 !important;
-  animation: flashSuccess 1s ease;
-}
-
-@keyframes flashSuccess {
-  0% { background: #28a745; }
-  50% { background: #5cd65c; }  /* lighter green flash */
-  100% { background: #28a745; }
-}
+      background: #28a745 !important;
+      animation: flashSuccess 1s ease;
+    }
+    @keyframes flashSuccess {
+      0% { background: #28a745; }
+      50% { background: #5cd65c; }
+      100% { background: #28a745; }
+    }
 
     /* === MODAL === */
     .modal {
@@ -166,6 +166,19 @@
     }
     .status-message.error { background: #fdecea; color: #611a15; }
     .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; }
+
+    /* Full width back button */
+    .back-btn {
+      margin-top: 20px;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+    }
+    .back-btn button {
+      width: 100%;
+      max-width: 600px;
+      font-size: 1.1rem;
+    }
   </style>
 </head>
 <body>
@@ -187,19 +200,18 @@
 
   <!-- Student List -->
   <div id="studentList"></div>
+</div>
 
-  <!-- Back Button -->
-  <button onclick="history.back()" class="btn btn-primary" style="margin-top:10px;">
+<!-- Full-width Back Button -->
+<div class="back-btn">
+  <button onclick="history.back()" class="btn btn-primary">
     <i class="fa-solid fa-arrow-left"></i> Back
   </button>
 </div>
 
 <!-- Fee Modal -->
 <div id="feeModal" class="modal" role="dialog" aria-modal="true">
-  <div class="modal-content"style="
-    width: 350px;
-    margin-right: 30px;
-">
+  <div class="modal-content" style="width: 350px; margin-right: 30px;">
     <div class="modal-header">
       <h3 id="modalStudentName"></h3>
     </div>
@@ -209,11 +221,7 @@
     <div class="modal-footer">
       <div>
         <label for="amount"><strong>Enter Amount to Collect:</strong></label>
-        <input type="number" id="amount" placeholder="Enter amount" min="1" step="0.01" style="
-    border-right-width: 1px;
-    margin-right: 0px;
-    width: 295px;
-">
+        <input type="number" id="amount" placeholder="Enter amount" min="1" step="0.01">
       </div>
       <button id="collectBtn" class="btn btn-success">
         <i class="fa-solid fa-dollar-sign"></i> Collect Fee
@@ -233,13 +241,11 @@
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5kaXNoZndua3pkZWRmY3l3Y2xlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYwOTk0MjcsImV4cCI6MjA3MTY3NTQyN30.CXQSfhR0MVLF40v2Tp-BcENBpHpPshG9Ys3zLYiBQaM';
   const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  // ========= State =========
   let currentStudentId = null;
   let selectedClassId = null;
   let debounceTimer = null;
   let currentCompanyId = null;
 
-  // ========= Helpers =========
   function toast(msg, type = 'success') {
     const el = document.createElement('div');
     el.className = `status-message ${type === 'error' ? 'error' : ''}`;
@@ -330,46 +336,45 @@
   }
 
   // ========= Modal =========
-async function openFeeModal(studentId) {
-  currentStudentId = studentId;
-  const modal = document.getElementById('feeModal');
-  const modalDetails = document.getElementById('modalDetails');
-  const modalStudentName = document.getElementById('modalStudentName');
-  const amountInput = document.getElementById('amount');
+  async function openFeeModal(studentId) {
+    currentStudentId = studentId;
+    const modal = document.getElementById('feeModal');
+    const modalDetails = document.getElementById('modalDetails');
+    const modalStudentName = document.getElementById('modalStudentName');
+    const amountInput = document.getElementById('amount');
 
-  modal.style.display = 'flex';
-  modalDetails.innerHTML = '<p><i class="fa-solid fa-spinner fa-spin"></i> Loading...</p>';
+    modal.style.display = 'flex';
+    modalDetails.innerHTML = '<p><i class="fa-solid fa-spinner fa-spin"></i> Loading...</p>';
 
-  const { data: student } = await supabase.from('students')
-    .select('name, totalFee').eq('id', studentId).single();
+    const { data: student } = await supabase.from('students')
+      .select('name, totalFee').eq('id', studentId).single();
 
-  const { data: fees } = await supabase.from('fees')
-    .select('id, amount, date').eq('student_id', studentId).order('date', { ascending: false });
+    const { data: fees } = await supabase.from('fees')
+      .select('id, amount, date').eq('student_id', studentId).order('date', { ascending: false });
 
-  const totalPaid = fees?.reduce((sum, f) => sum + f.amount, 0) ?? 0;
-  const pending = Math.max((student?.totalFee ?? 0) - totalPaid, 0);
+    const totalPaid = fees?.reduce((sum, f) => sum + f.amount, 0) ?? 0;
+    const pending = Math.max((student?.totalFee ?? 0) - totalPaid, 0);
 
-  modalStudentName.textContent = student?.name ?? '';
-  modalDetails.innerHTML = `
-    <div class="fee-info">
-      <p><strong>Total Fee:</strong> ${student?.totalFee ?? 0}</p>
-      <p><strong>Total Paid:</strong> ${totalPaid}</p>
-      <p><strong>Balance:</strong> ${pending}</p>
-      <p><strong>Recent Payments:</strong></p>
-      <ul class="payment-history">
-        ${fees?.length ? fees.map(f => `
-          <li>
-            <span>${f.date}: $${f.amount}</span>
-            <a href="print-receipt.html?feeId=${f.id}" target="_blank">
-              <button class="receipt-btn"><i class="fa-solid fa-receipt"></i></button>
-            </a>
-          </li>`).join('') : '<li>No recent payments.</li>'}
-      </ul>
-    </div>
-  `;
-  amountInput.value = pending > 0 ? pending : '';
-}
-
+    modalStudentName.textContent = student?.name ?? '';
+    modalDetails.innerHTML = `
+      <div class="fee-info">
+        <p><strong>Total Fee:</strong> ${student?.totalFee ?? 0}</p>
+        <p><strong>Total Paid:</strong> ${totalPaid}</p>
+        <p><strong>Balance:</strong> ${pending}</p>
+        <p><strong>Recent Payments:</strong></p>
+        <ul class="payment-history">
+          ${fees?.length ? fees.map(f => `
+            <li>
+              <span>${f.date}: $${f.amount}</span>
+              <a href="print-receipt.html?feeId=${f.id}" target="_blank">
+                <button class="receipt-btn"><i class="fa-solid fa-receipt"></i></button>
+              </a>
+            </li>`).join('') : '<li>No recent payments.</li>'}
+        </ul>
+      </div>
+    `;
+    amountInput.value = pending > 0 ? pending : '';
+  }
 
   function closeModal() {
     document.getElementById('feeModal').style.display = 'none';
@@ -379,7 +384,6 @@ async function openFeeModal(studentId) {
   document.getElementById('closeModalBtn').addEventListener('click', closeModal);
   document.getElementById('collectBtn').addEventListener('click', collectFee);
 
-  // close on overlay or ESC
   document.getElementById('feeModal').addEventListener('click', (e) => {
     if (e.target.id === 'feeModal') closeModal();
   });
@@ -389,71 +393,68 @@ async function openFeeModal(studentId) {
 
   // ========= Collect Fee =========
   async function collectFee() {
-  const amountInput = document.getElementById('amount');
-  const amount = parseFloat(amountInput.value);
-  const collectBtn = document.getElementById('collectBtn');
-  setLoading(collectBtn, true); // start loading
+    const amountInput = document.getElementById('amount');
+    const amount = parseFloat(amountInput.value);
+    const collectBtn = document.getElementById('collectBtn');
+    setLoading(collectBtn, true);
 
-  if (!currentStudentId || isNaN(amount) || amount <= 0) {
-    toast("Please enter a valid amount.", 'error');
+    if (!currentStudentId || isNaN(amount) || amount <= 0) {
+      toast("Please enter a valid amount.", 'error');
+      setLoading(collectBtn, false);
+      return;
+    }
+
+    const { data: { session } } = await supabase.auth.getSession();
+    const user = session?.user;
+    if (!user) {
+      toast("Session expired. Please log in again.", 'error');
+      setLoading(collectBtn, false);
+      return;
+    }
+
+    const { data: student } = await supabase.from('students')
+      .select('totalFee').eq('id', currentStudentId).single();
+    const { data: fees } = await supabase.from('fees')
+      .select('amount').eq('student_id', currentStudentId);
+
+    const totalPaid = fees?.reduce((s, f) => s + f.amount, 0) ?? 0;
+    const pending = (student?.totalFee ?? 0) - totalPaid;
+
+    if (amount > pending) {
+      toast(`Payment exceeds pending fee. Remaining: ${pending}`, 'error');
+      setLoading(collectBtn, false);
+      return;
+    }
+
+    const { error } = await supabase.from('fees').insert([{
+      student_id: currentStudentId,
+      amount,
+      date: new Date().toISOString(),
+      collected_by: user.id
+    }]);
+
+    if (error) {
+      toast("Error saving payment.", 'error');
+      setLoading(collectBtn, false);
+      return;
+    }
+
+    // ✅ Success feedback
+    toast("Fee collected successfully!");
+    amountInput.value = '';
     setLoading(collectBtn, false);
-    return;
+
+    collectBtn.innerHTML = '<i class="fa-solid fa-check"></i> Success!';
+    collectBtn.classList.add("flash-success");
+    setTimeout(() => {
+      collectBtn.classList.remove("flash-success");
+      collectBtn.innerHTML = '<i class="fa-solid fa-dollar-sign"></i> Collect Fee';
+    }, 1000);
+
+    openFeeModal(currentStudentId);
   }
 
-  const { data: { session } } = await supabase.auth.getSession();
-  const user = session?.user;
-  if (!user) {
-    toast("Session expired. Please log in again.", 'error');
-    setLoading(collectBtn, false);
-    return;
-  }
-
-  const { data: student } = await supabase.from('students')
-    .select('totalFee').eq('id', currentStudentId).single();
-  const { data: fees } = await supabase.from('fees')
-    .select('amount').eq('student_id', currentStudentId);
-
-  const totalPaid = fees?.reduce((s, f) => s + f.amount, 0) ?? 0;
-  const pending = (student?.totalFee ?? 0) - totalPaid;
-
-  if (amount > pending) {
-    toast(`Payment exceeds pending fee. Remaining: ${pending}`, 'error');
-    setLoading(collectBtn, false);
-    return;
-  }
-
-  const { error } = await supabase.from('fees').insert([{
-    student_id: currentStudentId,
-    amount,
-    date: new Date().toISOString().split("T")[0],
-    user_id: user.id,
-    company_id: currentCompanyId
-  }]);
-
-  if (error) {
-  toast("Failed to collect fee: " + error.message, 'error');
-  setLoading(collectBtn, false); // reset immediately on error
-} else {
-  toast("Fee collected successfully!");
-  amountInput.value = '';
-
-  // ✅ reset button immediately
-  setLoading(collectBtn, false);
-
-  // 🔥 Success flash animation
-  collectBtn.classList.add("flash-success");
-  setTimeout(() => collectBtn.classList.remove("flash-success"), 1000);
-
-  // then reload modal (async, but button already back to normal)
-  openFeeModal(currentStudentId);
-}
-
-  setLoading(collectBtn, false); // end loading
-}
-
-
-
-  // ========= Events =========
+  // ========= Init =========
   document.getElementById('searchInput').addEventListener('input', (e) => {
     clearTimeout(debounceTimer);
     debounceTimer = setTimeout(() => {
@@ -461,21 +462,28 @@ async function openFeeModal(studentId) {
     }, 300);
   });
 
-  // ========= Init =========
-  window.addEventListener('load', async () => {
+  async function init() {
     const { data: { session } } = await supabase.auth.getSession();
-    if (!session) return window.location.href = 'index.html';
+    if (!session?.user) {
+      alert("Please log in again.");
+      location.href = 'login.html';
+      return;
+    }
+    const user = session.user;
 
-    const { data } = await supabase
-      .from('users')
-      .select('company_id')
-      .eq('id', session.user.id).single();
+    const { data: company } = await supabase.from('companies')
+      .select('id').eq('user_id', user.id).single();
 
-    currentCompanyId = data?.company_id ?? null;
+    if (!company) {
+      alert("Company not found.");
+      return;
+    }
 
-    await renderClassFilters();
-    await renderStudents();
-  });
+    currentCompanyId = company.id;
+    renderClassFilters();
+    renderStudents();
+  }
+  init();
 </script>
 </body>
 </html>
