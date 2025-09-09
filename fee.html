@@ -71,6 +71,17 @@
     .student-name { font-weight: 600; font-size: 1.1rem; }
     .student-details-summary { font-size: 0.9rem; color: #777; }
 
+    .btn-success.flash-success {
+  background: #28a745 !important;
+  animation: flashSuccess 1s ease;
+}
+
+@keyframes flashSuccess {
+  0% { background: #28a745; }
+  50% { background: #5cd65c; }  /* lighter green flash */
+  100% { background: #28a745; }
+}
+
     /* === MODAL === */
     .modal {
       display: none; position: fixed; inset: 0;
@@ -319,48 +330,46 @@
   }
 
   // ========= Modal =========
-  async function openFeeModal(studentId) {
-    currentStudentId = studentId;
-    const modal = document.getElementById('feeModal');
-    const modalDetails = document.getElementById('modalDetails');
-    const modalStudentName = document.getElementById('modalStudentName');
-    const collectBtn = document.getElementById('collectBtn');
-    const amountInput = document.getElementById('amount');
+async function openFeeModal(studentId) {
+  currentStudentId = studentId;
+  const modal = document.getElementById('feeModal');
+  const modalDetails = document.getElementById('modalDetails');
+  const modalStudentName = document.getElementById('modalStudentName');
+  const amountInput = document.getElementById('amount');
 
-    setLoading(collectBtn, true);
-    modal.style.display = 'flex';
-    modalDetails.innerHTML = '<p><i class="fa-solid fa-spinner fa-spin"></i> Loading...</p>';
+  modal.style.display = 'flex';
+  modalDetails.innerHTML = '<p><i class="fa-solid fa-spinner fa-spin"></i> Loading...</p>';
 
-    const { data: student } = await supabase.from('students')
-      .select('name, totalFee').eq('id', studentId).single();
+  const { data: student } = await supabase.from('students')
+    .select('name, totalFee').eq('id', studentId).single();
 
-    const { data: fees } = await supabase.from('fees')
-      .select('id, amount, date').eq('student_id', studentId).order('date', { ascending: false });
+  const { data: fees } = await supabase.from('fees')
+    .select('id, amount, date').eq('student_id', studentId).order('date', { ascending: false });
 
-    const totalPaid = fees?.reduce((sum, f) => sum + f.amount, 0) ?? 0;
-    const pending = Math.max((student?.totalFee ?? 0) - totalPaid, 0);
+  const totalPaid = fees?.reduce((sum, f) => sum + f.amount, 0) ?? 0;
+  const pending = Math.max((student?.totalFee ?? 0) - totalPaid, 0);
 
-    modalStudentName.textContent = student?.name ?? '';
-    modalDetails.innerHTML = `
-      <div class="fee-info">
-        <p><strong>Total Fee:</strong> ${student?.totalFee ?? 0}</p>
-        <p><strong>Total Paid:</strong> ${totalPaid}</p>
-        <p><strong>Balance:</strong> ${pending}</p>
-        <p><strong>Recent Payments:</strong></p>
-        <ul class="payment-history">
-          ${fees?.length ? fees.map(f => `
-            <li>
-              <span>${f.date}: $${f.amount}</span>
-              <a href="print-receipt.html?feeId=${f.id}" target="_blank">
-                <button class="receipt-btn"><i class="fa-solid fa-receipt"></i></button>
-              </a>
-            </li>`).join('') : '<li>No recent payments.</li>'}
-        </ul>
-      </div>
-    `;
-    amountInput.value = pending > 0 ? pending : '';
-    setLoading(collectBtn, false);
-  }
+  modalStudentName.textContent = student?.name ?? '';
+  modalDetails.innerHTML = `
+    <div class="fee-info">
+      <p><strong>Total Fee:</strong> ${student?.totalFee ?? 0}</p>
+      <p><strong>Total Paid:</strong> ${totalPaid}</p>
+      <p><strong>Balance:</strong> ${pending}</p>
+      <p><strong>Recent Payments:</strong></p>
+      <ul class="payment-history">
+        ${fees?.length ? fees.map(f => `
+          <li>
+            <span>${f.date}: $${f.amount}</span>
+            <a href="print-receipt.html?feeId=${f.id}" target="_blank">
+              <button class="receipt-btn"><i class="fa-solid fa-receipt"></i></button>
+            </a>
+          </li>`).join('') : '<li>No recent payments.</li>'}
+      </ul>
+    </div>
+  `;
+  amountInput.value = pending > 0 ? pending : '';
+}
+
 
   function closeModal() {
     document.getElementById('feeModal').style.display = 'none';
@@ -383,11 +392,11 @@
   const amountInput = document.getElementById('amount');
   const amount = parseFloat(amountInput.value);
   const collectBtn = document.getElementById('collectBtn');
-  setLoading(collectBtn, true);
+  setLoading(collectBtn, true); // start loading
 
   if (!currentStudentId || isNaN(amount) || amount <= 0) {
     toast("Please enter a valid amount.", 'error');
-    setLoading(collectBtn, false); // FIX
+    setLoading(collectBtn, false);
     return;
   }
 
@@ -395,7 +404,7 @@
   const user = session?.user;
   if (!user) {
     toast("Session expired. Please log in again.", 'error');
-    setLoading(collectBtn, false); // FIX
+    setLoading(collectBtn, false);
     return;
   }
 
@@ -409,7 +418,7 @@
 
   if (amount > pending) {
     toast(`Payment exceeds pending fee. Remaining: ${pending}`, 'error');
-    setLoading(collectBtn, false); // FIX
+    setLoading(collectBtn, false);
     return;
   }
 
@@ -422,14 +431,26 @@
   }]);
 
   if (error) {
-    toast("Failed to collect fee: " + error.message, 'error');
-  } else {
-    toast("Fee collected successfully!");
-    amountInput.value = '';
-    openFeeModal(currentStudentId);
-  }
-  setLoading(collectBtn, false); // ✅ always restore at the end
+  toast("Failed to collect fee: " + error.message, 'error');
+  setLoading(collectBtn, false); // reset immediately on error
+} else {
+  toast("Fee collected successfully!");
+  amountInput.value = '';
+
+  // ✅ reset button immediately
+  setLoading(collectBtn, false);
+
+  // 🔥 Success flash animation
+  collectBtn.classList.add("flash-success");
+  setTimeout(() => collectBtn.classList.remove("flash-success"), 1000);
+
+  // then reload modal (async, but button already back to normal)
+  openFeeModal(currentStudentId);
 }
+
+  setLoading(collectBtn, false); // end loading
+}
+
 
 
   // ========= Events =========
