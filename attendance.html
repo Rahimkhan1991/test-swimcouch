@@ -374,7 +374,7 @@ window.saveAttendance = async function () {
 
   // 2. Get company_id for this user
   const { data: profile, error: profileError } = await supabase
-    .from("users")   // change to your actual profile/users table
+    .from("users")
     .select("company_id")
     .eq("id", user.id)
     .single();
@@ -394,7 +394,6 @@ window.saveAttendance = async function () {
     const studentId = cb.dataset.id;
 
     if (cb.checked) {
-      // Upsert attendance with company_id + user_id
       const { data: att, error } = await supabase
         .from("attendance")
         .upsert({
@@ -403,7 +402,7 @@ window.saveAttendance = async function () {
           user_id: userId,
           date,
           status: "Present"
-        }, { onConflict: "date,student_id,company_id" }) // ✅ respect unique constraint
+        }, { onConflict: "date,student_id,company_id" })
         .select("id")
         .single();
 
@@ -418,34 +417,34 @@ window.saveAttendance = async function () {
       // Save performance metrics
       const stars = document.querySelectorAll(`.stars[data-student-id="${studentId}"]`);
       for (const s of stars) {
-        if (s.dataset.score) {
-          const metricId = s.dataset.metricId;
-          const score = s.dataset.score;
-          const notes = s.parentElement.querySelector(".performance-notes").value;
+        const metricId = s.dataset.metricId;
+        const score = s.dataset.score || null; // allow empty
+        const notes = s.parentElement.querySelector(".performance-notes").value;
 
-          await supabase.from("performance_records").upsert({
+        await supabase.from("performance_records").upsert({
           attendance_id: attendanceId,
-           metric_id: metricId,
-           score,
-           notes
-            }, { onConflict: "attendance_id,metric_id" });
-
-        }
+          metric_id: metricId,
+          score,
+          notes
+        }, { onConflict: "attendance_id,metric_id" });
       }
 
     } else {
-      // Delete attendance if unchecked
       await supabase
         .from("attendance")
         .delete()
         .eq("student_id", studentId)
         .eq("date", date)
-        .eq("company_id", companyId); // ✅ include company filter
+        .eq("company_id", companyId);
     }
   }
 
   showMessage("Attendance saved successfully!");
+
+  // 🔄 Reload UI so stars & notes reflect saved data
+  await loadStudents();
 };
+
 
 
 window.onload=()=>{ loadStudents(); };
