@@ -276,7 +276,7 @@ async function displayStudents(students, metrics) {
   const list=document.getElementById("studentList");
   list.innerHTML="";
   if(students.length===0){ list.innerHTML="<p>No students found.</p>"; return; }
-  const date=document.getElementById("attendanceDate").value;
+  const date=document.getElementById("attendanceDate").addEventListener("change", loadStudents);
   const { data: todays } = await supabase.from("attendance").select(` student_id,id,performance_records (metric_id,score,notes)`).eq("date", date);
   const attended = {}; if(todays) {todays.forEach(r => {attended[r.student_id] = {attendanceId: r.id,records: r.performance_records || []};});}
 
@@ -447,7 +447,13 @@ window.saveAttendance = async function () {
 
 
 
-window.onload=()=>{ loadStudents(); };
+window.onload = () => {
+  loadStudents();
+  document.getElementById("attendanceDate").addEventListener("change", loadStudents);
+  document.getElementById("dayFilter").addEventListener("change", loadStudents);
+  document.getElementById("classFilter").addEventListener("change", loadStudents);
+};
+
 </script>
 </body>
 </html>
