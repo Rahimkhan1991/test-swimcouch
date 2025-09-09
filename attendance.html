@@ -8,15 +8,15 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
   <style>
     :root {
-      --primary: #4f46e5;
-      --primary-dark: #3730a3;
-      --bg: #f8fafc;
-      --card-bg: rgba(255, 255, 255, 0.9);
+      --primary: #6366f1;
+      --primary-dark: #4f46e5;
+      --bg: #f9fafb;
+      --card-bg: #ffffff;
       --text: #1f2937;
       --muted: #6b7280;
       --success: #22c55e;
       --error: #ef4444;
-      --shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+      --shadow: 0 4px 15px rgba(0,0,0,0.08);
     }
 
     body {
@@ -37,16 +37,16 @@
     }
 
     .page-title {
-      font-size: 1.8rem;
+      font-size: 2rem;
       font-weight: 700;
       color: var(--primary);
-      margin: 0 0 20px;
+      margin-bottom: 20px;
       text-align: center;
     }
 
     .section {
       background: var(--card-bg);
-      border-radius: 16px;
+      border-radius: 18px;
       padding: 20px;
       box-shadow: var(--shadow);
       margin-bottom: 20px;
@@ -56,130 +56,115 @@
     .controls-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-      gap: 12px;
-      margin-bottom: 15px;
+      gap: 14px;
+      margin-bottom: 20px;
     }
 
     input[type="date"], select {
       padding: 12px;
-      border-radius: 10px;
+      border-radius: 12px;
       border: 1px solid #e5e7eb;
       background: #fff;
-      font-size: 0.95rem;
+      font-size: 1rem;
       transition: border 0.2s, box-shadow 0.2s;
     }
     input[type="date"]:focus, select:focus {
       outline: none;
       border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(79,70,229,0.2);
+      box-shadow: 0 0 0 3px rgba(99,102,241,0.2);
     }
 
     /* Toggle switch */
-    .toggle-wrapper {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 0.9rem;
-      color: var(--muted);
-    }
     .switch {
       position: relative;
       display: inline-block;
-      width: 42px;
-      height: 22px;
+      width: 48px;
+      height: 26px;
     }
     .switch input { display: none; }
     .slider {
       position: absolute;
       cursor: pointer;
       top: 0; left: 0; right: 0; bottom: 0;
-      background-color: #ccc;
-      border-radius: 22px;
+      background-color: #d1d5db;
+      border-radius: 26px;
       transition: .3s;
     }
     .slider:before {
       position: absolute;
       content: "";
-      height: 16px;
-      width: 16px;
+      height: 20px;
+      width: 20px;
       left: 3px;
       bottom: 3px;
       background: white;
       border-radius: 50%;
       transition: .3s;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
     }
     input:checked + .slider {
       background-color: var(--primary);
     }
     input:checked + .slider:before {
-      transform: translateX(20px);
+      transform: translateX(22px);
     }
 
     /* Student cards */
     .student-card {
       background: var(--card-bg);
-      border-radius: 14px;
+      border-radius: 16px;
       padding: 16px;
       margin-bottom: 15px;
       box-shadow: var(--shadow);
+      transition: all 0.3s ease;
     }
     .student-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 12px;
     }
     .student-name {
       font-weight: 600;
-      font-size: 1.05rem;
+      font-size: 1.1rem;
+    }
+
+    /* Collapsible details */
+    .student-details {
+      margin-top: 14px;
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+    .student-details.active {
+      display: block;
     }
 
     /* Stars */
     .stars {
       display: flex;
-      gap: 4px;
-      font-size: 1.2rem;
+      gap: 6px;
+      font-size: 1.3rem;
       cursor: pointer;
       color: #d1d5db;
+      margin-bottom: 8px;
     }
     .stars .active {
       color: #facc15;
     }
 
-    .notes-input {
-      margin-top: 10px;
-    }
     .notes-input input {
-      width: 90%;
+      width: 100%;
       padding: 10px;
-      border-radius: 8px;
+      border-radius: 10px;
       border: 1px solid #e5e7eb;
+      margin-top: 6px;
     }
 
-    /* Floating save button */
-    .fab {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      background: var(--primary);
-      color: #fff;
-      border: none;
-      border-radius: 50px;
-      padding: 14px 24px;
-      font-size: 1rem;
-      font-weight: 600;
-      cursor: pointer;
-      box-shadow: var(--shadow);
-      transition: background 0.3s;
-    }
-    .fab:hover { background: var(--primary-dark); }
-
-    /* Back button */
+    /* Buttons */
     .back-button {
       width: 100%;
       background: var(--primary);
       color: #fff;
-      padding: 12px;
+      padding: 14px;
       font-size: 1rem;
       border: none;
       border-radius: 12px;
@@ -202,14 +187,19 @@
       background: var(--success);
       color: white;
       padding: 12px 20px;
-      border-radius: 8px;
-      font-size: 0.9rem;
+      border-radius: 10px;
+      font-size: 0.95rem;
       box-shadow: var(--shadow);
       transition: bottom 0.4s;
       z-index: 1000;
     }
     .toast.error { background: var(--error); }
     .toast.show { bottom: 20px; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-5px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
   </style>
 </head>
 <body>
@@ -239,15 +229,11 @@
       <div id="studentList"></div>
     </div>
 
-     <button class="back-button" onclick="saveAttendance()">
-      Save Attendance
-    </button>
-
+    <button class="back-button" onclick="saveAttendance()">Save Attendance</button>
     <button class="back-button" onclick="window.history.back()">
       <i class="fa fa-arrow-left"></i> Back
     </button>
   </div>
-
 
   <!-- Toast -->
   <div id="toast" class="toast"></div>
@@ -268,45 +254,17 @@ function showMessage(msg, type="success") {
   setTimeout(() => toast.classList.remove("show"), 3000);
 }
 
-/* Auto select current day */
-function autoSelectCurrentDay() {
-  const dayFilter = document.getElementById("dayFilter");
-  if (!dayFilter.value) {
-    const days = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
-    dayFilter.value = days[new Date().getDay()];
-  }
-}
-function resetMarkAll(){ document.getElementById("markAll").checked = false; }
-document.getElementById("dayFilter").addEventListener("change", ()=>{resetMarkAll(); loadStudents();});
-document.getElementById("classFilter").addEventListener("change", ()=>{resetMarkAll(); loadStudents();});
-document.getElementById("attendanceDate").addEventListener("change", ()=>{resetMarkAll(); loadStudents();});
-
-/* Load class options */
-async function loadClassOptions() {
-  const { data: classes, error } = await supabase.from("classes").select("id,name").order("name");
-  if (error) return console.error(error.message);
-  const sel = document.getElementById("classFilter");
-  sel.innerHTML = "<option value=''>All Classes</option>";
-  classes.forEach(c=>{
-    const opt=document.createElement("option");
-    opt.value=c.id; opt.textContent=c.name;
-    sel.appendChild(opt);
-  });
-}
-
 /* Load & filter students */
 async function loadStudents() {
-  try {
-    const day=document.getElementById("dayFilter").value;
-    const classId=document.getElementById("classFilter").value;
-    let query=supabase.from("students").select(`id,name,day,class_id,classes(name)`);
-    if(classId) query=query.eq("class_id",classId);
-    let { data: students,error }=await query;
-    if(error) throw error;
-    if(day) students=students.filter(s=>Array.isArray(s.day)&&s.day.includes(day));
-    const { data: metrics }=await supabase.from("performance_metrics").select("id,name");
-    await displayStudents(students, metrics||[]);
-  } catch(e){ showMessage("Error loading students: "+e.message,"error"); }
+  const day=document.getElementById("dayFilter").value;
+  const classId=document.getElementById("classFilter").value;
+  let query=supabase.from("students").select(`id,name,day,class_id,classes(name)`);
+  if(classId) query=query.eq("class_id",classId);
+  let { data: students,error }=await query;
+  if(error) return console.error(error);
+  if(day) students=students.filter(s=>Array.isArray(s.day)&&s.day.includes(day));
+  const { data: metrics }=await supabase.from("performance_metrics").select("id,name");
+  await displayStudents(students, metrics||[]);
 }
 
 /* Display students */
@@ -324,11 +282,15 @@ async function displayStudents(students, metrics) {
     card.innerHTML=`
       <div class="student-header">
         <div class="student-name">${st.name}</div>
-        <input type="checkbox" class="mark-present" data-id="${st.id}" ${attended[st.id]?"checked":""}>
+        <label class="switch">
+          <input type="checkbox" class="mark-present" data-id="${st.id}" ${attended[st.id]?"checked":""}>
+          <span class="slider"></span>
+        </label>
       </div>
+      <div class="student-details ${attended[st.id]?'active':''}" id="details-${st.id}"></div>
     `;
 
-    const perfDiv=document.createElement("div");
+    const perfDiv=card.querySelector(".student-details");
     metrics.forEach(m=>{
       const row=document.createElement("div");
       row.innerHTML=`
@@ -336,18 +298,28 @@ async function displayStudents(students, metrics) {
         <div class="stars" data-metric-id="${m.id}" data-student-id="${st.id}">
           ${[1,2,3,4,5].map(i=>`<i class="fa fa-star" data-value="${i}"></i>`).join("")}
         </div>
+        <input type="text" class="performance-notes" data-student-id="${st.id}" placeholder="Notes for ${m.name}...">
       `;
       perfDiv.appendChild(row);
     });
-    perfDiv.innerHTML+=`
-      <div class="notes-input">
-        <input type="text" class="performance-notes" data-student-id="${st.id}" placeholder="Notes...">
-      </div>`;
-    card.appendChild(perfDiv);
     list.appendChild(card);
   });
 
-  /* Star click logic */
+  // Toggle expand/collapse
+  document.querySelectorAll(".mark-present").forEach(cb=>{
+    cb.addEventListener("change",()=>{
+      const details=document.getElementById("details-"+cb.dataset.id);
+      if(cb.checked){ details.classList.add("active"); }
+      else {
+        details.classList.remove("active");
+        details.querySelectorAll(".fa-star").forEach(star=>star.classList.remove("active"));
+        details.querySelectorAll(".stars").forEach(div=>delete div.dataset.score);
+        details.querySelectorAll(".performance-notes").forEach(inp=>inp.value="");
+      }
+    });
+  });
+
+  // Star rating logic
   document.querySelectorAll(".stars").forEach(stars=>{
     stars.addEventListener("click",e=>{
       if(e.target.dataset.value){
@@ -361,52 +333,7 @@ async function displayStudents(students, metrics) {
   });
 }
 
-function markAllPresent() {
-  const checked=document.getElementById("markAll").checked;
-  document.querySelectorAll(".mark-present").forEach(cb=>cb.checked=checked);
-}
-
-/* Save attendance + performance */
-async function saveAttendance(){
-  try {
-    const date=document.getElementById("attendanceDate").value;
-    const { data:{session} }=await supabase.auth.getSession();
-    const user=session?.user;
-    if(!user) return showMessage("Session expired","error");
-    if(!date) return showMessage("Select a date","error");
-
-    const { data: comp, error: cErr }=await supabase.from("users").select("company_id").eq("id",user.id).single();
-    if(cErr||!comp) throw new Error("No company info");
-    const company_id=comp.company_id;
-
-    const records=[];
-    document.querySelectorAll(".mark-present").forEach(cb=>{
-      if(cb.checked) records.push({date,student_id:cb.dataset.id,status:"Present",user_id:user.id,company_id});
-    });
-    const { data: saved,error }=await supabase.from("attendance").upsert(records,{onConflict:"date,student_id,company_id"}).select();
-    if(error) throw error;
-    const map={}; saved.forEach(a=>map[a.student_id]=a.id);
-
-    const perfData=[];
-    document.querySelectorAll(".stars").forEach(stars=>{
-      const score=stars.dataset.score;
-      if(score){
-        const sid=stars.dataset.studentId;
-        const mid=stars.dataset.metricId;
-        const aid=map[sid];
-        const notes=document.querySelector(`.performance-notes[data-student-id="${sid}"]`)?.value||null;
-        perfData.push({attendance_id:aid,metric_id:mid,score,notes});
-      }
-    });
-    if(perfData.length){
-      const { error: pErr }=await supabase.from("performance_records").upsert(perfData,{onConflict:"attendance_id,metric_id"});
-      if(pErr) throw pErr;
-    }
-    showMessage("Attendance & Performance saved!");
-  } catch(e){ showMessage("Error saving: "+e.message,"error"); }
-}
-
-window.onload=async()=>{ autoSelectCurrentDay(); await loadClassOptions(); await loadStudents(); };
+window.onload=()=>{ loadStudents(); };
 </script>
 </body>
 </html>
