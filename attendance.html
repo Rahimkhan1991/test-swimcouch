@@ -18,15 +18,6 @@
       --error: #ef4444;
       --shadow: 0 4px 15px rgba(0,0,0,0.08);
     }
-    
-    .toggle-wrapper {
-      display: flex;
-      justify-content: flex-end;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 15px;
-    }
-
     body {
       font-family: "Inter", sans-serif;
       margin: 0;
@@ -38,12 +29,7 @@
       align-items: center;
       min-height: 100vh;
     }
-
-    .container {
-      width: 100%;
-      max-width: 900px;
-    }
-
+    .container { width: 100%; max-width: 900px; }
     .page-title {
       font-size: 2rem;
       font-weight: 700;
@@ -51,7 +37,6 @@
       margin-bottom: 20px;
       text-align: center;
     }
-
     .section {
       background: var(--card-bg);
       border-radius: 18px;
@@ -59,133 +44,64 @@
       box-shadow: var(--shadow);
       margin-bottom: 20px;
     }
-
     .controls-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
       gap: 14px;
       margin-bottom: 20px;
     }
-
     input[type="date"], select {
       padding: 12px;
       border-radius: 12px;
       border: 1px solid #e5e7eb;
       background: #fff;
       font-size: 1rem;
-      transition: border 0.2s, box-shadow 0.2s;
     }
     input[type="date"]:focus, select:focus {
       outline: none;
       border-color: var(--primary);
       box-shadow: 0 0 0 3px rgba(99,102,241,0.2);
     }
-
-    .switch {
-      position: relative;
-      display: inline-block;
-      width: 48px;
-      height: 26px;
-    }
+    .switch { position: relative; display: inline-block; width: 48px; height: 26px; }
     .switch input { display: none; }
     .slider {
-      position: absolute;
-      cursor: pointer;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background-color: #d1d5db;
-      border-radius: 26px;
-      transition: .3s;
+      position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+      background-color: #d1d5db; border-radius: 26px; transition: .3s;
     }
     .slider:before {
-      position: absolute;
-      content: "";
-      height: 20px;
-      width: 20px;
-      left: 3px;
-      bottom: 3px;
-      background: white;
-      border-radius: 50%;
-      transition: .3s;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      position: absolute; content: ""; height: 20px; width: 20px;
+      left: 3px; bottom: 3px; background: white; border-radius: 50%;
+      transition: .3s; box-shadow: 0 2px 4px rgba(0,0,0,0.2);
     }
     input:checked + .slider { background-color: var(--primary); }
     input:checked + .slider:before { transform: translateX(22px); }
-
+    .toggle-wrapper { display: flex; justify-content: flex-end; gap: 8px; margin-bottom: 15px; }
     .metrics.hidden { display: none; }
-    .metrics {
-      margin-top: 10px;
-      border-top: 1px solid #eee;
-      padding-top: 10px;
-    }
-
+    .metrics { margin-top: 10px; border-top: 1px solid #eee; padding-top: 10px; }
     .student-card {
-      background: var(--card-bg);
-      border-radius: 16px;
-      padding: 16px;
-      margin-bottom: 15px;
-      box-shadow: var(--shadow);
-      transition: all 0.3s ease;
+      background: var(--card-bg); border-radius: 16px; padding: 16px;
+      margin-bottom: 15px; box-shadow: var(--shadow);
     }
-    .student-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      cursor: pointer;
-    }
-    .student-name {
-      font-weight: 600;
-      font-size: 1.1rem;
-    }
-
-    .stars {
-      display: flex;
-      gap: 6px;
-      font-size: 1.3rem;
-      cursor: pointer;
-      color: #d1d5db;
-      margin-bottom: 8px;
-    }
+    .student-header { display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+    .student-name { font-weight: 600; font-size: 1.1rem; }
+    .stars { display: flex; gap: 6px; font-size: 1.3rem; cursor: pointer; color: #d1d5db; margin-bottom: 8px; }
     .stars .active { color: #facc15; }
-
     .notes-input input {
-      width: 100%;
-      padding: 10px;
-      border-radius: 10px;
-      border: 1px solid #e5e7eb;
-      margin-top: 6px;
+      width: 100%; padding: 10px; border-radius: 10px;
+      border: 1px solid #e5e7eb; margin-top: 6px;
     }
-
     .back-button, .save-button {
-      width: 100%;
-      background: var(--primary);
-      color: #fff;
-      padding: 14px;
-      font-size: 1rem;
-      border: none;
-      border-radius: 12px;
-      cursor: pointer;
-      margin-top: 20px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 8px;
-      transition: background 0.3s;
+      width: 100%; background: var(--primary); color: #fff;
+      padding: 14px; font-size: 1rem; border: none;
+      border-radius: 12px; cursor: pointer; margin-top: 20px;
+      display: flex; justify-content: center; align-items: center; gap: 8px;
     }
     .back-button:hover, .save-button:hover { background: var(--primary-dark); }
-
     .toast {
-      position: fixed;
-      bottom: -60px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: var(--success);
-      color: white;
-      padding: 12px 20px;
-      border-radius: 10px;
-      font-size: 0.95rem;
-      box-shadow: var(--shadow);
-      transition: bottom 0.4s;
-      z-index: 1000;
+      position: fixed; bottom: -60px; left: 50%; transform: translateX(-50%);
+      background: var(--success); color: white; padding: 12px 20px;
+      border-radius: 10px; font-size: 0.95rem; box-shadow: var(--shadow);
+      transition: bottom 0.4s; z-index: 1000;
     }
     .toast.error { background: var(--error); }
     .toast.show { bottom: 20px; }
@@ -231,11 +147,12 @@
 
 <script>
 const SUPABASE_URL = "https://ndishfwnkzdedfcywcle.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5kaXNoZndua3pkZWRmY3l3Y2xlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYwOTk0MjcsImV4cCI6MjA3MTY3NTQyN30.CXQSfhR0MVLF40v2Tp-BcENBpHpPshG9Ys3zLYiBQaM";
+const SUPABASE_ANON_KEY = "YOUR_KEY_HERE";
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 document.getElementById("attendanceDate").valueAsDate = new Date();
 
+/* Toast */
 function showMessage(msg, type="success") {
   const toast = document.getElementById("toast");
   toast.textContent = msg;
@@ -244,6 +161,22 @@ function showMessage(msg, type="success") {
   setTimeout(() => toast.classList.remove("show"), 3000);
 }
 
+/* Load classes dynamically */
+async function loadClasses() {
+  const { data: classes, error } = await supabase.from("classes").select("id,name");
+  if (error) { console.error(error); return; }
+
+  const classFilter = document.getElementById("classFilter");
+  classFilter.innerHTML = `<option value="">All Classes</option>`;
+  classes.forEach(c => {
+    const opt = document.createElement("option");
+    opt.value = c.id;
+    opt.textContent = c.name;
+    classFilter.appendChild(opt);
+  });
+}
+
+/* Load & filter students */
 async function loadStudents() {
   const day=document.getElementById("dayFilter").value;
   const classId=document.getElementById("classFilter").value;
@@ -256,28 +189,19 @@ async function loadStudents() {
   await displayStudents(students, metrics||[]);
 }
 
+/* Display students */
 async function displayStudents(students, metrics) {
   const list=document.getElementById("studentList");
   list.innerHTML="";
   if(students.length===0){ list.innerHTML="<p>No students found.</p>"; return; }
-
-  let date=document.getElementById("attendanceDate").value;
-  if (!date) {
-    date=new Date().toISOString().split("T")[0];
-    document.getElementById("attendanceDate").value=date;
-  }
-
+  const date=document.getElementById("attendanceDate").value;
   const { data: todays } = await supabase
     .from("attendance")
-    .select(`student_id,id,performance_records (metric_id,score,notes)`)
+    .select(`student_id,id,performance_records(metric_id,score,notes)`)
     .eq("date", date);
 
-  const attended = {};
-  if(todays) {
-    todays.forEach(r => {
-      attended[r.student_id] = {attendanceId: r.id, records: r.performance_records || []};
-    });
-  }
+  const attended={};
+  if(todays){todays.forEach(r=>{attended[r.student_id]={attendanceId:r.id,records:r.performance_records||[]};});}
 
   students.forEach(st=>{
     const card=document.createElement("div");
@@ -295,17 +219,17 @@ async function displayStudents(students, metrics) {
     const perfDiv=document.createElement("div");
     perfDiv.className="metrics hidden";
 
-    metrics.forEach(m => {
-      const existing = attended[st.id]?.records.find(rec => rec.metric_id === m.id);
+    metrics.forEach(m=>{
+      const existing=attended[st.id]?.records.find(rec=>rec.metric_id===m.id);
       const row=document.createElement("div");
       row.innerHTML=`
         <label>${m.name}:</label>
-        <div class="stars" data-metric-id="${m.id}" data-student-id="${st.id}" data-score="${existing?.score || ""}">
+        <div class="stars" data-metric-id="${m.id}" data-student-id="${st.id}" data-score="${existing?.score||""}">
           ${[1,2,3,4,5].map(i=>`
-            <i class="fa fa-star ${existing?.score >= i ? "active" : ""}" data-value="${i}"></i>
+            <i class="fa fa-star ${existing?.score>=i?"active":""}" data-value="${i}"></i>
           `).join("")}
         </div>
-        <input type="text" class="performance-notes" data-student-id="${st.id}" placeholder="Notes..." value="${existing?.notes || ""}">
+        <input type="text" class="performance-notes" data-student-id="${st.id}" placeholder="Notes..." value="${existing?.notes||""}">
       `;
       perfDiv.appendChild(row);
     });
@@ -346,7 +270,7 @@ async function displayStudents(students, metrics) {
   });
 }
 
-function markAllPresent() {
+function markAllPresent(){
   const checked=document.getElementById("markAll").checked;
   document.querySelectorAll(".mark-present").forEach(cb=>{
     cb.checked=checked;
@@ -354,64 +278,48 @@ function markAllPresent() {
   });
 }
 
-window.saveAttendance = async function () {
-  const date = document.getElementById("attendanceDate").value;
-  const { data: { user }, error: userError } = await supabase.auth.getUser();
-  if (userError || !user) { showMessage("User not logged in", "error"); return; }
+/* Save attendance + performance */
+window.saveAttendance=async function(){
+  const date=document.getElementById("attendanceDate").value;
+  const { data:{user}, error:userError }=await supabase.auth.getUser();
+  if(userError||!user){ showMessage("User not logged in","error"); return; }
 
-  const { data: profile, error: profileError } = await supabase
-    .from("users").select("company_id").eq("id", user.id).single();
-  if (profileError || !profile?.company_id) { showMessage("Company ID not found", "error"); return; }
+  const { data:profile,error:profileError }=await supabase.from("users").select("company_id").eq("id",user.id).single();
+  if(profileError||!profile?.company_id){ showMessage("Company ID not found","error"); return; }
 
-  const companyId = profile.company_id;
-  const userId = user.id;
-  const checkboxes = document.querySelectorAll(".mark-present");
+  const companyId=profile.company_id;
+  const userId=user.id;
 
-  for (const cb of checkboxes) {
-    const studentId = cb.dataset.id;
+  const checkboxes=document.querySelectorAll(".mark-present");
+  for(const cb of checkboxes){
+    const studentId=cb.dataset.id;
+    if(cb.checked){
+      const { data:att,error }=await supabase.from("attendance").upsert({
+        student_id:studentId, company_id:companyId, user_id:userId, date, status:"Present"
+      },{ onConflict:"date,student_id,company_id" }).select("id").single();
+      if(error){ console.error(error); showMessage("Error saving attendance","error"); return; }
 
-    if (cb.checked) {
-      const { data: att, error } = await supabase
-        .from("attendance")
-        .upsert({
-          student_id: studentId,
-          company_id: companyId,
-          user_id: userId,
-          date,
-          status: "Present"
-        }, { onConflict: "date,student_id,company_id" })
-        .select("id")
-        .single();
-
-      if (error) { console.error("Attendance error", error); showMessage("Error saving attendance", "error"); return; }
-
-      const attendanceId = att.id;
-      const stars = document.querySelectorAll(`.stars[data-student-id="${studentId}"]`);
-      for (const s of stars) {
-        const metricId = s.dataset.metricId;
-        const score = s.dataset.score || null;
-        const notes = s.parentElement.querySelector(".performance-notes").value;
-
+      const attendanceId=att.id;
+      const stars=document.querySelectorAll(`.stars[data-student-id="${studentId}"]`);
+      for(const s of stars){
+        const metricId=s.dataset.metricId;
+        const score=s.dataset.score||null;
+        const notes=s.parentElement.querySelector(".performance-notes").value;
         await supabase.from("performance_records").upsert({
-          attendance_id: attendanceId,
-          metric_id: metricId,
-          score,
-          notes
-        }, { onConflict: "attendance_id,metric_id" });
+          attendance_id:attendanceId, metric_id:metricId, score, notes
+        },{ onConflict:"attendance_id,metric_id" });
       }
-
-    } else {
-      await supabase.from("attendance").delete()
-        .eq("student_id", studentId).eq("date", date).eq("company_id", companyId);
+    }else{
+      await supabase.from("attendance").delete().eq("student_id",studentId).eq("date",date).eq("company_id",companyId);
     }
   }
-
   showMessage("Attendance saved successfully!");
   await loadStudents();
 };
 
-window.onload = () => {
-  loadStudents();
+window.onload=async()=>{
+  await loadClasses();  // load class dropdown first
+  await loadStudents();
   document.getElementById("attendanceDate").addEventListener("change", loadStudents);
   document.getElementById("dayFilter").addEventListener("change", loadStudents);
   document.getElementById("classFilter").addEventListener("change", loadStudents);
