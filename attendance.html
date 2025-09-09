@@ -18,6 +18,14 @@
       --error: #ef4444;
       --shadow: 0 4px 15px rgba(0,0,0,0.08);
     }
+    
+.toggle-wrapper {
+  display: flex;
+  justify-content: flex-end; /* moves it to the right */
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 15px;
+}
 
     body {
       font-family: "Inter", sans-serif;
@@ -109,6 +117,13 @@
       transform: translateX(22px);
     }
 
+    .metrics.hidden { display: none; }
+    .metrics {
+      margin-top: 10px;
+      border-top: 1px solid #eee;
+      padding-top: 10px;
+    }
+
     /* Student cards */
     .student-card {
       background: var(--card-bg);
@@ -122,20 +137,11 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      cursor: pointer;
     }
     .student-name {
       font-weight: 600;
       font-size: 1.1rem;
-    }
-
-    /* Collapsible details */
-    .student-details {
-      margin-top: 14px;
-      display: none;
-      animation: fadeIn 0.3s ease;
-    }
-    .student-details.active {
-      display: block;
     }
 
     /* Stars */
@@ -195,11 +201,6 @@
     }
     .toast.error { background: var(--error); }
     .toast.show { bottom: 20px; }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(-5px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
   </style>
 </head>
 <body>
@@ -281,16 +282,17 @@ async function displayStudents(students, metrics) {
     card.className="student-card";
     card.innerHTML=`
       <div class="student-header">
-        <div class="student-name">${st.name}</div>
+        <div class="student-name" data-toggle="${st.id}">${st.name}</div>
         <label class="switch">
           <input type="checkbox" class="mark-present" data-id="${st.id}" ${attended[st.id]?"checked":""}>
           <span class="slider"></span>
         </label>
       </div>
-      <div class="student-details ${attended[st.id]?'active':''}" id="details-${st.id}"></div>
     `;
 
-    const perfDiv=card.querySelector(".student-details");
+    const perfDiv=document.createElement("div");
+    perfDiv.className="metrics hidden"; // collapsed by default
+
     metrics.forEach(m=>{
       const row=document.createElement("div");
       row.innerHTML=`
@@ -298,28 +300,37 @@ async function displayStudents(students, metrics) {
         <div class="stars" data-metric-id="${m.id}" data-student-id="${st.id}">
           ${[1,2,3,4,5].map(i=>`<i class="fa fa-star" data-value="${i}"></i>`).join("")}
         </div>
-        <input type="text" class="performance-notes" data-student-id="${st.id}" placeholder="Notes for ${m.name}...">
+        <input type="text" class="performance-notes" data-student-id="${st.id}" placeholder="Notes...">
       `;
       perfDiv.appendChild(row);
     });
+
+    card.appendChild(perfDiv);
     list.appendChild(card);
   });
 
-  // Toggle expand/collapse
+  // expand/collapse on name click
+  document.querySelectorAll(".student-name").forEach(name=>{
+    name.addEventListener("click",()=>{
+      const metricsDiv=name.closest(".student-card").querySelector(".metrics");
+      metricsDiv.classList.toggle("hidden");
+    });
+  });
+
+  // reset metrics when unchecked
   document.querySelectorAll(".mark-present").forEach(cb=>{
     cb.addEventListener("change",()=>{
-      const details=document.getElementById("details-"+cb.dataset.id);
-      if(cb.checked){ details.classList.add("active"); }
-      else {
-        details.classList.remove("active");
-        details.querySelectorAll(".fa-star").forEach(star=>star.classList.remove("active"));
-        details.querySelectorAll(".stars").forEach(div=>delete div.dataset.score);
-        details.querySelectorAll(".performance-notes").forEach(inp=>inp.value="");
+      const metricsDiv=cb.closest(".student-card").querySelector(".metrics");
+      if(!cb.checked){
+        metricsDiv.classList.add("hidden");
+        metricsDiv.querySelectorAll(".fa-star").forEach(star=>star.classList.remove("active"));
+        metricsDiv.querySelectorAll(".stars").forEach(div=>delete div.dataset.score);
+        metricsDiv.querySelectorAll(".performance-notes").forEach(inp=>inp.value="");
       }
     });
   });
 
-  // Star rating logic
+  // star rating
   document.querySelectorAll(".stars").forEach(stars=>{
     stars.addEventListener("click",e=>{
       if(e.target.dataset.value){
@@ -330,6 +341,14 @@ async function displayStudents(students, metrics) {
         stars.dataset.score=val;
       }
     });
+  });
+}
+
+function markAllPresent() {
+  const checked=document.getElementById("markAll").checked;
+  document.querySelectorAll(".mark-present").forEach(cb=>{
+    cb.checked=checked;
+    cb.dispatchEvent(new Event("change")); // trigger reset logic
   });
 }
 
