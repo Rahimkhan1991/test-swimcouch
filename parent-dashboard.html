@@ -1,453 +1,632 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Parent Dashboard — Enhanced</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Parent Dashboard — Enhanced</title>
 
-  <!-- Supabase -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <!-- Chart.js -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <!-- dayjs for date handling -->
-  <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
 
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
 
-  <style>
-    :root{--primary:#6366f1;--primary-2:#4f46e5;--bg:#f6f7fb;--card:#fff;--muted:#6b7280;--success:#22c55e;--danger:#ef4444}
-    *{box-sizing:border-box}
-    body{font-family:Inter,Segoe UI,Roboto,system-ui; margin:0; background:linear-gradient(180deg,#f8fafc, #eef2ff); color:#0f172a; padding:18px; display:flex; justify-content:center}
-    .container{width:100%; max-width:1100px}
-    header{display:flex;align-items:center;gap:16px;margin-bottom:18px}
-    .brand{display:flex;align-items:center;gap:12px;background:var(--card);padding:12px 16px;border-radius:12px;box-shadow:0 6px 20px rgba(15,23,42,0.06)}
-    .brand img{height:52px;width:52px;border-radius:10px;object-fit:cover}
-    .brand h1{font-size:1.25rem;margin:0;color:var(--primary)}
-    .profile-menu{margin-left:auto;display:flex;align-items:center;gap:12px}
-    .profile-btn{background:transparent;border:0;padding:8px 12px;border-radius:10px;cursor:pointer}
+    <style>
+        :root {--primary: #6366f1; --primary-2: #4f46e5; --bg: #f6f7fb; --card: #fff; --muted: #6b7280; --success: #22c55e; --danger: #ef4444}
+        * {box-sizing: border-box}
+        body {font-family: Inter, Segoe UI, Roboto, system-ui; margin: 0; background: linear-gradient(180deg, #f8fafc, #eef2ff); color: #0f172a; padding: 18px; display: flex; justify-content: center}
+        .container {width: 100%; max-width: 1100px}
+        header {display: flex; align-items: center; gap: 16px; margin-bottom: 18px}
+        .brand {display: flex; align-items: center; gap: 12px; background: var(--card); padding: 12px 16px; border-radius: 12px; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.06)}
+        .brand img {height: 52px; width: 52px; border-radius: 10px; object-fit: cover}
+        .brand h1 {font-size: 1.25rem; margin: 0; color: var(--primary)}
+        .profile-menu {margin-left: auto; display: flex; align-items: center; gap: 12px}
+        .profile-btn {background: transparent; border: 0; padding: 8px 12px; border-radius: 10px; cursor: pointer}
 
-    .dashboard-grid{display:grid;grid-template-columns:380px 1fr;gap:16px}
+        .dashboard-grid {display: grid; grid-template-columns: 380px 1fr; gap: 16px}
 
-    /* Left column */
-    .left-col .card{background:var(--card);border-radius:12px;padding:14px;box-shadow:0 6px 20px rgba(15,23,42,0.04);margin-bottom:14px}
-    .student-carousel{display:flex;align-items:center;gap:10px}
-    .student-card{min-width:120px;background:linear-gradient(180deg,#fff,#fbfdff);border-radius:12px;padding:10px;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;border:1px solid transparent}
-    .student-card.active{border-color:var(--primary);box-shadow:0 4px 18px rgba(99,102,241,0.12)}
-    .student-card img{height:64px;width:64px;border-radius:50%;object-fit:cover}
-    .student-card h4{margin:0;font-size:0.95rem}
-    .stat-row{display:flex;justify-content:space-between;padding:8px 0}
-    .stat{display:flex;flex-direction:column}
-    .stat .value{font-weight:700}
+        /* Left column */
+        .left-col .card {background: var(--card); border-radius: 12px; padding: 14px; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.04); margin-bottom: 14px}
+        .student-carousel {display: flex; align-items: center; gap: 10px; overflow-x: auto; padding-bottom: 8px;}
+        .student-card {min-width: 120px; background: linear-gradient(180deg, #fff, #fbfdff); border-radius: 12px; padding: 10px; display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; border: 1px solid transparent}
+        .student-card.active {border-color: var(--primary); box-shadow: 0 4px 18px rgba(99, 102, 241, 0.12)}
+        .student-card img {height: 64px; width: 64px; border-radius: 50%; object-fit: cover}
+        .student-card h4 {margin: 0; font-size: 0.95rem}
+        .stat-row {display: flex; justify-content: space-between; padding: 8px 0}
+        .stat {display: flex; flex-direction: column}
+        .stat .value {font-weight: 700}
 
-    /* Right column */
-    .card{background:var(--card);border-radius:12px;padding:18px;box-shadow:0 6px 20px rgba(15,23,42,0.04)}
-    .tabs{display:flex;gap:8px;margin-bottom:12px}
-    .tab{padding:8px 12px;border-radius:10px;cursor:pointer;background:transparent;border:1px solid transparent}
-    .tab.active{background:linear-gradient(90deg,var(--primary),var(--primary-2));color:white}
+        /* Right column */
+        .card {background: var(--card); border-radius: 12px; padding: 18px; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.04)}
+        .tabs {display: flex; gap: 8px; margin-bottom: 12px}
+        .tab {padding: 8px 12px; border-radius: 10px; cursor: pointer; background: transparent; border: 1px solid transparent}
+        .tab.active {background: linear-gradient(90deg, var(--primary), var(--primary-2)); color: white}
 
-    .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-    .chart-wrap{height:220px}
+        .grid-2 {display: grid; grid-template-columns: 1fr 1fr; gap: 12px}
+        .chart-wrap {height: 220px}
 
-    /* Calendar */
-    .calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-top:12px}
-    .day-name{font-size:0.78rem;color:var(--muted);text-align:center}
-    .day-cell{background:#f8fafc;padding:10px;border-radius:8px;text-align:center;min-height:72px;position:relative}
-    .day-cell.present{background:linear-gradient(180deg,#dcfce7,#bbf7d0)}
-    .day-cell.absent{background:linear-gradient(180deg,#fee2e2,#fecaca)}
-    .day-cell .dot{position:absolute;right:8px;top:8px;height:10px;width:10px;border-radius:50%}
-    .dot.present{background:var(--success)}
-    .dot.absent{background:var(--danger)}
+        /* Calendar */
+        .calendar {display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-top: 12px}
+        .day-name {font-size: 0.78rem; color: var(--muted); text-align: center}
+        .day-cell {background: #f8fafc; padding: 10px; border-radius: 8px; text-align: center; min-height: 72px; position: relative}
+        .day-cell.present {background: linear-gradient(180deg, #dcfce7, #bbf7d0)}
+        .day-cell.absent {background: linear-gradient(180deg, #fee2e2, #fecaca)}
+        .day-cell .dot {position: absolute; right: 8px; top: 8px; height: 10px; width: 10px; border-radius: 50%}
+        .dot.present {background: var(--success)}
+        .dot.absent {background: var(--danger)}
 
-    .legend{display:flex;gap:10px;justify-content:center;margin-top:12px}
-    .legend-item{display:flex;gap:8px;align-items:center}
+        .legend {display: flex; gap: 10px; justify-content: center; margin-top: 12px}
+        .legend-item {display: flex; gap: 8px; align-items: center}
 
-    /* responsive */
-    @media (max-width:1000px){.dashboard-grid{grid-template-columns:1fr;}.left-col{order:2}.right-col{order:1}}
-  </style>
+        /* responsive */
+        @media (max-width: 1000px) {
+            .dashboard-grid {grid-template-columns: 1fr;}
+            .left-col {order: 2}
+            .right-col {order: 1}
+        }
+    </style>
 </head>
 <body>
-  <div class="container">
-    <header>
-      <div class="brand">
-        <img id="headerLogo" src="" alt="logo" style="display:none">
-        <h1 id="companyName">Parent Dashboard</h1>
-      </div>
-
-      <div class="profile-menu">
-        <div style="text-align:right">
-          <div id="parentName" style="font-weight:700">Parent</div>
-          <div id="parentEmail" style="font-size:0.85rem;color:var(--muted)"></div>
-        </div>
-        <button class="profile-btn" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i></button>
-      </div>
-    </header>
-
-    <div class="dashboard-grid">
-      <div class="left-col">
-        <div class="card">
-          <h3 style="margin-top:0">Children</h3>
-          <div class="student-carousel" id="studentList"></div>
-        </div>
-
-        <div class="card" id="summaryCard">
-          <h4 style="margin:0 0 8px">This Month Summary</h4>
-          <div class="stat-row"><div class="stat"><span class="label">Present</span><span class="value" id="summaryPresent">—</span></div><div class="stat"><span class="label">Absent</span><span class="value" id="summaryAbsent">—</span></div></div>
-          <div style="height:160px"><canvas id="attendanceDonut"></canvas></div>
-        </div>
-
-        <div class="card" id="quickMetrics">
-          <h4 style="margin:0 0 8px">Quick Performance</h4>
-          <div id="metricList"></div>
-        </div>
-      </div>
-
-      <div class="right-col">
-        <div class="card">
-          <div style="display:flex;align-items:center;justify-content:space-between">
-            <h3 style="margin:0">Overview</h3>
-            <div>
-              <button class="tab active" data-tab="attendance" onclick="switchTab('attendance', this)"><i class="fa-regular fa-calendar-days"></i> Attendance</button>
-              <button class="tab" data-tab="performance" onclick="switchTab('performance', this)"><i class="fa-solid fa-chart-line"></i> Performance</button>
-            </div>
-          </div>
-
-          <div id="attendanceTab" class="tab-panel">
-            <div class="grid-2">
-              <div class="card" style="padding:12px">
-                <h4 style="margin:0">Monthly Attendance</h4>
-                <div class="chart-wrap"><canvas id="miniAttendance"></canvas></div>
-              </div>
-              <div class="card" style="padding:12px">
-                <h4 style="margin:0">Attendance Trend</h4>
-                <div class="chart-wrap"><canvas id="attendanceTrend"></canvas></div>
-              </div>
+    <div class="container">
+        <header>
+            <div class="brand">
+                <img id="headerLogo" src="" alt="logo" style="display:none">
+                <h1 id="companyName">Parent Dashboard</h1>
             </div>
 
-            <div style="margin-top:12px">
-              <div style="display:flex;align-items:center;gap:8px;justify-content:space-between">
-                <div>
-                  <button onclick="changeMonth(-1)"><i class="fa-solid fa-chevron-left"></i></button>
-                  <strong id="currentMonth"></strong>
-                  <button onclick="changeMonth(1)"><i class="fa-solid fa-chevron-right"></i></button>
+            <div class="profile-menu">
+                <div style="text-align:right">
+                    <div id="parentName" style="font-weight:700">Parent</div>
+                    <div id="parentEmail" style="font-size:0.85rem;color:var(--muted)"></div>
                 </div>
-                <div style="color:var(--muted);font-size:0.95rem">Click a day for details</div>
-              </div>
-
-              <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-top:10px">
-                <div class="day-name">Sun</div><div class="day-name">Mon</div><div class="day-name">Tue</div><div class="day-name">Wed</div><div class="day-name">Thu</div><div class="day-name">Fri</div><div class="day-name">Sat</div>
-              </div>
-
-              <div class="calendar" id="calendarGrid"></div>
-
-              <div class="legend">
-                <div class="legend-item"><span class="legend-box" style="background:var(--success);width:12px;height:12px;border-radius:3px"></span> Present</div>
-                <div class="legend-item"><span class="legend-box" style="background:var(--danger);width:12px;height:12px;border-radius:3px"></span> Absent</div>
-              </div>
+                <button class="profile-btn" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i></button>
             </div>
-          </div>
+        </header>
 
-          <div id="performanceTab" class="tab-panel" style="display:none;margin-top:12px">
-            <div style="display:flex;gap:12px;align-items:flex-start">
-              <div style="flex:1" class="card">
-                <h4 style="margin:0">Metric Averages</h4>
-                <div style="height:240px"><canvas id="metricsBar"></canvas></div>
-              </div>
-              <div style="flex:1" class="card">
-                <h4 style="margin:0">Progress Over Time</h4>
-                <div style="height:240px"><canvas id="metricsLine"></canvas></div>
-              </div>
+        <div class="dashboard-grid">
+            <div class="left-col">
+                <div class="card">
+                    <h3 style="margin-top:0">Children</h3>
+                    <div class="student-carousel" id="studentList"></div>
+                </div>
+
+                <div class="card" id="summaryCard">
+                    <h4 style="margin:0 0 8px">This Month Summary</h4>
+                    <div class="stat-row"><div class="stat"><span class="label">Present</span><span class="value" id="summaryPresent">—</span></div><div class="stat"><span class="label">Absent</span><span class="value" id="summaryAbsent">—</span></div></div>
+                    <div style="height:160px"><canvas id="attendanceDonut"></canvas></div>
+                </div>
+
+                <div class="card" id="quickMetrics">
+                    <h4 style="margin:0 0 8px">Quick Performance</h4>
+                    <div id="metricList"></div>
+                </div>
             </div>
 
-            <div style="margin-top:12px" class="card">
-              <h4 style="margin:0 0 8px">Latest Notes</h4>
-              <div id="notesList"></div>
-            </div>
-          </div>
+            <div class="right-col">
+                <div class="card">
+                    <div style="display:flex;align-items:center;justify-content:space-between">
+                        <h3 style="margin:0">Overview</h3>
+                        <div>
+                            <button class="tab active" data-tab="attendance" onclick="switchTab('attendance', this)"><i class="fa-regular fa-calendar-days"></i> Attendance</button>
+                            <button class="tab" data-tab="performance" onclick="switchTab('performance', this)"><i class="fa-solid fa-chart-line"></i> Performance</button>
+                        </div>
+                    </div>
 
+                    <div id="attendanceTab" class="tab-panel">
+                        <div class="grid-2">
+                            <div class="card" style="padding:12px">
+                                <h4 style="margin:0">Monthly Attendance</h4>
+                                <div class="chart-wrap"><canvas id="miniAttendance"></canvas></div>
+                            </div>
+                            <div class="card" style="padding:12px">
+                                <h4 style="margin:0">Attendance Trend</h4>
+                                <div class="chart-wrap"><canvas id="attendanceTrend"></canvas></div>
+                            </div>
+                        </div>
+
+                        <div style="margin-top:12px">
+                            <div style="display:flex;align-items:center;gap:8px;justify-content:space-between">
+                                <div>
+                                    <button onclick="changeMonth(-1)"><i class="fa-solid fa-chevron-left"></i></button>
+                                    <strong id="currentMonth"></strong>
+                                    <button onclick="changeMonth(1)"><i class="fa-solid fa-chevron-right"></i></button>
+                                </div>
+                                <div style="color:var(--muted);font-size:0.95rem">Click a day for details</div>
+                            </div>
+
+                            <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-top:10px">
+                                <div class="day-name">Sun</div><div class="day-name">Mon</div><div class="day-name">Tue</div><div class="day-name">Wed</div><div class="day-name">Thu</div><div class="day-name">Fri</div><div class="day-name">Sat</div>
+                            </div>
+
+                            <div class="calendar" id="calendarGrid"></div>
+
+                            <div class="legend">
+                                <div class="legend-item"><span class="legend-box" style="background:var(--success);width:12px;height:12px;border-radius:3px"></span> Present</div>
+                                <div class="legend-item"><span class="legend-box" style="background:var(--danger);width:12px;height:12px;border-radius:3px"></span> Absent</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="performanceTab" class="tab-panel" style="display:none;margin-top:12px">
+                        <div style="display:flex;gap:12px;align-items:flex-start">
+                            <div style="flex:1" class="card">
+                                <h4 style="margin:0">Metric Averages</h4>
+                                <div style="height:240px"><canvas id="metricsBar"></canvas></div>
+                            </div>
+                            <div style="flex:1" class="card">
+                                <h4 style="margin:0">Progress Over Time</h4>
+                                <div style="height:240px"><canvas id="metricsLine"></canvas></div>
+                            </div>
+                        </div>
+
+                        <div style="margin-top:12px" class="card">
+                            <h4 style="margin:0 0 8px">Latest Notes</h4>
+                            <div id="notesList"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-      </div>
     </div>
-  </div>
 
-  <script>
-    const SUPABASE_URL = "https://ndishfwnkzdedfcywcle.supabase.co";
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5kaXNoZndua3pkZWRmY3l3Y2xlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYwOTk0MjcsImV4cCI6MjA3MTY3NTQyN30.CXQSfhR0MVLF40v2Tp-BcENBpHpPshG9Ys3zLYiBQaM";
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    <script>
+        const SUPABASE_URL = "https://ndishfwnkzdedfcywcle.supabase.co";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5kaXNoZndua3pkZWRmY3l3Y2xlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYwOTk0MjcsImV4cCI6MjA3MTY3NTQyN30.CXQSfhR0MVLF40v2Tp-BcENBpHpPshG9Ys3zLYiBQaM";
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    let sessionUser = null;
-    let students = [];
-    let activeStudent = null;
-    let currentMonth = dayjs();
+        let sessionUser = null;
+        let students = [];
+        let activeStudent = null;
+        let currentMonth = dayjs();
 
-    // Chart instances
-    let donutChart=null, miniChart=null, trendChart=null, metricsBar=null, metricsLine=null;
+        // Chart instances
+        let donutChart = null, miniChart = null, trendChart = null, metricsBar = null, metricsLine = null;
 
-    async function init(){
-      const { data: { session }, error } = await supabase.auth.getSession();
-      if(error || !session){ window.location.href = 'index.html'; return; }
-      sessionUser = session.user;
-      document.getElementById('parentName').textContent = sessionUser.user_metadata?.full_name || sessionUser.email.split('@')[0];
-      document.getElementById('parentEmail').textContent = sessionUser.email;
+        /**
+         * The main initialization function.
+         * It checks for a valid user session and loads parent/company data.
+         */
+        async function init() {
+            const { data: { session }, error } = await supabase.auth.getSession();
+            if (error || !session) {
+                window.location.href = 'index.html';
+                return;
+            }
+            sessionUser = session.user;
+            document.getElementById('parentName').textContent = sessionUser.user_metadata?.full_name || sessionUser.email.split('@')[0];
+            document.getElementById('parentEmail').textContent = sessionUser.email;
 
-      // load company + children
-      const { data: userData, error: userError } = await supabase
-        .from('users')
-        .select('company_id, role, companies(display_name, logo_url)')
-        .eq('id', sessionUser.id)
-        .maybeSingle();
-      if(userError || !userData || userData.role!=='parent'){ window.location.href='index.html'; return; }
-      if(userData.companies?.display_name) document.getElementById('companyName').textContent = userData.companies.display_name;
-      if(userData.companies?.logo_url){ const e=document.getElementById('headerLogo'); e.src=userData.companies.logo_url; e.style.display='inline-block' }
+            // Load company and role data
+            const { data: userData, error: userError } = await supabase
+                .from('users')
+                .select('company_id, role, companies(display_name, logo_url)')
+                .eq('id', sessionUser.id)
+                .maybeSingle();
 
-      // fetch students for this parent
-      // fetch students for this parent
-async function loadStudents() {
-  const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-  if (sessionError || !session) {
-    window.location.href = "index.html";
-    return;
-  }
+            if (userError || !userData || userData.role !== 'parent') {
+                window.location.href = 'index.html';
+                return;
+            }
+            if (userData.companies?.display_name) document.getElementById('companyName').textContent = userData.companies.display_name;
+            if (userData.companies?.logo_url) {
+                const e = document.getElementById('headerLogo');
+                e.src = userData.companies.logo_url;
+                e.style.display = 'inline-block';
+            }
 
-  const user = session.user;
-
-  // fetch user company + role
-  const { data: userData, error: userError } = await supabase
-    .from('users')
-    .select('company_id, role')
-    .eq('id', user.id)
-    .maybeSingle();
-
-  if (userError || !userData) {
-    console.error("User fetch error:", userError);
-    return;
-  }
-
-  if (userData.role !== 'parent') {
-    window.location.href = "home.html";
-    return;
-  }
-
-  const { data: studentData, error: studentError } = await supabase
-    .from('students')
-    .select('id, name, parent_email, company_id, classes:class_id(name)')
-    .ilike('parent_email', user.email)  // case-insensitive match
-    .eq('company_id', userData.company_id);
-
-  if (studentError) {
-    console.error("Error fetching student data:", studentError);
-    return;
-  }
-
-  students = studentData || [];
-  console.log("Students fetched:", students);
-
-  if (students.length > 0) {
-    renderStudentCarousel();
-    setActiveStudent(students[0]);
-  } else {
-    document.getElementById("studentInfo").innerHTML =
-      "<p>No students found linked to this account.</p>";
-  }
-}
-
-
-
-    function renderStudentCarousel(){
-      const el = document.getElementById('studentList'); el.innerHTML='';
-      students.forEach(s=>{
-        const card = document.createElement('div'); card.className='student-card';
-        card.innerHTML = `<img src='https://ui-avatars.com/api/?name=${encodeURIComponent(s.name)}&background=ddd&color=555&rounded=true' alt=''> <h4>${s.name}</h4><div style='font-size:0.8rem;color:var(--muted)'>${s.classes?.name||''}</div>`;
-        card.onclick = ()=> setActiveStudent(s);
-        el.appendChild(card);
-      });
-    }
-
-    function setActiveStudent(s){
-      activeStudent = s;
-      document.querySelectorAll('.student-card').forEach((c,i)=> c.classList.toggle('active', students[i].id===s.id));
-      refreshAll();
-    }
-
-    async function refreshAll(){
-      if(!activeStudent) return;
-      await renderAttendanceSummary();
-      await renderAttendanceCharts();
-      await renderCalendar();
-      await renderPerformance();
-    }
-
-   async function renderAttendanceSummary() {
-  const start = currentMonth.startOf('month').format('YYYY-MM-DD');
-  const end = currentMonth.endOf('month').format('YYYY-MM-DD');
-
-  const { data: attendanceData, error: attendanceError } = await supabase
-    .from('attendance')
-    .select('date,status')
-    .eq('student_id', activeStudent.id)
-    .gte('date', start)
-    .lte('date', end);
-
-  if (attendanceError) { 
-    console.error(attendanceError); 
-    return; 
-  }
-
-  const present = (attendanceData || []).filter(r => r.status === 'Present').length;
-  const absent = (attendanceData || []).filter(r => r.status === 'Absent').length;
-
-  document.getElementById('summaryPresent').textContent = present;
-  document.getElementById('summaryAbsent').textContent = absent;
-
-  const ctx = document.getElementById('attendanceDonut').getContext('2d');
-  const dData = [present, absent];
-
-  if (donutChart) donutChart.destroy();
-
-  donutChart = new Chart(ctx, {
-    type: 'doughnut',
-    data: {
-      labels: ['Present', 'Absent'],
-      datasets: [{
-        data: dData,
-        backgroundColor: ['#34d399', '#fb7185']
-      }]
-    },
-    options: {
-      plugins: {
-        legend: { position: 'bottom' }
-      }
-    }
-  });
-}
-
-
-    async function renderAttendanceCharts(){
-      // miniAttendance: counts per weekday this month
-      const start = currentMonth.startOf('month').format('YYYY-MM-DD');
-      const end = currentMonth.endOf('month').format('YYYY-MM-DD');
-      const { data } = await supabase.from('attendance')
-        .select('date,status')
-        .eq('student_id', activeStudent.id)
-        .gte('date', start)
-        .lte('date', end);
-      const days = Array(7).fill(0);
-      (data||[]).forEach(r=>{ const dow = dayjs(r.date).day(); if(r.status==='Present') days[dow]++; });
-      const ctx = document.getElementById('miniAttendance').getContext('2d'); if(miniChart) miniChart.destroy();
-      miniChart = new Chart(ctx, {type:'bar', data:{labels:['Sun','Mon','Tue','Wed','Thu','Fri','Sat'], datasets:[{label:'Present', data:days, backgroundColor:'#60a5fa'}]}, options:{plugins:{legend:{display:false}}}});
-
-      // attendanceTrend: daily presence count across the month
-      const dayCount = currentMonth.daysInMonth();
-      const labels = Array.from({length:dayCount},(_,i)=>i+1);
-      const counts = Array(dayCount).fill(0);
-      (data||[]).forEach(r=>{ const d = dayjs(r.date).date(); if(r.status==='Present') counts[d-1]=1; });
-      const ctx2 = document.getElementById('attendanceTrend').getContext('2d'); if(trendChart) trendChart.destroy();
-      trendChart = new Chart(ctx2, {type:'line', data:{labels, datasets:[{label:'Present(1/0)',data:counts,fill:true,tension:0.35}]}, options:{plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true, ticks:{stepSize:1}}}}});
-    }
-
-    async function renderCalendar(){
-      document.getElementById('currentMonth').textContent = currentMonth.format('MMMM YYYY');
-      const grid = document.getElementById('calendarGrid'); grid.innerHTML='';
-      const start = currentMonth.startOf('month');
-      const end = currentMonth.endOf('month');
-      const firstDay = start.day();
-
-      // fetch attendance for month
-      const { data } = await supabase.from('attendance')
-        .select('date,status,notes')
-        .eq('student_id', activeStudent.id)
-        .gte('date', start.format('YYYY-MM-DD'))
-        .lte('date', end.format('YYYY-MM-DD'));
-      const map = new Map((data||[]).map(r=>[r.date, r]));
-
-      for(let i=0;i<firstDay;i++){ const e=document.createElement('div'); grid.appendChild(e); }
-      for(let d=1; d<=end.date(); d++){
-        const cur = start.date(d);
-        const key = cur.format('YYYY-MM-DD');
-        const cell = document.createElement('div'); cell.className='day-cell'; cell.innerHTML = `<div style="font-weight:600">${d}</div>`;
-        const rec = map.get(key);
-        if(rec){ const dot = document.createElement('div'); dot.className='dot ' + (rec.status==='Present'?'present':'absent'); cell.appendChild(dot); if(rec.status==='Present') cell.classList.add('present'); if(rec.status==='Absent') cell.classList.add('absent');
-          cell.onclick = ()=> showDayDetails(key, rec);
-        } else {
-          cell.onclick = ()=> showDayDetails(key, null);
+            // After authentication and company data, load the students
+            await loadStudents();
         }
-        grid.appendChild(cell);
-      }
-    }
 
-    function showDayDetails(date, record){
-      const nicely = dayjs(date).format('DD MMM YYYY');
-      const tag = record ? `${record.status}${record.notes?(' — ' + record.notes):''}` : 'No record for this day';
-      alert(`${nicely}\n\n${tag}`);
-    }
+        /**
+         * Fetches students linked to the parent's email address.
+         */
+        async function loadStudents() {
+            const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+            if (sessionError || !session) {
+                window.location.href = "index.html";
+                return;
+            }
 
-    async function renderPerformance(){
-      // fetch metrics + records for the last 90 days for activeStudent
-      const since = dayjs().subtract(90,'day').format('YYYY-MM-DD');
-      const { data:metrics } = await supabase.from('performance_metrics').select('id,name');
-      const { data:records } = await supabase.from('performance_records')
-        .select('score,attendance_id,notes, created_at, attendance(date)')
-        .eq('student_id', activeStudent.id)
-        .gte('created_at', since);
+            const user = session.user;
+            const { data: userData, error: userError } = await supabase
+                .from('users')
+                .select('company_id')
+                .eq('id', user.id)
+                .maybeSingle();
 
-      // Fallback: if schema differs, try to join differently
-      // Build average per metric (this assumes performance_records has metric_id and attendance->date relation)
-      if(!metrics || metrics.length===0){ document.getElementById('metricList').innerHTML='<div style="color:var(--muted)">No metrics defined</div>'; return; }
+            if (userError || !userData) {
+                console.error("User fetch error:", userError);
+                return;
+            }
+            
+            const { data: studentData, error: studentError } = await supabase
+                .from('students')
+                .select('id, name, parent_email, company_id, classes:class_id(name)')
+                .eq('parent_email', user.email)
+                .eq('company_id', userData.company_id);
 
-      // Attempt aggregated query per metric
-      const { data:agg } = await supabase.from('performance_records')
-        .select('metric_id,avg:avg(score),count:count(score)')
-        .eq('student_id', activeStudent.id)
-        .group('metric_id');
+            if (studentError) {
+                console.error("Error fetching student data:", studentError);
+                return;
+            }
 
-      // Build metric list UI
-      const metricList = document.getElementById('metricList'); metricList.innerHTML='';
-      metrics.forEach(m=>{
-        const avgObj = (agg||[]).find(a=>a.metric_id===m.id) || {};
-        const avg = avgObj.avg || 0;
-        const div = document.createElement('div'); div.style.padding='8px 0'; div.innerHTML = `<div style='display:flex;justify-content:space-between'><div>${m.name}</div><div style='font-weight:700'>${Number(avg).toFixed(1)}</div></div>`;
-        metricList.appendChild(div);
-      });
+            students = studentData || [];
+            if (students.length > 0) {
+                renderStudentCarousel();
+                setActiveStudent(students[0]);
+            } else {
+                document.getElementById("studentList").innerHTML = "<div style='color:var(--muted); text-align:center;'>No students found linked to this account.</div>";
+                // Optionally hide other dashboard elements if there are no students
+                document.getElementById('summaryCard').style.display = 'none';
+                document.getElementById('quickMetrics').style.display = 'none';
+            }
+        }
 
-      // Chart: metricsBar showing avg per metric
-      const metricNames = metrics.map(m=>m.name);
-      const metricAverages = metrics.map(m=>{ const a=(agg||[]).find(x=>x.metric_id===m.id); return a?Number(a.avg).toFixed(1):0 });
-      const ctx = document.getElementById('metricsBar').getContext('2d'); if(metricsBar) metricsBar.destroy();
-      metricsBar = new Chart(ctx, {type:'bar', data:{labels:metricNames, datasets:[{label:'Average',data:metricAverages}]}, options:{plugins:{legend:{display:false}}}});
+        /**
+         * Renders the student carousel from the fetched student data.
+         */
+        function renderStudentCarousel() {
+            const el = document.getElementById('studentList');
+            el.innerHTML = '';
+            students.forEach(s => {
+                const card = document.createElement('div');
+                card.className = 'student-card';
+                card.innerHTML = `<img src='https://ui-avatars.com/api/?name=${encodeURIComponent(s.name)}&background=ddd&color=555&rounded=true' alt=''> <h4>${s.name}</h4><div style='font-size:0.8rem;color:var(--muted)'>${s.classes?.name || ''}</div>`;
+                card.onclick = () => setActiveStudent(s);
+                el.appendChild(card);
+            });
+        }
 
-      // Chart: metricsLine over time
-      // We'll create a simple time series by metric averages per week
-      const days = [];
-      for(let i=0;i<12;i++){ days.push(dayjs().subtract(11-i,'week').startOf('week').format('YYYY-MM-DD')); }
-      const datasets = metrics.map((m,mi)=>{
-        const dataPoints = days.map(weekStart=>{
-          // naive: average of records in that week
-          const weekEnd = dayjs(weekStart).endOf('week').format('YYYY-MM-DD');
-          // Querying per metric per week synchronously would be slow — we approximate using records already fetched
-          return Math.round(Math.random()*5); // placeholder if no time-series available
-        });
-        return {label:m.name, data:dataPoints, fill:false, tension:0.3};
-      });
-      const ctx2 = document.getElementById('metricsLine').getContext('2d'); if(metricsLine) metricsLine.destroy();
-      metricsLine = new Chart(ctx2, {type:'line', data:{labels:days.map(d=>dayjs(d).format('MMM DD')), datasets}, options:{plugins:{legend:{position:'bottom'}}}});
+        /**
+         * Sets the active student and refreshes all dashboard data.
+         * @param {object} s - The student object.
+         */
+        function setActiveStudent(s) {
+            activeStudent = s;
+            document.querySelectorAll('.student-card').forEach((c, i) => c.classList.toggle('active', students[i].id === s.id));
+            refreshAll();
+        }
 
-      // Latest notes
-      const notesEl = document.getElementById('notesList'); notesEl.innerHTML='';
-      (records||[]).slice(-6).reverse().forEach(r=>{
-        const row = document.createElement('div'); row.style.padding='8px 0'; row.style.borderBottom='1px dashed #eee'; row.innerHTML = `<div style='font-size:0.9rem'><strong>${r.attendance?.date || dayjs(r.created_at).format('DD MMM')}</strong> — Score: ${r.score||'—'}</div><div style='color:var(--muted);font-size:0.9rem'>${r.notes || ''}</div>`;
-        notesEl.appendChild(row);
-      });
+        /**
+         * Fetches and renders all dashboard data for the active student.
+         */
+        async function refreshAll() {
+            if (!activeStudent) return;
+            await renderAttendanceSummary();
+            await renderAttendanceCharts();
+            await renderCalendar();
+            await renderPerformance();
+        }
 
-    }
+        /**
+         * Renders the attendance summary and donut chart for the current month.
+         */
+        async function renderAttendanceSummary() {
+            const start = currentMonth.startOf('month').format('YYYY-MM-DD');
+            const end = currentMonth.endOf('month').format('YYYY-MM-DD');
 
-    function switchTab(tab, btn){ document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active')); btn.classList.add('active'); document.getElementById('attendanceTab').style.display = tab==='attendance'?'block':'none'; document.getElementById('performanceTab').style.display = tab==='performance'?'block':'none'; }
+            const { data: attendanceData, error: attendanceError } = await supabase
+                .from('attendance')
+                .select('status')
+                .eq('student_id', activeStudent.id)
+                .gte('date', start)
+                .lte('date', end);
 
-    function changeMonth(offset){ currentMonth = currentMonth.add(offset,'month'); refreshAll(); }
+            if (attendanceError) {
+                console.error(attendanceError);
+                return;
+            }
 
-    async function logout(){ await supabase.auth.signOut(); window.location.href='index.html'; }
+            const present = (attendanceData || []).filter(r => r.status === 'Present').length;
+            const absent = (attendanceData || []).filter(r => r.status === 'Absent').length;
 
-    // initialize
-    window.onload = init;
-    };
-  </script>
+            document.getElementById('summaryPresent').textContent = present;
+            document.getElementById('summaryAbsent').textContent = absent;
+
+            const ctx = document.getElementById('attendanceDonut').getContext('2d');
+            const dData = [present, absent];
+
+            if (donutChart) donutChart.destroy();
+
+            donutChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Present', 'Absent'],
+                    datasets: [{
+                        data: dData,
+                        backgroundColor: ['#34d399', '#fb7185']
+                    }]
+                },
+                options: {
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    },
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+        }
+
+        /**
+         * Renders the monthly attendance bar chart and trend line chart.
+         */
+        async function renderAttendanceCharts() {
+            const start = currentMonth.startOf('month').format('YYYY-MM-DD');
+            const end = currentMonth.endOf('month').format('YYYY-MM-DD');
+
+            const { data } = await supabase.from('attendance')
+                .select('date,status')
+                .eq('student_id', activeStudent.id)
+                .gte('date', start)
+                .lte('date', end);
+            
+            // Mini Attendance Chart (counts per weekday)
+            const days = Array(7).fill(0);
+            (data || []).forEach(r => {
+                const dow = dayjs(r.date).day();
+                if (r.status === 'Present') days[dow]++;
+            });
+            const ctx1 = document.getElementById('miniAttendance').getContext('2d');
+            if (miniChart) miniChart.destroy();
+            miniChart = new Chart(ctx1, {
+                type: 'bar',
+                data: {
+                    labels: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+                    datasets: [{
+                        label: 'Present',
+                        data: days,
+                        backgroundColor: '#60a5fa'
+                    }]
+                },
+                options: {
+                    plugins: { legend: { display: false } },
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+
+            // Attendance Trend Chart (daily presence)
+            const dayCount = currentMonth.daysInMonth();
+            const labels = Array.from({ length: dayCount }, (_, i) => i + 1);
+            const counts = Array(dayCount).fill(0);
+            (data || []).forEach(r => {
+                const d = dayjs(r.date).date();
+                if (r.status === 'Present') counts[d - 1] = 1;
+            });
+            const ctx2 = document.getElementById('attendanceTrend').getContext('2d');
+            if (trendChart) trendChart.destroy();
+            trendChart = new Chart(ctx2, {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: 'Present (1/0)',
+                        data: counts,
+                        fill: true,
+                        tension: 0.35,
+                        backgroundColor: 'rgba(99,102,241,0.2)',
+                        borderColor: 'rgba(99,102,241,1)'
+                    }]
+                },
+                options: {
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { stepSize: 1 } }
+                    },
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+        }
+
+        /**
+         * Renders the monthly calendar grid with attendance data.
+         */
+        async function renderCalendar() {
+            document.getElementById('currentMonth').textContent = currentMonth.format('MMMM YYYY');
+            const grid = document.getElementById('calendarGrid');
+            grid.innerHTML = '';
+            const start = currentMonth.startOf('month');
+            const end = currentMonth.endOf('month');
+            const firstDay = start.day();
+
+            const { data } = await supabase.from('attendance')
+                .select('date,status,notes')
+                .eq('student_id', activeStudent.id)
+                .gte('date', start.format('YYYY-MM-DD'))
+                .lte('date', end.format('YYYY-MM-DD'));
+            const map = new Map((data || []).map(r => [r.date, r]));
+
+            for (let i = 0; i < firstDay; i++) {
+                grid.appendChild(document.createElement('div'));
+            }
+            
+            for (let d = 1; d <= end.date(); d++) {
+                const cur = start.date(d);
+                const key = cur.format('YYYY-MM-DD');
+                const cell = document.createElement('div');
+                cell.className = 'day-cell';
+                cell.innerHTML = `<div style="font-weight:600">${d}</div>`;
+                const rec = map.get(key);
+                if (rec) {
+                    const dot = document.createElement('div');
+                    dot.className = 'dot ' + (rec.status === 'Present' ? 'present' : 'absent');
+                    cell.appendChild(dot);
+                    if (rec.status === 'Present') cell.classList.add('present');
+                    if (rec.status === 'Absent') cell.classList.add('absent');
+                    cell.onclick = () => showDayDetails(key, rec);
+                } else {
+                    cell.onclick = () => showDayDetails(key, null);
+                }
+                grid.appendChild(cell);
+            }
+        }
+
+        /**
+         * Shows an alert with detailed attendance information for a specific day.
+         * @param {string} date - The date string.
+         * @param {object} record - The attendance record.
+         */
+        function showDayDetails(date, record) {
+            const nicely = dayjs(date).format('DD MMM YYYY');
+            const tag = record ? `${record.status}${record.notes ? (' — ' + record.notes) : ''}` : 'No record for this day';
+            alert(`${nicely}\n\n${tag}`);
+        }
+
+        /**
+         * Renders the performance metrics charts and latest notes.
+         */
+        async function renderPerformance() {
+            const since = dayjs().subtract(90, 'day').format('YYYY-MM-DD');
+            const { data: metrics } = await supabase.from('performance_metrics').select('id,name');
+
+            // Corrected query to join and fetch metric names with records
+            const { data: records } = await supabase.from('performance_records')
+                .select('score, notes, created_at, metric_id, performance_metrics(name)')
+                .eq('student_id', activeStudent.id)
+                .gte('created_at', since)
+                .order('created_at', { ascending: false });
+
+            // Aggregate query for metric averages
+            const { data: agg } = await supabase.from('performance_records')
+                .select('metric_id,avg:avg(score)')
+                .eq('student_id', activeStudent.id)
+                .group('metric_id');
+
+            // Build Quick Performance metric list UI
+            const metricList = document.getElementById('metricList');
+            metricList.innerHTML = '';
+            if (!metrics || metrics.length === 0) {
+                metricList.innerHTML = '<div style="color:var(--muted)">No metrics defined</div>';
+            } else {
+                metrics.forEach(m => {
+                    const avgObj = (agg || []).find(a => a.metric_id === m.id) || {};
+                    const avg = avgObj.avg || 0;
+                    const div = document.createElement('div');
+                    div.style.padding = '8px 0';
+                    div.innerHTML = `<div style='display:flex;justify-content:space-between'><div>${m.name}</div><div style='font-weight:700'>${Number(avg).toFixed(1)}</div></div>`;
+                    metricList.appendChild(div);
+                });
+            }
+
+            // Chart: metricsBar showing avg per metric
+            const metricNames = metrics.map(m => m.name);
+            const metricAverages = metrics.map(m => {
+                const a = (agg || []).find(x => x.metric_id === m.id);
+                return a ? Number(a.avg).toFixed(1) : 0
+            });
+            const ctx1 = document.getElementById('metricsBar').getContext('2d');
+            if (metricsBar) metricsBar.destroy();
+            metricsBar = new Chart(ctx1, {
+                type: 'bar',
+                data: {
+                    labels: metricNames,
+                    datasets: [{
+                        label: 'Average Score',
+                        data: metricAverages,
+                        backgroundColor: '#6366f1'
+                    }]
+                },
+                options: {
+                    plugins: { legend: { display: false } },
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+
+            // Chart: metricsLine over time - Using records to build a meaningful trend
+            const lineDatasets = metrics.map(m => {
+                const metricRecords = (records || []).filter(r => r.metric_id === m.id).sort((a,b) => dayjs(a.created_at) - dayjs(b.created_at));
+                return {
+                    label: m.name,
+                    data: metricRecords.map(r => r.score),
+                    fill: false,
+                    tension: 0.3,
+                    borderColor: getRandomColor(),
+                    pointBackgroundColor: '#fff',
+                    pointBorderColor: '#fff',
+                };
+            });
+            const lineLabels = (records || []).map(r => dayjs(r.created_at).format('MMM DD'));
+            const ctx2 = document.getElementById('metricsLine').getContext('2d');
+            if (metricsLine) metricsLine.destroy();
+            metricsLine = new Chart(ctx2, {
+                type: 'line',
+                data: {
+                    labels: lineLabels,
+                    datasets: lineDatasets
+                },
+                options: {
+                    plugins: { legend: { position: 'bottom' } },
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+            
+            // Latest notes rendering
+            const notesEl = document.getElementById('notesList');
+            notesEl.innerHTML = '';
+            if (records && records.length > 0) {
+                records.slice(0, 6).forEach(r => {
+                    const row = document.createElement('div');
+                    row.style.padding = '8px 0';
+                    row.style.borderBottom = '1px dashed #eee';
+                    row.innerHTML = `
+                        <div style='font-size:0.9rem'>
+                            <strong>${dayjs(r.created_at).format('DD MMM YYYY')}</strong> — 
+                            <strong>${r.performance_metrics?.name || 'Note'}:</strong> Score ${r.score}
+                        </div>
+                        <div style='color:var(--muted);font-size:0.9rem'>${r.notes || 'No notes provided.'}</div>
+                    `;
+                    notesEl.appendChild(row);
+                });
+            } else {
+                notesEl.innerHTML = '<div style="color:var(--muted); text-align:center;">No performance notes found.</div>';
+            }
+        }
+        
+        // Helper function for random colors
+        function getRandomColor() {
+            const letters = '0123456789ABCDEF';
+            let color = '#';
+            for (let i = 0; i < 6; i++) {
+                color += letters[Math.floor(Math.random() * 16)];
+            }
+            return color;
+        }
+
+        /**
+         * Switches between the Attendance and Performance tabs.
+         * @param {string} tab - The name of the tab to switch to.
+         * @param {HTMLElement} btn - The button element that was clicked.
+         */
+        function switchTab(tab, btn) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById('attendanceTab').style.display = tab === 'attendance' ? 'block' : 'none';
+            document.getElementById('performanceTab').style.display = tab === 'performance' ? 'block' : 'none';
+        }
+
+        /**
+         * Changes the displayed month for the calendar and charts.
+         * @param {number} offset - The number of months to add (e.g., -1 for previous, 1 for next).
+         */
+        function changeMonth(offset) {
+            currentMonth = currentMonth.add(offset, 'month');
+            refreshAll();
+        }
+
+        /**
+         * Logs the user out and redirects to the login page.
+         */
+        async function logout() {
+            await supabase.auth.signOut();
+            window.location.href = 'index.html';
+        }
+
+        // Initialize the app when the window loads
+        window.onload = init;
+    </script>
 </body>
 </html>
