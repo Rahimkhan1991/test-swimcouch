@@ -257,7 +257,6 @@
                 setActiveStudent(students[0]);
             } else {
                 document.getElementById("studentList").innerHTML = "<div style='color:var(--muted); text-align:center;'>No students found linked to this account.</div>";
-                // Optionally hide other dashboard elements if there are no students
                 document.getElementById('summaryCard').style.display = 'none';
                 document.getElementById('quickMetrics').style.display = 'none';
             }
@@ -314,7 +313,7 @@
                 .lte('date', end);
 
             if (attendanceError) {
-                console.error(attendanceError);
+                console.error("Attendance Summary Error:", attendanceError);
                 return;
             }
 
@@ -361,7 +360,6 @@
                 .gte('date', start)
                 .lte('date', end);
             
-            // Mini Attendance Chart (counts per weekday)
             const days = Array(7).fill(0);
             (data || []).forEach(r => {
                 const dow = dayjs(r.date).day();
@@ -386,7 +384,6 @@
                 }
             });
 
-            // Attendance Trend Chart (daily presence)
             const dayCount = currentMonth.daysInMonth();
             const labels = Array.from({ length: dayCount }, (_, i) => i + 1);
             const counts = Array(dayCount).fill(0);
@@ -481,18 +478,29 @@
             const since = dayjs().subtract(90, 'day').format('YYYY-MM-DD');
             const { data: metrics } = await supabase.from('performance_metrics').select('id,name');
 
-            // Corrected query to join and fetch metric names with records
-            const { data: records } = await supabase.from('performance_records')
+            const { data: records, error: recordsError } = await supabase.from('performance_records')
                 .select('score, notes, created_at, metric_id, performance_metrics(name)')
                 .eq('student_id', activeStudent.id)
                 .gte('created_at', since)
                 .order('created_at', { ascending: false });
 
-            // Aggregate query for metric averages
-            const { data: agg } = await supabase.from('performance_records')
-                .select('metric_id,avg:avg(score)')
+            if (recordsError) {
+                console.error("Performance Records Error:", recordsError);
+                // Handle the error gracefully
+                document.getElementById('quickMetrics').innerHTML = `<div style="color:var(--muted); text-align:center;">Failed to load metrics.</div>`;
+                document.getElementById('notesList').innerHTML = `<div style="color:var(--muted); text-align:center;">Failed to load notes.</div>`;
+                return;
+            }
+
+            const { data: agg, error: aggError } = await supabase.from('performance_records')
+                .select('metric_id, avg(score) as avg_score')
                 .eq('student_id', activeStudent.id)
                 .group('metric_id');
+
+            if (aggError) {
+                console.error("Aggregation Error:", aggError);
+                return;
+            }
 
             // Build Quick Performance metric list UI
             const metricList = document.getElementById('metricList');
@@ -502,7 +510,7 @@
             } else {
                 metrics.forEach(m => {
                     const avgObj = (agg || []).find(a => a.metric_id === m.id) || {};
-                    const avg = avgObj.avg || 0;
+                    const avg = avgObj.avg_score || 0;
                     const div = document.createElement('div');
                     div.style.padding = '8px 0';
                     div.innerHTML = `<div style='display:flex;justify-content:space-between'><div>${m.name}</div><div style='font-weight:700'>${Number(avg).toFixed(1)}</div></div>`;
@@ -514,7 +522,7 @@
             const metricNames = metrics.map(m => m.name);
             const metricAverages = metrics.map(m => {
                 const a = (agg || []).find(x => x.metric_id === m.id);
-                return a ? Number(a.avg).toFixed(1) : 0
+                return a ? Number(a.avg_score).toFixed(1) : 0
             });
             const ctx1 = document.getElementById('metricsBar').getContext('2d');
             if (metricsBar) metricsBar.destroy();
@@ -535,7 +543,6 @@
                 }
             });
 
-            // Chart: metricsLine over time - Using records to build a meaningful trend
             const lineDatasets = metrics.map(m => {
                 const metricRecords = (records || []).filter(r => r.metric_id === m.id).sort((a,b) => dayjs(a.created_at) - dayjs(b.created_at));
                 return {
@@ -572,10 +579,11 @@
                     const row = document.createElement('div');
                     row.style.padding = '8px 0';
                     row.style.borderBottom = '1px dashed #eee';
+                    const metricName = r.performance_metrics?.name || 'Note';
                     row.innerHTML = `
                         <div style='font-size:0.9rem'>
                             <strong>${dayjs(r.created_at).format('DD MMM YYYY')}</strong> — 
-                            <strong>${r.performance_metrics?.name || 'Note'}:</strong> Score ${r.score}
+                            <strong>${metricName}:</strong> Score ${r.score}
                         </div>
                         <div style='color:var(--muted);font-size:0.9rem'>${r.notes || 'No notes provided.'}</div>
                     `;
