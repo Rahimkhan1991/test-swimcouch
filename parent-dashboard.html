@@ -200,15 +200,24 @@
       if(userData.companies?.logo_url){ const e=document.getElementById('headerLogo'); e.src=userData.companies.logo_url; e.style.display='inline-block' }
 
       // fetch students for this parent
-      const { data, error } = await supabase.from('students')
-        .select('id,name,parent_email,company_id,classes:class_id(name)')
-        .eq('parent_email', sessionUser.email.toLowerCase())
-        .eq('company_id', userData.company_id);
-      if(error){ console.error(error); return; }
-      students = data || [];
-      renderStudentCarousel();
-      if(students.length>0){ setActiveStudent(students[0]); }
-    }
+    // fetch students for this parent
+const { data: studentData, error: studentError } = await supabase
+  .from('students')
+  .select('id,name,parent_email,company_id,classes:class_id(name)')
+  .eq('parent_email', sessionUser.email.toLowerCase())
+  .eq('company_id', userData.company_id);
+
+if (studentError) { 
+  console.error(studentError); 
+  return; 
+}
+
+students = studentData || [];
+renderStudentCarousel();
+if (students.length > 0) { 
+  setActiveStudent(students[0]); 
+}
+
 
     function renderStudentCarousel(){
       const el = document.getElementById('studentList'); el.innerHTML='';
@@ -234,25 +243,50 @@
       await renderPerformance();
     }
 
-    async function renderAttendanceSummary(){
-      const start = currentMonth.startOf('month').format('YYYY-MM-DD');
-      const end = currentMonth.endOf('month').format('YYYY-MM-DD');
-      const { data, error } = await supabase.from('attendance')
-        .select('date,status')
-        .eq('student_id', activeStudent.id)
-        .gte('date', start)
-        .lte('date', end);
-      if(error){ console.error(error); return; }
-      const present = (data||[]).filter(r=>r.status==='Present').length;
-      const absent = (data||[]).filter(r=>r.status==='Absent').length;
-      document.getElementById('summaryPresent').textContent = present;
-      document.getElementById('summaryAbsent').textContent = absent;
+   async function renderAttendanceSummary() {
+  const start = currentMonth.startOf('month').format('YYYY-MM-DD');
+  const end = currentMonth.endOf('month').format('YYYY-MM-DD');
 
-      const ctx = document.getElementById('attendanceDonut').getContext('2d');
-      const dData = [present, absent];
-      if(donutChart) donutChart.destroy();
-      donutChart = new Chart(ctx, {type:'doughnut', data:{labels:['Present','Absent'], datasets:[{data:dData, backgroundColor:['#34d399','#fb7185']}],}, options:{plugins:{legend:{position:'bottom'}}}});
+  const { data: attendanceData, error: attendanceError } = await supabase
+    .from('attendance')
+    .select('date,status')
+    .eq('student_id', activeStudent.id)
+    .gte('date', start)
+    .lte('date', end);
+
+  if (attendanceError) { 
+    console.error(attendanceError); 
+    return; 
+  }
+
+  const present = (attendanceData || []).filter(r => r.status === 'Present').length;
+  const absent = (attendanceData || []).filter(r => r.status === 'Absent').length;
+
+  document.getElementById('summaryPresent').textContent = present;
+  document.getElementById('summaryAbsent').textContent = absent;
+
+  const ctx = document.getElementById('attendanceDonut').getContext('2d');
+  const dData = [present, absent];
+
+  if (donutChart) donutChart.destroy();
+
+  donutChart = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: ['Present', 'Absent'],
+      datasets: [{
+        data: dData,
+        backgroundColor: ['#34d399', '#fb7185']
+      }]
+    },
+    options: {
+      plugins: {
+        legend: { position: 'bottom' }
+      }
     }
+  });
+}
+
 
     async function renderAttendanceCharts(){
       // miniAttendance: counts per weekday this month
