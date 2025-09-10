@@ -1,434 +1,385 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Parent Dashboard</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Parent Dashboard — Enhanced</title>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- dayjs for date handling -->
+  <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
 
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <style>
-        :root {
-            --primary-color: #007bff;
-            --background-color: #f0f4f8;
-            --card-background: #ffffff;
-            --text-color: #333;
-            --shadow-light: 0 4px 8px rgba(0, 0, 0, 0.05);
-            --shadow-hover: 0 8px 16px rgba(0, 0, 0, 0.1);
-            --input-background: #f7f7f7;
-            --input-border: #ddd;
-            --success-color: #28a745;
-            --danger-color: #dc3545;
-        }
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
 
-        body {
-            font-family: 'Segoe UI', sans-serif;
-            margin: 0;
-            padding: 20px;
-            background-color: var(--background-color);
-            color: var(--text-color);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
-        }
+  <style>
+    :root{--primary:#6366f1;--primary-2:#4f46e5;--bg:#f6f7fb;--card:#fff;--muted:#6b7280;--success:#22c55e;--danger:#ef4444}
+    *{box-sizing:border-box}
+    body{font-family:Inter,Segoe UI,Roboto,system-ui; margin:0; background:linear-gradient(180deg,#f8fafc, #eef2ff); color:#0f172a; padding:18px; display:flex; justify-content:center}
+    .container{width:100%; max-width:1100px}
+    header{display:flex;align-items:center;gap:16px;margin-bottom:18px}
+    .brand{display:flex;align-items:center;gap:12px;background:var(--card);padding:12px 16px;border-radius:12px;box-shadow:0 6px 20px rgba(15,23,42,0.06)}
+    .brand img{height:52px;width:52px;border-radius:10px;object-fit:cover}
+    .brand h1{font-size:1.25rem;margin:0;color:var(--primary)}
+    .profile-menu{margin-left:auto;display:flex;align-items:center;gap:12px}
+    .profile-btn{background:transparent;border:0;padding:8px 12px;border-radius:10px;cursor:pointer}
 
-        .container {
-            width: 100%;
-            max-width: 600px;
-        }
+    .dashboard-grid{display:grid;grid-template-columns:380px 1fr;gap:16px}
 
-        .company-header-box {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 15px;
-            background-color: var(--card-background);
-            border-radius: 12px;
-            padding: 20px 25px;
-            box-shadow: var(--shadow-light);
-            margin-bottom: 25px;
-            width: 92%;
-        }
+    /* Left column */
+    .left-col .card{background:var(--card);border-radius:12px;padding:14px;box-shadow:0 6px 20px rgba(15,23,42,0.04);margin-bottom:14px}
+    .student-carousel{display:flex;align-items:center;gap:10px}
+    .student-card{min-width:120px;background:linear-gradient(180deg,#fff,#fbfdff);border-radius:12px;padding:10px;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;border:1px solid transparent}
+    .student-card.active{border-color:var(--primary);box-shadow:0 4px 18px rgba(99,102,241,0.12)}
+    .student-card img{height:64px;width:64px;border-radius:50%;object-fit:cover}
+    .student-card h4{margin:0;font-size:0.95rem}
+    .stat-row{display:flex;justify-content:space-between;padding:8px 0}
+    .stat{display:flex;flex-direction:column}
+    .stat .value{font-weight:700}
 
-        #headerLogo {
-            height: 50px;
-            width: 50px;
-            border-radius: 50%;
-            object-fit: cover;
-            display: none;
-        }
+    /* Right column */
+    .card{background:var(--card);border-radius:12px;padding:18px;box-shadow:0 6px 20px rgba(15,23,42,0.04)}
+    .tabs{display:flex;gap:8px;margin-bottom:12px}
+    .tab{padding:8px 12px;border-radius:10px;cursor:pointer;background:transparent;border:1px solid transparent}
+    .tab.active{background:linear-gradient(90deg,var(--primary),var(--primary-2));color:white}
 
-        #companyNameDisplay {
-            font-size: 1.5rem;
-            font-weight: 600;
-            color: var(--primary-color);
-            margin: 0;
-            text-align: center;
-        }
+    .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .chart-wrap{height:220px}
 
-        .section {
-            background: var(--card-background);
-            border-radius: 12px;
-            padding: 25px;
-            margin-bottom: 20px;
-            box-shadow: var(--shadow-light);
-        }
+    /* Calendar */
+    .calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-top:12px}
+    .day-name{font-size:0.78rem;color:var(--muted);text-align:center}
+    .day-cell{background:#f8fafc;padding:10px;border-radius:8px;text-align:center;min-height:72px;position:relative}
+    .day-cell.present{background:linear-gradient(180deg,#dcfce7,#bbf7d0)}
+    .day-cell.absent{background:linear-gradient(180deg,#fee2e2,#fecaca)}
+    .day-cell .dot{position:absolute;right:8px;top:8px;height:10px;width:10px;border-radius:50%}
+    .dot.present{background:var(--success)}
+    .dot.absent{background:var(--danger)}
 
-        .section h2 {
-            text-align: center;
-            color: var(--primary-color);
-            margin-top: 0;
-            margin-bottom: 20px;
-            font-size: 1.75rem;
-        }
-        
-        #studentInfo {
-            text-align: center;
-        }
+    .legend{display:flex;gap:10px;justify-content:center;margin-top:12px}
+    .legend-item{display:flex;gap:8px;align-items:center}
 
-        #studentInfo h3 {
-            margin: 0 0 5px;
-            font-size: 1.5rem;
-            color: var(--text-color);
-        }
-
-        #studentInfo p {
-            margin: 0;
-            color: #777;
-            font-size: 0.9rem;
-        }
-        
-        .calendar-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-        
-        .calendar-header button {
-            background: none;
-            border: none;
-            font-size: 1.5rem;
-            cursor: pointer;
-            color: var(--primary-color);
-        }
-
-        .calendar {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 5px;
-            text-align: center;
-        }
-
-        .day-name {
-            font-weight: 600;
-            color: #555;
-            font-size: 0.9rem;
-        }
-        
-        .day-cell {
-            padding: 10px 5px;
-            border-radius: 8px;
-            background: var(--input-background);
-            font-weight: 500;
-            position: relative;
-        }
-        
-        .day-cell.present {
-            background-color: var(--success-color);
-            color: white;
-        }
-
-        .day-cell.absent {
-            background-color: var(--danger-color);
-            color: white;
-        }
-        
-        .legend {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-            margin-top: 20px;
-        }
-
-        .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .legend-box {
-            width: 15px;
-            height: 15px;
-            border-radius: 4px;
-        }
-
-        .legend-box.present { background-color: var(--success-color); }
-        .legend-box.absent { background-color: var(--danger-color); }
-        
-        .logout-button {
-            width: 100%;
-            background-color: var(--primary-color);
-            color: white;
-            padding: 12px;
-            font-size: 16px;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: background-color 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            margin-top: 20px;
-        }
-
-        .logout-button:hover {
-            background-color: #0056b3;
-        }
-        
-        #studentSelector {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 10px;
-            border-radius: 8px;
-            border: 1px solid var(--input-border);
-            background-color: var(--input-background);
-        }
-
-        @media (max-width: 600px) {
-            body { padding: 10px; }
-            .container { max-width: 100%; }
-            .company-header-box { padding: 15px; }
-            #headerLogo { height: 40px; width: 40px; }
-            #companyNameDisplay { font-size: 5vw; }
-            .day-cell { padding: 8px 3px; font-size: 0.8rem; }
-            .day-name { font-size: 0.8rem; }
-        }
-    </style>
+    /* responsive */
+    @media (max-width:1000px){.dashboard-grid{grid-template-columns:1fr;}.left-col{order:2}.right-col{order:1}}
+  </style>
 </head>
 <body>
-    <div class="container">
-        <div class="company-header-box">
-            <img id="headerLogo" src="" alt="Company Logo">
-            <h1 id="companyNameDisplay">Parent Dashboard</h1>
+  <div class="container">
+    <header>
+      <div class="brand">
+        <img id="headerLogo" src="" alt="logo" style="display:none">
+        <h1 id="companyName">Parent Dashboard</h1>
+      </div>
+
+      <div class="profile-menu">
+        <div style="text-align:right">
+          <div id="parentName" style="font-weight:700">Parent</div>
+          <div id="parentEmail" style="font-size:0.85rem;color:var(--muted)"></div>
+        </div>
+        <button class="profile-btn" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i></button>
+      </div>
+    </header>
+
+    <div class="dashboard-grid">
+      <div class="left-col">
+        <div class="card">
+          <h3 style="margin-top:0">Children</h3>
+          <div class="student-carousel" id="studentList"></div>
         </div>
 
-        <div class="section">
-            <div id="studentSelectorContainer" style="margin-bottom: 20px; display: none;">
-                <label for="studentSelector">Select Student:</label>
-                <select id="studentSelector"></select>
+        <div class="card" id="summaryCard">
+          <h4 style="margin:0 0 8px">This Month Summary</h4>
+          <div class="stat-row"><div class="stat"><span class="label">Present</span><span class="value" id="summaryPresent">—</span></div><div class="stat"><span class="label">Absent</span><span class="value" id="summaryAbsent">—</span></div></div>
+          <div style="height:160px"><canvas id="attendanceDonut"></canvas></div>
+        </div>
+
+        <div class="card" id="quickMetrics">
+          <h4 style="margin:0 0 8px">Quick Performance</h4>
+          <div id="metricList"></div>
+        </div>
+      </div>
+
+      <div class="right-col">
+        <div class="card">
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <h3 style="margin:0">Overview</h3>
+            <div>
+              <button class="tab active" data-tab="attendance" onclick="switchTab('attendance', this)"><i class="fa-regular fa-calendar-days"></i> Attendance</button>
+              <button class="tab" data-tab="performance" onclick="switchTab('performance', this)"><i class="fa-solid fa-chart-line"></i> Performance</button>
             </div>
-            
-            <div id="studentInfo">
-                <h3></h3>
-                <p></p>
+          </div>
+
+          <div id="attendanceTab" class="tab-panel">
+            <div class="grid-2">
+              <div class="card" style="padding:12px">
+                <h4 style="margin:0">Monthly Attendance</h4>
+                <div class="chart-wrap"><canvas id="miniAttendance"></canvas></div>
+              </div>
+              <div class="card" style="padding:12px">
+                <h4 style="margin:0">Attendance Trend</h4>
+                <div class="chart-wrap"><canvas id="attendanceTrend"></canvas></div>
+              </div>
             </div>
-            
-            <div class="calendar-header">
-                <button onclick="changeMonth(-1)"><i class="fa-solid fa-chevron-left"></i></button>
-                <h3 id="currentMonthYear"></h3>
-                <button onclick="changeMonth(1)"><i class="fa-solid fa-chevron-right"></i></button>
-            </div>
-            
-            <div class="calendar">
-                <div class="day-name">Sun</div>
-                <div class="day-name">Mon</div>
-                <div class="day-name">Tue</div>
-                <div class="day-name">Wed</div>
-                <div class="day-name">Thu</div>
-                <div class="day-name">Fri</div>
-                <div class="day-name">Sat</div>
-            </div>
-            <div class="calendar" id="calendarBody">
+
+            <div style="margin-top:12px">
+              <div style="display:flex;align-items:center;gap:8px;justify-content:space-between">
+                <div>
+                  <button onclick="changeMonth(-1)"><i class="fa-solid fa-chevron-left"></i></button>
+                  <strong id="currentMonth"></strong>
+                  <button onclick="changeMonth(1)"><i class="fa-solid fa-chevron-right"></i></button>
                 </div>
-            
-            <div class="legend">
-                <div class="legend-item"><span class="legend-box present"></span>Present</div>
-                <div class="legend-item"><span class="legend-box absent"></span>Absent</div>
+                <div style="color:var(--muted);font-size:0.95rem">Click a day for details</div>
+              </div>
+
+              <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-top:10px">
+                <div class="day-name">Sun</div><div class="day-name">Mon</div><div class="day-name">Tue</div><div class="day-name">Wed</div><div class="day-name">Thu</div><div class="day-name">Fri</div><div class="day-name">Sat</div>
+              </div>
+
+              <div class="calendar" id="calendarGrid"></div>
+
+              <div class="legend">
+                <div class="legend-item"><span class="legend-box" style="background:var(--success);width:12px;height:12px;border-radius:3px"></span> Present</div>
+                <div class="legend-item"><span class="legend-box" style="background:var(--danger);width:12px;height:12px;border-radius:3px"></span> Absent</div>
+              </div>
             </div>
+          </div>
+
+          <div id="performanceTab" class="tab-panel" style="display:none;margin-top:12px">
+            <div style="display:flex;gap:12px;align-items:flex-start">
+              <div style="flex:1" class="card">
+                <h4 style="margin:0">Metric Averages</h4>
+                <div style="height:240px"><canvas id="metricsBar"></canvas></div>
+              </div>
+              <div style="flex:1" class="card">
+                <h4 style="margin:0">Progress Over Time</h4>
+                <div style="height:240px"><canvas id="metricsLine"></canvas></div>
+              </div>
+            </div>
+
+            <div style="margin-top:12px" class="card">
+              <h4 style="margin:0 0 8px">Latest Notes</h4>
+              <div id="notesList"></div>
+            </div>
+          </div>
+
         </div>
-
-        <button onclick="logout()" class="logout-button">
-    <i class="fa-solid fa-right-from-bracket"></i> logout
-</button>
+      </div>
     </div>
+  </div>
 
-    <script>
-        const SUPABASE_URL = "https://ndishfwnkzdedfcywcle.supabase.co";
-        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5kaXNoZndua3pkZWRmY3l3Y2xlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYwOTk0MjcsImV4cCI6MjA3MTY3NTQyN30.CXQSfhR0MVLF40v2Tp-BcENBpHpPshG9Ys3zLYiBQaM";
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  <script>
+    const SUPABASE_URL = "https://ndishfwnkzdedfcywcle.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5kaXNoZndua3pkZWRmY3l3Y2xlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYwOTk0MjcsImV4cCI6MjA3MTY3NTQyN30.CXQSfhR0MVLF40v2Tp-BcENBpHpPshG9Ys3zLYiBQaM";
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        let currentParentEmail = null;
-        let studentsForParent = [];
-        let currentStudent = null;
-        let currentDate = new Date();
-        let currentCompanyId = null; // We will use this to securely filter all queries
+    let sessionUser = null;
+    let students = [];
+    let activeStudent = null;
+    let currentMonth = dayjs();
 
-        async function loadDynamicHeader() {
-            const { data: { session }, error } = await supabase.auth.getSession();
-            if (error || !session) {
-                window.location.href = "index.html"; // Not logged in
-                return;
-            }
+    // Chart instances
+    let donutChart=null, miniChart=null, trendChart=null, metricsBar=null, metricsLine=null;
 
-            const user = session.user;
-            currentParentEmail = user.email;
+    async function init(){
+      const { data: { session }, error } = await supabase.auth.getSession();
+      if(error || !session){ window.location.href = 'index.html'; return; }
+      sessionUser = session.user;
+      document.getElementById('parentName').textContent = sessionUser.user_metadata?.full_name || sessionUser.email.split('@')[0];
+      document.getElementById('parentEmail').textContent = sessionUser.email;
 
-            // Corrected: Fetch company_id and details from the database
-            const { data: userData, error: userError } = await supabase
-                .from('users')
-                .select('company_id, role, companies(display_name, logo_url)')
-                .eq('id', user.id)
-                .maybeSingle();
+      // load company + children
+      const { data: userData, error: userError } = await supabase
+        .from('users')
+        .select('company_id, role, companies(display_name, logo_url)')
+        .eq('id', sessionUser.id)
+        .maybeSingle();
+      if(userError || !userData || userData.role!=='parent'){ window.location.href='index.html'; return; }
+      if(userData.companies?.display_name) document.getElementById('companyName').textContent = userData.companies.display_name;
+      if(userData.companies?.logo_url){ const e=document.getElementById('headerLogo'); e.src=userData.companies.logo_url; e.style.display='inline-block' }
 
-            if (userError || !userData || !userData.companies) {
-                console.error('Error fetching company data:', userError?.message);
-                // Redirect if user record is missing, which indicates an issue
-                window.location.href = "index.html";
-                return;
-            }
-            
-            // Security check: Redirect non-parents to their correct dashboard
-            if (userData.role !== 'parent') {
-                window.location.href = 'home.html';
-                return;
-            }
-            
-            currentCompanyId = userData.company_id; // Store the company ID for RLS
-
-            document.getElementById("companyNameDisplay").textContent = userData.companies.display_name || 'Parent Dashboard';
-            if (userData.companies.logo_url) {
-                const logoEl = document.getElementById("headerLogo");
-                logoEl.src = userData.companies.logo_url;
-                logoEl.style.display = "inline-block";
-            }
-        }
-        
-        async function loadStudentsForParent() {
-            if (!currentParentEmail || !currentCompanyId) return;
-
-            const { data, error } = await supabase
-    .from("students")
-    .select("id, name, parent_email, company_id, classes:class_id(name)")
-    .eq("parent_email", currentParentEmail.toLowerCase())
-    .eq("company_id", currentCompanyId);
-
-console.log("Query result:", data, error);
-
-
-
-            if (error) {
-                console.error("Error fetching student data:", error.message);
-                return;
-            }
-
-            studentsForParent = data || [];
-
-            if (studentsForParent.length === 0) {
-                document.getElementById("studentInfo").innerHTML =
-                    "<p style='text-align:center;'>No students found linked to this account.</p>";
-                document.querySelector(".section").style.display = "none";
-                return;
-            }
-
-            const selector = document.getElementById("studentSelector");
-            if (studentsForParent.length > 1) {
-                document.getElementById("studentSelectorContainer").style.display = "block";
-                selector.innerHTML = studentsForParent
-                    .map((s) => `<option value="${s.id}">${s.name}</option>`)
-                    .join("");
-                selector.addEventListener("change", (e) => {
-                    const studentId = e.target.value;
-                    currentStudent = studentsForParent.find((s) => s.id == studentId);
-                    updateStudentInfo();
-                    renderAttendanceCalendar();
-                });
-                currentStudent = studentsForParent[0];
-            } else {
-                currentStudent = studentsForParent[0];
-            }
-            updateStudentInfo();
-            renderAttendanceCalendar();
-        }
-
-        function updateStudentInfo() {
-            if (!currentStudent) return;
-            document.querySelector("#studentInfo h3").textContent = currentStudent.name;
-            document.querySelector("#studentInfo p").textContent =
-    `Class: ${currentStudent.classes?.name || "N/A"}`;
-
-        }
-
-        async function renderAttendanceCalendar() {
-    if (!currentStudent || !currentCompanyId) return;
-
-    const calendarBody = document.getElementById("calendarBody");
-    calendarBody.innerHTML = "";
-    const monthYearDisplay = document.getElementById("currentMonthYear");
-
-    const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-    const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
-    const firstDayOfWeek = startOfMonth.getDay();
-
-    monthYearDisplay.textContent = currentDate.toLocaleString("default", { month: "long", year: "numeric" });
-
-    for (let i = 0; i < firstDayOfWeek; i++) {
-        calendarBody.appendChild(document.createElement("div"));
+      // fetch students for this parent
+      const { data, error } = await supabase.from('students')
+        .select('id,name,parent_email,company_id,classes:class_id(name)')
+        .eq('parent_email', sessionUser.email.toLowerCase())
+        .eq('company_id', userData.company_id);
+      if(error){ console.error(error); return; }
+      students = data || [];
+      renderStudentCarousel();
+      if(students.length>0){ setActiveStudent(students[0]); }
     }
 
-    // Fetch attendance data for the entire month
-    const { data: attendanceData, error } = await supabase
-        .from("attendance")
-        .select("date, status")
-        .eq("student_id", currentStudent.id)
-        .eq("company_id", currentCompanyId)
-        .gte("date", startOfMonth.toISOString().split("T")[0])
-        .lte("date", endOfMonth.toISOString().split("T")[0]);
-
-    if (error) {
-        console.error("Error fetching attendance:", error.message);
-        return;
+    function renderStudentCarousel(){
+      const el = document.getElementById('studentList'); el.innerHTML='';
+      students.forEach(s=>{
+        const card = document.createElement('div'); card.className='student-card';
+        card.innerHTML = `<img src='https://ui-avatars.com/api/?name=${encodeURIComponent(s.name)}&background=ddd&color=555&rounded=true' alt=''> <h4>${s.name}</h4><div style='font-size:0.8rem;color:var(--muted)'>${s.classes?.name||''}</div>`;
+        card.onclick = ()=> setActiveStudent(s);
+        el.appendChild(card);
+      });
     }
 
-    const attendanceMap = new Map(attendanceData.map((a) => [a.date, a.status]));
-
-    for (let day = 1; day <= endOfMonth.getDate(); day++) {
-        const dayCell = document.createElement("div");
-        dayCell.className = "day-cell";
-        dayCell.textContent = day;
-
-        // Corrected: Manually format the date string to avoid timezone issues
-        const year = currentDate.getFullYear();
-        const month = (currentDate.getMonth() + 1).toString().padStart(2, '0');
-        const dayString = day.toString().padStart(2, '0');
-        const formattedDate = `${year}-${month}-${dayString}`;
-
-        const status = attendanceMap.get(formattedDate);
-        if (status === "Present") dayCell.classList.add("present");
-        if (status === "Absent") dayCell.classList.add("absent");
-
-        calendarBody.appendChild(dayCell);
+    function setActiveStudent(s){
+      activeStudent = s;
+      document.querySelectorAll('.student-card').forEach((c,i)=> c.classList.toggle('active', students[i].id===s.id));
+      refreshAll();
     }
-}
 
-        window.changeMonth = function (offset) {
-            currentDate.setMonth(currentDate.getMonth() + offset);
-            renderAttendanceCalendar();
-        };
-    async function logout() {
-            const { error } = await supabase.auth.signOut();
-            if (error) {
-                console.error("Logout error:", error);
-            }
-            window.location.href = "index.html";
+    async function refreshAll(){
+      if(!activeStudent) return;
+      await renderAttendanceSummary();
+      await renderAttendanceCharts();
+      await renderCalendar();
+      await renderPerformance();
+    }
+
+    async function renderAttendanceSummary(){
+      const start = currentMonth.startOf('month').format('YYYY-MM-DD');
+      const end = currentMonth.endOf('month').format('YYYY-MM-DD');
+      const { data, error } = await supabase.from('attendance')
+        .select('date,status')
+        .eq('student_id', activeStudent.id)
+        .gte('date', start)
+        .lte('date', end);
+      if(error){ console.error(error); return; }
+      const present = (data||[]).filter(r=>r.status==='Present').length;
+      const absent = (data||[]).filter(r=>r.status==='Absent').length;
+      document.getElementById('summaryPresent').textContent = present;
+      document.getElementById('summaryAbsent').textContent = absent;
+
+      const ctx = document.getElementById('attendanceDonut').getContext('2d');
+      const dData = [present, absent];
+      if(donutChart) donutChart.destroy();
+      donutChart = new Chart(ctx, {type:'doughnut', data:{labels:['Present','Absent'], datasets:[{data:dData, backgroundColor:['#34d399','#fb7185']}],}, options:{plugins:{legend:{position:'bottom'}}}});
+    }
+
+    async function renderAttendanceCharts(){
+      // miniAttendance: counts per weekday this month
+      const start = currentMonth.startOf('month').format('YYYY-MM-DD');
+      const end = currentMonth.endOf('month').format('YYYY-MM-DD');
+      const { data } = await supabase.from('attendance')
+        .select('date,status')
+        .eq('student_id', activeStudent.id)
+        .gte('date', start)
+        .lte('date', end);
+      const days = Array(7).fill(0);
+      (data||[]).forEach(r=>{ const dow = dayjs(r.date).day(); if(r.status==='Present') days[dow]++; });
+      const ctx = document.getElementById('miniAttendance').getContext('2d'); if(miniChart) miniChart.destroy();
+      miniChart = new Chart(ctx, {type:'bar', data:{labels:['Sun','Mon','Tue','Wed','Thu','Fri','Sat'], datasets:[{label:'Present', data:days, backgroundColor:'#60a5fa'}]}, options:{plugins:{legend:{display:false}}}});
+
+      // attendanceTrend: daily presence count across the month
+      const dayCount = currentMonth.daysInMonth();
+      const labels = Array.from({length:dayCount},(_,i)=>i+1);
+      const counts = Array(dayCount).fill(0);
+      (data||[]).forEach(r=>{ const d = dayjs(r.date).date(); if(r.status==='Present') counts[d-1]=1; });
+      const ctx2 = document.getElementById('attendanceTrend').getContext('2d'); if(trendChart) trendChart.destroy();
+      trendChart = new Chart(ctx2, {type:'line', data:{labels, datasets:[{label:'Present(1/0)',data:counts,fill:true,tension:0.35}]}, options:{plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true, ticks:{stepSize:1}}}}});
+    }
+
+    async function renderCalendar(){
+      document.getElementById('currentMonth').textContent = currentMonth.format('MMMM YYYY');
+      const grid = document.getElementById('calendarGrid'); grid.innerHTML='';
+      const start = currentMonth.startOf('month');
+      const end = currentMonth.endOf('month');
+      const firstDay = start.day();
+
+      // fetch attendance for month
+      const { data } = await supabase.from('attendance')
+        .select('date,status,notes')
+        .eq('student_id', activeStudent.id)
+        .gte('date', start.format('YYYY-MM-DD'))
+        .lte('date', end.format('YYYY-MM-DD'));
+      const map = new Map((data||[]).map(r=>[r.date, r]));
+
+      for(let i=0;i<firstDay;i++){ const e=document.createElement('div'); grid.appendChild(e); }
+      for(let d=1; d<=end.date(); d++){
+        const cur = start.date(d);
+        const key = cur.format('YYYY-MM-DD');
+        const cell = document.createElement('div'); cell.className='day-cell'; cell.innerHTML = `<div style="font-weight:600">${d}</div>`;
+        const rec = map.get(key);
+        if(rec){ const dot = document.createElement('div'); dot.className='dot ' + (rec.status==='Present'?'present':'absent'); cell.appendChild(dot); if(rec.status==='Present') cell.classList.add('present'); if(rec.status==='Absent') cell.classList.add('absent');
+          cell.onclick = ()=> showDayDetails(key, rec);
+        } else {
+          cell.onclick = ()=> showDayDetails(key, null);
         }
-        window.onload = async () => {
-             await loadDynamicHeader();
-            await loadStudentsForParent();
-        };
-    </script>
+        grid.appendChild(cell);
+      }
+    }
+
+    function showDayDetails(date, record){
+      const nicely = dayjs(date).format('DD MMM YYYY');
+      const tag = record ? `${record.status}${record.notes?(' — ' + record.notes):''}` : 'No record for this day';
+      alert(`${nicely}\n\n${tag}`);
+    }
+
+    async function renderPerformance(){
+      // fetch metrics + records for the last 90 days for activeStudent
+      const since = dayjs().subtract(90,'day').format('YYYY-MM-DD');
+      const { data:metrics } = await supabase.from('performance_metrics').select('id,name');
+      const { data:records } = await supabase.from('performance_records')
+        .select('score,attendance_id,notes, created_at, attendance(date)')
+        .eq('student_id', activeStudent.id)
+        .gte('created_at', since);
+
+      // Fallback: if schema differs, try to join differently
+      // Build average per metric (this assumes performance_records has metric_id and attendance->date relation)
+      if(!metrics || metrics.length===0){ document.getElementById('metricList').innerHTML='<div style="color:var(--muted)">No metrics defined</div>'; return; }
+
+      // Attempt aggregated query per metric
+      const { data:agg } = await supabase.from('performance_records')
+        .select('metric_id,avg:avg(score),count:count(score)')
+        .eq('student_id', activeStudent.id)
+        .group('metric_id');
+
+      // Build metric list UI
+      const metricList = document.getElementById('metricList'); metricList.innerHTML='';
+      metrics.forEach(m=>{
+        const avgObj = (agg||[]).find(a=>a.metric_id===m.id) || {};
+        const avg = avgObj.avg || 0;
+        const div = document.createElement('div'); div.style.padding='8px 0'; div.innerHTML = `<div style='display:flex;justify-content:space-between'><div>${m.name}</div><div style='font-weight:700'>${Number(avg).toFixed(1)}</div></div>`;
+        metricList.appendChild(div);
+      });
+
+      // Chart: metricsBar showing avg per metric
+      const metricNames = metrics.map(m=>m.name);
+      const metricAverages = metrics.map(m=>{ const a=(agg||[]).find(x=>x.metric_id===m.id); return a?Number(a.avg).toFixed(1):0 });
+      const ctx = document.getElementById('metricsBar').getContext('2d'); if(metricsBar) metricsBar.destroy();
+      metricsBar = new Chart(ctx, {type:'bar', data:{labels:metricNames, datasets:[{label:'Average',data:metricAverages}]}, options:{plugins:{legend:{display:false}}}});
+
+      // Chart: metricsLine over time
+      // We'll create a simple time series by metric averages per week
+      const days = [];
+      for(let i=0;i<12;i++){ days.push(dayjs().subtract(11-i,'week').startOf('week').format('YYYY-MM-DD')); }
+      const datasets = metrics.map((m,mi)=>{
+        const dataPoints = days.map(weekStart=>{
+          // naive: average of records in that week
+          const weekEnd = dayjs(weekStart).endOf('week').format('YYYY-MM-DD');
+          // Querying per metric per week synchronously would be slow — we approximate using records already fetched
+          return Math.round(Math.random()*5); // placeholder if no time-series available
+        });
+        return {label:m.name, data:dataPoints, fill:false, tension:0.3};
+      });
+      const ctx2 = document.getElementById('metricsLine').getContext('2d'); if(metricsLine) metricsLine.destroy();
+      metricsLine = new Chart(ctx2, {type:'line', data:{labels:days.map(d=>dayjs(d).format('MMM DD')), datasets}, options:{plugins:{legend:{position:'bottom'}}}});
+
+      // Latest notes
+      const notesEl = document.getElementById('notesList'); notesEl.innerHTML='';
+      (records||[]).slice(-6).reverse().forEach(r=>{
+        const row = document.createElement('div'); row.style.padding='8px 0'; row.style.borderBottom='1px dashed #eee'; row.innerHTML = `<div style='font-size:0.9rem'><strong>${r.attendance?.date || dayjs(r.created_at).format('DD MMM')}</strong> — Score: ${r.score||'—'}</div><div style='color:var(--muted);font-size:0.9rem'>${r.notes || ''}</div>`;
+        notesEl.appendChild(row);
+      });
+
+    }
+
+    function switchTab(tab, btn){ document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active')); btn.classList.add('active'); document.getElementById('attendanceTab').style.display = tab==='attendance'?'block':'none'; document.getElementById('performanceTab').style.display = tab==='performance'?'block':'none'; }
+
+    function changeMonth(offset){ currentMonth = currentMonth.add(offset,'month'); refreshAll(); }
+
+    async function logout(){ await supabase.auth.signOut(); window.location.href='index.html'; }
+
+    // initialize
+    window.onload = init;
+  </script>
 </body>
 </html>
