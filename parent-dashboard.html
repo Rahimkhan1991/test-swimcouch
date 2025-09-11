@@ -344,7 +344,7 @@ async function renderCalendar(){
 async function renderPerformance(){
   try {
     const { data: metrics } = await supabase.from('performance_metrics').select('id,name');
-    const { data: records } = await supabase.from('performance_records').select('metric_id,score,created_at').eq('student_id', activeStudent.id);
+    const { data: records } = await supabase.from('performance_records').select('score, notes, created_at, attendance_id, attendance(date)').eq('student_id', activeStudent.id);
 
     // Quick metrics
     const list = document.getElementById('metricList'); list.innerHTML='';
