@@ -168,9 +168,8 @@
   <!-- Actions -->
   <div class="actions">
     <button class="btn export" onclick="exportCSV()">⬇️ Export CSV</button>
+    <button class="back-btn" id="backBtn"><i class="fa fa-arrow-left"></i> Back</button>
   </div>
-
-  <a href="home.html" class="back-btn">⬅️ Back to Home</a>
 
 <script>
 const SUPABASE_URL = 'https://ndishfwnkzdedfcywcle.supabase.co';
@@ -220,7 +219,7 @@ function drawChart(collected, pending) {
     type: "doughnut",
     data: {
       labels: ["Collected", "Pending"],
-      datasets: [{ data: [collected, pending], backgroundColor: ["#34c759", "#facc15"] }]
+      datasets: [{ data: [collected, pending], backgroundColor: ["#34c759", "#ef4444"] }]
     },
     options: { plugins: { legend: { position: "bottom" } } }
   });
