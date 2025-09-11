@@ -1,177 +1,181 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Parent Dashboard — Enhanced</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Parent Dashboard — Enhanced</title>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
 
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
 
-  <style>
-    :root{--primary:#6366f1;--primary-2:#4f46e5;--bg:#f6f7fb;--card:#fff;--muted:#6b7280;--success:#22c55e;--danger:#ef4444}
-    *{box-sizing:border-box}
-    body{font-family:Inter,Segoe UI,Roboto,system-ui; margin:0; background:linear-gradient(180deg,#f8fafc, #eef2ff); color:#0f172a; padding:18px; display:flex; justify-content:center}
-    .container{width:100%; max-width:1100px}
-    header{display:flex;align-items:center;gap:16px;margin-bottom:18px}
-    .brand{display:flex;align-items:center;gap:12px;background:var(--card);padding:12px 16px;border-radius:12px;box-shadow:0 6px 20px rgba(15,23,42,0.06)}
-    .brand img{height:52px;width:52px;border-radius:10px;object-fit:cover}
-    .brand h1{font-size:1.25rem;margin:0;color:var(--primary)}
-    .profile-menu{margin-left:auto;display:flex;align-items:center;gap:12px}
-    .profile-btn{background:transparent;border:0;padding:8px 12px;border-radius:10px;cursor:pointer}
+  <style>
+    :root{--primary:#6366f1;--primary-2:#4f46e5;--bg:#f6f7fb;--card:#fff;--muted:#6b7280;--success:#22c55e;--danger:#ef4444}
+    *{box-sizing:border-box}
+    body{font-family:Inter,Segoe UI,Roboto,system-ui; margin:0; background:linear-gradient(180deg,#f8fafc, #eef2ff); color:#0f172a; padding:18px; display:flex; justify-content:center}
+    .container{width:100%; max-width:1100px}
+    header{display:flex;align-items:center;gap:16px;margin-bottom:18px}
+    .brand{display:flex;align-items:center;gap:12px;background:var(--card);padding:12px 16px;border-radius:12px;box-shadow:0 6px 20px rgba(15,23,42,0.06)}
+    .brand img{height:52px;width:52px;border-radius:10px;object-fit:cover}
+    .brand h1{font-size:1.25rem;margin:0;color:var(--primary)}
+    .profile-menu{margin-left:auto;display:flex;align-items:center;gap:12px}
+    .profile-btn{background:transparent;border:0;padding:8px 12px;border-radius:10px;cursor:pointer}
 
-    .dashboard-grid{display:grid;grid-template-columns:380px 1fr;gap:16px}
+    .dashboard-grid{display:grid;grid-template-columns:380px 1fr;gap:16px}
 
-    /* Left column */
-    .left-col .card{background:var(--card);border-radius:12px;padding:14px;box-shadow:0 6px 20px rgba(15,23,42,0.04);margin-bottom:14px}
-    .student-carousel{display:flex;align-items:center;gap:10px}
-    .student-card{min-width:120px;background:linear-gradient(180deg,#fff,#fbfdff);border-radius:12px;padding:10px;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;border:1px solid transparent}
-    .student-card.active{border-color:var(--primary);box-shadow:0 4px 18px rgba(99,102,241,0.12)}
-    .student-card img{height:64px;width:64px;border-radius:50%;object-fit:cover}
-    .student-card h4{margin:0;font-size:0.95rem}
-    .stat-row{display:flex;justify-content:space-between;padding:8px 0}
-    .stat{display:flex;flex-direction:column}
-    .stat .value{font-weight:700}
+    /* Left column */
+    .left-col .card{background:var(--card);border-radius:12px;padding:14px;box-shadow:0 6px 20px rgba(15,23,42,0.04);margin-bottom:14px}
+    .student-carousel{display:flex;align-items:center;gap:10px}
+    .student-card{min-width:120px;background:linear-gradient(180deg,#fff,#fbfdff);border-radius:12px;padding:10px;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;border:1px solid transparent}
+    .student-card.active{border-color:var(--primary);box-shadow:0 4px 18px rgba(99,102,241,0.12)}
+    .student-card img{height:64px;width:64px;border-radius:50%;object-fit:cover}
+    .student-card h4{margin:0;font-size:0.95rem}
+    .stat-row{display:flex;justify-content:space-between;padding:8px 0}
+    .stat{display:flex;flex-direction:column}
+    .stat .value{font-weight:700}
 
-    /* Right column */
-    .card{background:var(--card);border-radius:12px;padding:18px;box-shadow:0 6px 20px rgba(15,23,42,0.04)}
-    .tabs{display:flex;gap:8px;margin-bottom:12px}
-    .tab{padding:8px 12px;border-radius:10px;cursor:pointer;background:transparent;border:1px solid transparent}
-    .tab.active{background:linear-gradient(90deg,var(--primary),var(--primary-2));color:white}
+    /* Right column */
+    .card{background:var(--card);border-radius:12px;padding:18px;box-shadow:0 6px 20px rgba(15,23,42,0.04)}
+    .tabs{display:flex;gap:8px;margin-bottom:12px}
+    .tab{padding:8px 12px;border-radius:10px;cursor:pointer;background:transparent;border:1px solid transparent}
+    .tab.active{background:linear-gradient(90deg,var(--primary),var(--primary-2));color:white}
 
-    .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-    .chart-wrap{height:220px}
+    .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .chart-wrap{height:220px}
 
-    /* Calendar */
-    .calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-top:12px}
-    .day-name{font-size:0.78rem;color:var(--muted);text-align:center}
-    .day-cell{background:#f8fafc;padding:10px;border-radius:8px;text-align:center;min-height:72px;position:relative}
-    .day-cell.present{background:linear-gradient(180deg,#dcfce7,#bbf7d0)}
-    .day-cell.absent{background:linear-gradient(180deg,#fee2e2,#fecaca)}
-    .day-cell .dot{position:absolute;right:8px;top:8px;height:10px;width:10px;border-radius:50%}
-    .dot.present{background:var(--success)}
-    .dot.absent{background:var(--danger)}
+    /* Calendar */
+    .calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-top:12px}
+    .day-name{font-size:0.78rem;color:var(--muted);text-align:center}
+    .day-cell{background:#f8fafc;padding:10px;border-radius:8px;text-align:center;min-height:72px;position:relative}
+    .day-cell.present{background:linear-gradient(180deg,#dcfce7,#bbf7d0)}
+    .day-cell.absent{background:linear-gradient(180deg,#fee2e2,#fecaca)}
+    .day-cell .dot{position:absolute;right:8px;top:8px;height:10px;width:10px;border-radius:50%}
+    .dot.present{background:var(--success)}
+    .dot.absent{background:var(--danger)}
 
-    .legend{display:flex;gap:10px;justify-content:center;margin-top:12px}
-    .legend-item{display:flex;gap:8px;align-items:center}
+    .legend{display:flex;gap:10px;justify-content:center;margin-top:12px}
+    .legend-item{display:flex;gap:8px;align-items:center}
 
-    /* responsive */
-    @media (max-width:1000px){.dashboard-grid{grid-template-columns:1fr;}.left-col{order:2}.right-col{order:1}}
-  </style>
+    /* responsive */
+    @media (max-width:1000px){.dashboard-grid{grid-template-columns:1fr;}.left-col{order:2}.right-col{order:1}}
+  </style>
 </head>
 <body>
-  <div class="container">
-        <header>
-      <div class="brand">
-        <img id="headerLogo" src="" alt="logo" style="display:none">
-        <h1 id="companyName">Parent Dashboard</h1>
-      </div>
-      <div class="profile-menu">
-        <div style="text-align:right">
-          <div id="parentName" style="font-weight:700">Parent</div>
-          <div id="parentEmail" style="font-size:0.85rem;color:var(--muted)"></div>
-        </div>
-        <button class="profile-btn" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i></button>
-      </div>
-    </header>
+  <div class="container">
+    <!-- Header -->
+    <header>
+      <div class="brand">
+        <img id="headerLogo" src="" alt="logo" style="display:none">
+        <h1 id="companyName">Parent Dashboard</h1>
+      </div>
+      <div class="profile-menu">
+        <div style="text-align:right">
+          <div id="parentName" style="font-weight:700">Parent</div>
+          <div id="parentEmail" style="font-size:0.85rem;color:var(--muted)"></div>
+        </div>
+        <button class="profile-btn" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i></button>
+      </div>
+    </header>
 
-        <div class="dashboard-grid">
-      <div class="left-col">
-        <div class="card">
-          <h3 style="margin-top:0">Children</h3>
-          <div class="student-carousel" id="studentList"></div>
-        </div>
+    <!-- Dashboard -->
+    <div class="dashboard-grid">
+      <div class="left-col">
+        <div class="card">
+          <h3 style="margin-top:0">Children</h3>
+          <div class="student-carousel" id="studentList"></div>
+        </div>
 
-        <div class="card" id="summaryCard">
-          <h4 style="margin:0 0 8px">This Month Summary</h4>
-          <div class="stat-row">
-            <div class="stat"><span class="label">Present</span><span class="value" id="summaryPresent">—</span></div>
-            <div class="stat"><span class="label">Absent</span><span class="value" id="summaryAbsent">—</span></div>
-          </div>
-          <div style="height:160px"><canvas id="attendanceDonut"></canvas></div>
-        </div>
+        <div class="card" id="summaryCard">
+          <h4 style="margin:0 0 8px">This Month Summary</h4>
+          <div class="stat-row">
+            <div class="stat"><span class="label">Present</span><span class="value" id="summaryPresent">—</span></div>
+            <div class="stat"><span class="label">Absent</span><span class="value" id="summaryAbsent">—</span></div>
+          </div>
+          <div style="height:160px"><canvas id="attendanceDonut"></canvas></div>
+        </div>
 
-        <div class="card" id="quickMetrics">
-          <h4 style="margin:0 0 8px">Quick Performance</h4>
-          <div id="metricList"></div>
-        </div>
-      </div>
+        <div class="card" id="quickMetrics">
+          <h4 style="margin:0 0 8px">Quick Performance</h4>
+          <div id="metricList"></div>
+        </div>
+      </div>
 
-      <div class="right-col">
-        <div class="card">
-          <div style="display:flex;align-items:center;justify-content:space-between">
-            <h3 style="margin:0">Overview</h3>
-            <div>
-              <button class="tab active" data-tab="attendance" onclick="switchTab('attendance', this)">
-                <i class="fa-regular fa-calendar-days"></i> Attendance
-              </button>
-              <button class="tab" data-tab="performance" onclick="switchTab('performance', this)">
-                <i class="fa-solid fa-chart-line"></i> Performance
-              </button>
-            </div>
-          </div>
+      <div class="right-col">
+        <div class="card">
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <h3 style="margin:0">Overview</h3>
+            <div>
+              <button class="tab active" data-tab="attendance" onclick="switchTab('attendance', this)">
+                <i class="fa-regular fa-calendar-days"></i> Attendance
+              </button>
+              <button class="tab" data-tab="performance" onclick="switchTab('performance', this)">
+                <i class="fa-solid fa-chart-line"></i> Performance
+              </button>
+            </div>
+          </div>
 
-                    <div id="attendanceTab" class="tab-panel">
-            <div class="grid-2">
-              <div class="card" style="padding:12px">
-                <h4 style="margin:0">Monthly Attendance</h4>
-                <div class="chart-wrap"><canvas id="miniAttendance"></canvas></div>
-              </div>
-              <div class="card" style="padding:12px">
-                <h4 style="margin:0">Attendance Trend</h4>
-                <div class="chart-wrap"><canvas id="attendanceTrend"></canvas></div>
-              </div>
-            </div>
+          <!-- Attendance Tab -->
+          <div id="attendanceTab" class="tab-panel">
+            <div class="grid-2">
+              <div class="card" style="padding:12px">
+                <h4 style="margin:0">Monthly Attendance</h4>
+                <div class="chart-wrap"><canvas id="miniAttendance"></canvas></div>
+              </div>
+              <div class="card" style="padding:12px">
+                <h4 style="margin:0">Attendance Trend</h4>
+                <div class="chart-wrap"><canvas id="attendanceTrend"></canvas></div>
+              </div>
+            </div>
 
-            <div style="margin-top:12px">
-              <div style="display:flex;align-items:center;gap:8px;justify-content:space-between">
-                <div>
-                  <button onclick="changeMonth(-1)"><i class="fa-solid fa-chevron-left"></i></button>
-                  <strong id="currentMonth"></strong>
-                  <button onclick="changeMonth(1)"><i class="fa-solid fa-chevron-right"></i></button>
-                </div>
-                <div style="color:var(--muted);font-size:0.95rem">Click a day for details</div>
-              </div>
+            <div style="margin-top:12px">
+              <div style="display:flex;align-items:center;gap:8px;justify-content:space-between">
+                <div>
+                  <button onclick="changeMonth(-1)"><i class="fa-solid fa-chevron-left"></i></button>
+                  <strong id="currentMonth"></strong>
+                  <button onclick="changeMonth(1)"><i class="fa-solid fa-chevron-right"></i></button>
+                </div>
+                <div style="color:var(--muted);font-size:0.95rem">Click a day for details</div>
+              </div>
 
-              <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-top:10px">
-                <div class="day-name">Sun</div><div class="day-name">Mon</div><div class="day-name">Tue</div>
-                <div class="day-name">Wed</div><div class="day-name">Thu</div><div class="day-name">Fri</div>
-                <div class="day-name">Sat</div>
-              </div>
+              <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-top:10px">
+                <div class="day-name">Sun</div><div class="day-name">Mon</div><div class="day-name">Tue</div>
+                <div class="day-name">Wed</div><div class="day-name">Thu</div><div class="day-name">Fri</div>
+                <div class="day-name">Sat</div>
+              </div>
 
-              <div class="calendar" id="calendarGrid"></div>
+              <div class="calendar" id="calendarGrid"></div>
 
-              <div class="legend">
-                <div class="legend-item"><span class="legend-box" style="background:var(--success);width:12px;height:12px;border-radius:3px"></span> Present</div>
-                <div class="legend-item"><span class="legend-box" style="background:var(--danger);width:12px;height:12px;border-radius:3px"></span> Absent</div>
-              </div>
-            </div>
-          </div>
+              <div class="legend">
+                <div class="legend-item"><span class="legend-box" style="background:var(--success);width:12px;height:12px;border-radius:3px"></span> Present</div>
+                <div class="legend-item"><span class="legend-box" style="background:var(--danger);width:12px;height:12px;border-radius:3px"></span> Absent</div>
+              </div>
+            </div>
+          </div>
 
-                    <div id="performanceTab" class="tab-panel" style="display:none;margin-top:12px">
-            <div style="display:flex;gap:12px;align-items:flex-start">
-              <div style="flex:1" class="card">
-                <h4 style="margin:0">Metric Averages</h4>
-                <div style="height:240px"><canvas id="metricsBar"></canvas></div>
-              </div>
-              <div style="flex:1" class="card">
-                <h4 style="margin:0">Progress Over Time</h4>
-                <div style="height:240px"><canvas id="metricsLine"></canvas></div>
-              </div>
-            </div>
+          <!-- Performance Tab -->
+          <div id="performanceTab" class="tab-panel" style="display:none;margin-top:12px">
+            <div style="display:flex;gap:12px;align-items:flex-start">
+              <div style="flex:1" class="card">
+                <h4 style="margin:0">Metric Averages</h4>
+                <div style="height:240px"><canvas id="metricsBar"></canvas></div>
+              </div>
+              <div style="flex:1" class="card">
+                <h4 style="margin:0">Progress Over Time</h4>
+                <div style="height:240px"><canvas id="metricsLine"></canvas></div>
+              </div>
+            </div>
 
-            <div style="margin-top:12px" class="card">
-              <h4 style="margin:0 0 8px">Latest Notes</h4>
-              <div id="notesList"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
+            <div style="margin-top:12px" class="card">
+              <h4 style="margin:0 0 8px">Latest Notes</h4>
+              <div id="notesList"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
 <script>
 const SUPABASE_URL = "https://ndishfwnkzdedfcywcle.supabase.co";
@@ -182,212 +186,205 @@ let sessionUser=null, students=[], activeStudent=null, currentMonth=dayjs();
 let donutChart=null, miniChart=null, trendChart=null, metricsBar=null, metricsLine=null;
 
 async function init(){
-  try {
-    const { data: { session }, error } = await supabase.auth.getSession();
-    if(error || !session){ window.location.href = 'index.html'; return; }
-    sessionUser = session.user;
-    document.getElementById('parentName').textContent = sessionUser.user_metadata?.full_name || sessionUser.email.split('@')[0];
-    document.getElementById('parentEmail').textContent = sessionUser.email;
+  try {
+    const { data: { session }, error } = await supabase.auth.getSession();
+    if(error || !session){ window.location.href = 'index.html'; return; }
+    sessionUser = session.user;
+    document.getElementById('parentName').textContent = sessionUser.user_metadata?.full_name || sessionUser.email.split('@')[0];
+    document.getElementById('parentEmail').textContent = sessionUser.email;
 
-    // Load company + children
-    const { data: userData, error: userError } = await supabase
-      .from('users')
-      .select('company_id, role, companies(display_name, logo_url)')
-      .eq('id', sessionUser.id)
-      .maybeSingle();
-    if(userError || !userData || userData.role!=='parent'){ window.location.href='index.html'; return; }
-    if(userData.companies?.display_name) document.getElementById('companyName').textContent = userData.companies.display_name;
-    if(userData.companies?.logo_url){ const e=document.getElementById('headerLogo'); e.src=userData.companies.logo_url; e.style.display='inline-block' }
+    // Load company + children
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .select('company_id, role, companies(display_name, logo_url)')
+      .eq('id', sessionUser.id)
+      .maybeSingle();
+    if(userError || !userData || userData.role!=='parent'){ window.location.href='index.html'; return; }
+    if(userData.companies?.display_name) document.getElementById('companyName').textContent = userData.companies.display_name;
+    if(userData.companies?.logo_url){ const e=document.getElementById('headerLogo'); e.src=userData.companies.logo_url; e.style.display='inline-block' }
 
-    loadStudents();
-  } catch(err){ console.error("Init error:",err); }
+    loadStudents();
+  } catch(err){ console.error("Init error:",err); }
 }
 
 async function loadStudents(){
-  try {
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-    if (sessionError || !session) { window.location.href = "index.html"; return; }
-    const user = session.user;
+  try {
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    if (sessionError || !session) { window.location.href = "index.html"; return; }
+    const user = session.user;
 
-    const { data: userData, error: userError } = await supabase
-      .from('users')
-      .select('company_id, role')
-      .eq('id', user.id)
-      .maybeSingle();
-    if (userError || !userData) { console.error("User fetch error:", userError); return; }
-    if (userData.role !== 'parent') { window.location.href = "index.html"; return; }
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .select('company_id, role')
+      .eq('id', user.id)
+      .maybeSingle();
+    if (userError || !userData) { console.error("User fetch error:", userError); return; }
+    if (userData.role !== 'parent') { window.location.href = "index.html"; return; }
 
-    const { data: studentData, error: studentError } = await supabase
-      .from('students')
-      .select('id, name, parent_email, company_id, classes:class_id(name)')
-      .ilike('parent_email', user.email) 
-      .eq('company_id', userData.company_id);
-    if (studentError) { console.error("Error fetching student data:", studentError); return; }
+    const { data: studentData, error: studentError } = await supabase
+      .from('students')
+      .select('id, name, parent_email, company_id, classes:class_id(name)')
+      .ilike('parent_email', user.email) 
+      .eq('company_id', userData.company_id);
+    if (studentError) { console.error("Error fetching student data:", studentError); return; }
 
-    students = studentData || [];
-    if (students.length > 0) {
-      renderStudentCarousel();
-      setActiveStudent(students[0]);
-    } else {
-      document.getElementById("studentList").innerHTML = "<p>No students found linked to this account.</p>";
-    }
-  } catch(err){ console.error("Load students error:",err); }
+    students = studentData || [];
+    if (students.length > 0) {
+      renderStudentCarousel();
+      setActiveStudent(students[0]);
+    } else {
+      document.getElementById("studentList").innerHTML = "<p>No students found linked to this account.</p>";
+    }
+  } catch(err){ console.error("Load students error:",err); }
 }
 
 function renderStudentCarousel(){
-  const el = document.getElementById('studentList'); el.innerHTML='';
-  students.forEach(s=>{
-    const card = document.createElement('div'); card.className='student-card';
-    card.innerHTML = `<img src='https://ui-avatars.com/api/?name=${encodeURIComponent(s.name)}&background=ddd&color=555&rounded=true' alt=''> 
-                      <h4>${s.name}</h4>
-                      <div style='font-size:0.8rem;color:var(--muted)'>${s.classes?.name||''}</div>`;
-    card.onclick = ()=> setActiveStudent(s);
-    el.appendChild(card);
-  });
+  const el = document.getElementById('studentList'); el.innerHTML='';
+  students.forEach(s=>{
+    const card = document.createElement('div'); card.className='student-card';
+    card.innerHTML = `<img src='https://ui-avatars.com/api/?name=${encodeURIComponent(s.name)}&background=ddd&color=555&rounded=true' alt=''> 
+                      <h4>${s.name}</h4>
+                      <div style='font-size:0.8rem;color:var(--muted)'>${s.classes?.name||''}</div>`;
+    card.onclick = ()=> setActiveStudent(s);
+    el.appendChild(card);
+  });
 }
 
 function setActiveStudent(s){
-  activeStudent = s;
-  document.querySelectorAll('.student-card').forEach((c,i)=> c.classList.toggle('active', students[i].id===s.id));
-  refreshAll();
+  activeStudent = s;
+  document.querySelectorAll('.student-card').forEach((c,i)=> c.classList.toggle('active', students[i].id===s.id));
+  refreshAll();
 }
 
 async function refreshAll(){
-  if(!activeStudent) return;
-  await renderAttendanceSummary();
-  await renderAttendanceCharts();
-  await renderCalendar();
-  await renderPerformance();
+  if(!activeStudent) return;
+  await renderAttendanceSummary();
+  await renderAttendanceCharts();
+  await renderCalendar();
+  await renderPerformance();
 }
 
 async function renderAttendanceSummary() {
-  try {
-    const start = currentMonth.startOf('month').format('YYYY-MM-DD');
-    const end = currentMonth.endOf('month').format('YYYY-MM-DD');
-    const { data: attendanceData, error: attendanceError } = await supabase
-      .from('attendance')
-      .select('date,status')
-      .eq('student_id', activeStudent.id)
-      .gte('date', start).lte('date', end);
-    if (attendanceError) { console.error(attendanceError); return; }
+  try {
+    const start = currentMonth.startOf('month').format('YYYY-MM-DD');
+    const end = currentMonth.endOf('month').format('YYYY-MM-DD');
+    const { data: attendanceData, error: attendanceError } = await supabase
+      .from('attendance')
+      .select('date,status')
+      .eq('student_id', activeStudent.id)
+      .gte('date', start).lte('date', end);
+    if (attendanceError) { console.error(attendanceError); return; }
 
-    const present = (attendanceData || []).filter(r => r.status === 'Present').length;
-    const absent = (attendanceData || []).filter(r => r.status === 'Absent').length;
-    document.getElementById('summaryPresent').textContent = present;
-    document.getElementById('summaryAbsent').textContent = absent;
+    const present = (attendanceData || []).filter(r => r.status === 'Present').length;
+    const absent = (attendanceData || []).filter(r => r.status === 'Absent').length;
+    document.getElementById('summaryPresent').textContent = present;
+    document.getElementById('summaryAbsent').textContent = absent;
 
-    const ctx = document.getElementById('attendanceDonut').getContext('2d');
-    if (donutChart) donutChart.destroy();
-    donutChart = new Chart(ctx, {
-      type: 'doughnut',
-      data: { labels: ['Present', 'Absent'], datasets: [{ data: [present, absent], backgroundColor: ['#34d399', '#fb7185'] }] },
-      options: { plugins: { legend: { position: 'bottom' } } }
-    });
-  } catch(err){ console.error("Attendance summary error:",err); }
+    const ctx = document.getElementById('attendanceDonut').getContext('2d');
+    if (donutChart) donutChart.destroy();
+    donutChart = new Chart(ctx, {
+      type: 'doughnut',
+      data: { labels: ['Present', 'Absent'], datasets: [{ data: [present, absent], backgroundColor: ['#34d399', '#fb7185'] }] },
+      options: { plugins: { legend: { position: 'bottom' } } }
+    });
+  } catch(err){ console.error("Attendance summary error:",err); }
 }
 
 async function renderAttendanceCharts(){
-  try {
-    const start = currentMonth.startOf('month').format('YYYY-MM-DD');
-    const end = currentMonth.endOf('month').format('YYYY-MM-DD');
-    const { data } = await supabase.from('attendance')
-      .select('date,status')
-      .eq('student_id', activeStudent.id).gte('date', start).lte('date', end);
+  try {
+    const start = currentMonth.startOf('month').format('YYYY-MM-DD');
+    const end = currentMonth.endOf('month').format('YYYY-MM-DD');
+    const { data } = await supabase.from('attendance')
+      .select('date,status')
+      .eq('student_id', activeStudent.id).gte('date', start).lte('date', end);
 
-    // Mini chart: presence per weekday
-    const days = Array(7).fill(0);
-    (data||[]).forEach(r=>{ const dow = dayjs(r.date).day(); if(r.status==='Present') days[dow]++; });
-    const ctx = document.getElementById('miniAttendance').getContext('2d'); if(miniChart) miniChart.destroy();
-    miniChart = new Chart(ctx, {type:'bar', data:{labels:['Sun','Mon','Tue','Wed','Thu','Fri','Sat'], datasets:[{label:'Present', data:days, backgroundColor:'#60a5fa'}]}, options:{plugins:{legend:{display:false}}}});
+    // Mini chart: presence per weekday
+    const days = Array(7).fill(0);
+    (data||[]).forEach(r=>{ const dow = dayjs(r.date).day(); if(r.status==='Present') days[dow]++; });
+    const ctx = document.getElementById('miniAttendance').getContext('2d'); if(miniChart) miniChart.destroy();
+    miniChart = new Chart(ctx, {type:'bar', data:{labels:['Sun','Mon','Tue','Wed','Thu','Fri','Sat'], datasets:[{label:'Present', data:days, backgroundColor:'#60a5fa'}]}, options:{plugins:{legend:{display:false}}}});
 
-    // Trend chart
-    const dayCount = currentMonth.daysInMonth();
-    const labels = Array.from({length:dayCount},(_,i)=>i+1);
-    const counts = Array(dayCount).fill(0);
-    (data||[]).forEach(r=>{ const d = dayjs(r.date).date(); if(r.status==='Present') counts[d-1]=1; });
-    const ctx2 = document.getElementById('attendanceTrend').getContext('2d'); if(trendChart) trendChart.destroy();
-    trendChart = new Chart(ctx2, {type:'line', data:{labels, datasets:[{label:'Present', data:counts, borderColor:'#34d399'}]}, options:{scales:{y:{beginAtZero:true,max:1}}}});
-  } catch(err){ console.error("Attendance charts error:",err); }
+    // Trend chart
+    const dayCount = currentMonth.daysInMonth();
+    const labels = Array.from({length:dayCount},(_,i)=>i+1);
+    const counts = Array(dayCount).fill(0);
+    (data||[]).forEach(r=>{ const d = dayjs(r.date).date(); if(r.status==='Present') counts[d-1]=1; });
+    const ctx2 = document.getElementById('attendanceTrend').getContext('2d'); if(trendChart) trendChart.destroy();
+    trendChart = new Chart(ctx2, {type:'line', data:{labels, datasets:[{label:'Present', data:counts, borderColor:'#34d399'}]}, options:{scales:{y:{beginAtZero:true,max:1}}}});
+  } catch(err){ console.error("Attendance charts error:",err); }
 }
 
 async function renderCalendar(){
-  try {
-    const start = currentMonth.startOf('month').format('YYYY-MM-DD');
-    const end = currentMonth.endOf('month').format('YYYY-MM-DD');
-    const { data } = await supabase.from('attendance')
-      .select('date,status')
-      .eq('student_id', activeStudent.id).gte('date', start).lte('date', end);
+  try {
+    const start = currentMonth.startOf('month').format('YYYY-MM-DD');
+    const end = currentMonth.endOf('month').format('YYYY-MM-DD');
+    const { data } = await supabase.from('attendance')
+      .select('date,status')
+      .eq('student_id', activeStudent.id).gte('date', start).lte('date', end);
 
-    document.getElementById('currentMonth').textContent = currentMonth.format('MMMM YYYY');
-    const firstDay = currentMonth.startOf('month').day();
-    const dayCount = currentMonth.daysInMonth();
-    const grid = document.getElementById('calendarGrid'); grid.innerHTML='';
-    for(let i=0;i<firstDay;i++){ const cell=document.createElement('div'); grid.appendChild(cell); }
-    for(let d=1;d<=dayCount;d++){
-      const date = currentMonth.date(d).format('YYYY-MM-DD');
-      const record = (data||[]).find(r=>r.date===date);
-      const cell=document.createElement('div'); cell.className='day-cell';
-      cell.textContent = d;
-      if(record){
-        if(record.status==='Present'){ cell.classList.add('present'); const dot=document.createElement('span'); dot.className='dot present'; cell.appendChild(dot); }
-        else if(record.status==='Absent'){ cell.classList.add('absent'); const dot=document.createElement('span'); dot.className='dot absent'; cell.appendChild(dot); }
-      }
-      grid.appendChild(cell);
-    }
-  } catch(err){ console.error("Calendar error:",err); }
+    document.getElementById('currentMonth').textContent = currentMonth.format('MMMM YYYY');
+    const firstDay = currentMonth.startOf('month').day();
+    const dayCount = currentMonth.daysInMonth();
+    const grid = document.getElementById('calendarGrid'); grid.innerHTML='';
+    for(let i=0;i<firstDay;i++){ const cell=document.createElement('div'); grid.appendChild(cell); }
+    for(let d=1;d<=dayCount;d++){
+      const date = currentMonth.date(d).format('YYYY-MM-DD');
+      const record = (data||[]).find(r=>r.date===date);
+      const cell=document.createElement('div'); cell.className='day-cell';
+      cell.textContent = d;
+      if(record){
+        if(record.status==='Present'){ cell.classList.add('present'); const dot=document.createElement('span'); dot.className='dot present'; cell.appendChild(dot); }
+        else if(record.status==='Absent'){ cell.classList.add('absent'); const dot=document.createElement('span'); dot.className='dot absent'; cell.appendChild(dot); }
+      }
+      grid.appendChild(cell);
+    }
+  } catch(err){ console.error("Calendar error:",err); }
 }
 
 async function renderPerformance(){
-  try {
-    // FIX: Redefine the 'since' variable which was missing.
-    const since = dayjs().subtract(90,'day').format('YYYY-MM-DD');
+  try {
+    const { data: metrics } = await supabase.from('performance_metrics').select('id,name');
+    const { data: records } = await supabase.from('performance_records').select('metric_id,score,created_at').eq('student_id', activeStudent.id);
 
-    const { data: metrics } = await supabase.from('performance_metrics').select('id,name');
-    const { data: records, error: recordsError } = await supabase
-      .from('performance_records')
-      .select('score, notes, created_at, attendance_id, attendance(date)')
-      .eq('student_id', activeStudent.id)
-      .gte('created_at', since);
+    // Quick metrics
+    const list = document.getElementById('metricList'); list.innerHTML='';
+    metrics.forEach(m=>{
+      const scores = (records||[]).filter(r=>r.metric_id===m.id).map(r=>r.score);
+      const avg = scores.length ? (scores.reduce((a,b)=>a+b,0)/scores.length).toFixed(1) : '—';
+      const div=document.createElement('div'); div.textContent=`${m.name}: ${avg}`;
+      list.appendChild(div);
+    });
 
-    // Quick metrics
-    const list = document.getElementById('metricList'); list.innerHTML='';
-    metrics.forEach(m=>{
-      const scores = (records||[]).filter(r=>r.metric_id===m.id).map(r=>r.score);
-      const avg = scores.length ? (scores.reduce((a,b)=>a+b,0)/scores.length).toFixed(1) : '—';
-      const div=document.createElement('div'); div.textContent=`${m.name}: ${avg}`;
-      list.appendChild(div);
-    });
+    // Bar chart (averages)
+    const labels = metrics.map(m=>m.name);
+    const avgs = metrics.map(m=>{
+      const scores=(records||[]).filter(r=>r.metric_id===m.id).map(r=>r.score);
+      return scores.length? scores.reduce((a,b)=>a+b,0)/scores.length : 0;
+    });
+    const ctx=document.getElementById('metricsBar').getContext('2d'); if(metricsBar) metricsBar.destroy();
+    metricsBar=new Chart(ctx,{type:'bar', data:{labels,datasets:[{label:'Average', data:avgs, backgroundColor:'#a78bfa'}]}});
 
-    // Bar chart (averages)
-    const labels = metrics.map(m=>m.name);
-    const avgs = metrics.map(m=>{
-      const scores=(records||[]).filter(r=>r.metric_id===m.id).map(r=>r.score);
-      return scores.length? scores.reduce((a,b)=>a+b,0)/scores.length : 0;
-    });
-    const ctx=document.getElementById('metricsBar').getContext('2d'); if(metricsBar) metricsBar.destroy();
-    metricsBar=new Chart(ctx,{type:'bar', data:{labels,datasets:[{label:'Average', data:avgs, backgroundColor:'#a78bfa'}]}});
-
-    // Line chart (weekly avg)
-    const weeks = []; let weekStart = dayjs().subtract(11,'week').startOf('week');
-    for(let i=0;i<12;i++){ weeks.push(weekStart.add(i,'week')); }
-    const datasets = metrics.map(m=>{
-      const points = weeks.map(ws=>{
-        const we = ws.endOf('week');
-        const wkRecords=(records||[]).filter(r=>r.metric_id===m.id && dayjs(r.created_at).isAfter(ws) && dayjs(r.created_at).isBefore(we));
-        if(wkRecords.length===0) return null;
-        const avg=wkRecords.reduce((a,b)=>a+b.score,0)/wkRecords.length; return Number(avg.toFixed(1));
-      });
-      return {label:m.name, data:points, borderColor:`hsl(${Math.random()*360},70%,50%)`};
-    });
-    const ctx2=document.getElementById('metricsLine').getContext('2d'); if(metricsLine) metricsLine.destroy();
-    metricsLine=new Chart(ctx2,{type:'line', data:{labels:weeks.map(w=>w.format('MMM D')), datasets}});
-  } catch(err){ console.error("Performance error:",err); }
+    // Line chart (weekly avg)
+    const weeks = []; let weekStart = dayjs().subtract(11,'week').startOf('week');
+    for(let i=0;i<12;i++){ weeks.push(weekStart.add(i,'week')); }
+    const datasets = metrics.map(m=>{
+      const points = weeks.map(ws=>{
+        const we = ws.endOf('week');
+        const wkRecords=(records||[]).filter(r=>r.metric_id===m.id && dayjs(r.created_at).isAfter(ws) && dayjs(r.created_at).isBefore(we));
+        if(wkRecords.length===0) return null;
+        const avg=wkRecords.reduce((a,b)=>a+b.score,0)/wkRecords.length; return Number(avg.toFixed(1));
+      });
+      return {label:m.name, data:points, borderColor:`hsl(${Math.random()*360},70%,50%)`};
+    });
+    const ctx2=document.getElementById('metricsLine').getContext('2d'); if(metricsLine) metricsLine.destroy();
+    metricsLine=new Chart(ctx2,{type:'line', data:{labels:weeks.map(w=>w.format('MMM D')), datasets}});
+  } catch(err){ console.error("Performance error:",err); }
 }
 
 function switchTab(tab, btn){
-  document.getElementById('attendanceTab').style.display=tab==='attendance'?'block':'none';
-  document.getElementById('performanceTab').style.display=tab==='performance'?'block':'none';
-  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active')); btn.classList.add('active');
+  document.getElementById('attendanceTab').style.display=tab==='attendance'?'block':'none';
+  document.getElementById('performanceTab').style.display=tab==='performance'?'block':'none';
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active')); btn.classList.add('active');
 }
 
 function changeMonth(delta){ currentMonth=currentMonth.add(delta,'month'); refreshAll(); }
