@@ -248,7 +248,13 @@ async function drawTrendChart(company_id) {
   });
 
   const ctx = document.getElementById("trendChart").getContext("2d");
-  if (window.trendChart) window.trendChart.destroy();
+
+  // ✅ Safely destroy old chart
+  if (window.trendChart instanceof Chart) {
+    window.trendChart.destroy();
+  }
+
+  // ✅ Create new chart
   window.trendChart = new Chart(ctx, {
     type: "line",
     data: {
@@ -265,6 +271,7 @@ async function drawTrendChart(company_id) {
     options: { scales: { y: { beginAtZero: true } } }
   });
 }
+
 
 function renderPendingTable(students, paidMap) {
   const tbody = document.getElementById("pendingTable");
