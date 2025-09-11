@@ -4,12 +4,18 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>💰 Finance Dashboard</title>
+
+  <!-- External libs -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
   <style>
     :root {
       --primary: #2563eb;
+      --primary-dark: #1e40af;
       --secondary: #34c759;
       --warning: #facc15;
       --danger: #ef4444;
@@ -17,10 +23,9 @@
       --card: #ffffff;
       --shadow: 0 6px 16px rgba(0,0,0,0.08);
     }
-    * { box-sizing: border-box; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: 'Inter', sans-serif;
-      margin: 0;
       padding: 16px;
       background: var(--bg);
       color: #1f2937;
@@ -93,32 +98,39 @@
     }
     .badge.pending { background: var(--warning); color: #111; }
     .badge.paid { background: var(--secondary); }
-    .actions {
+    /* Fix overlap issue */
+    .page-footer-space { height: 120px; }
+    .fixed-bottom-buttons {
+      position: sticky;
+      bottom: 10px;
       display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      justify-content: center;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      z-index: 200;
       margin-top: 20px;
     }
-    /* Fixed bottom stacked buttons */
-    .fixed-bottom-buttons {
-      position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%);
-      display: flex; flex-direction: column; align-items: center; gap: 12px; z-index: 200;
-    }
     .fixed-bottom-buttons button {
-      width: 90vw; max-width: 400px; padding: 14px; border: none; border-radius: 10px;
-      cursor: pointer; font-size: 1rem; font-weight: 600; text-align: center;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: background 0.3s;
-      background: var(--primary); color: #fff;
+      width: 90vw;
+      max-width: 400px;
+      padding: 14px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: 600;
+      text-align: center;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      transition: background 0.3s;
+      background: var(--primary);
+      color: #fff;
     }
     .fixed-bottom-buttons button:hover { background: var(--primary-dark); }
-
   </style>
 </head>
 <body>
   <h1>💰 Finance Dashboard</h1>
 
-  <!-- Summary -->
   <div class="grid">
     <div class="card"><h3>Total Collected</h3><p id="totalIncome">Rp0</p></div>
     <div class="card"><h3>Total Expected</h3><p id="expectedIncome">Rp0</p></div>
@@ -126,19 +138,16 @@
     <div class="card"><h3>Collection Rate</h3><p id="collectionRate">0%</p></div>
   </div>
 
-  <!-- Pie Chart -->
   <div class="chart-section">
     <h2>Collection Status</h2>
     <canvas id="financeChart" height="250"></canvas>
   </div>
 
-  <!-- Trend Chart -->
   <div class="chart-section">
     <h2>📈 Last 30 Days Fee Collection</h2>
     <canvas id="trendChart" height="230"></canvas>
   </div>
 
-  <!-- Top Pending Students -->
   <div class="table-container">
     <h2>📌 Top Pending Students</h2>
     <table>
@@ -149,27 +158,28 @@
     </table>
   </div>
 
-  <!-- Actions -->
+  <div class="page-footer-space"></div>
+
   <div class="fixed-bottom-buttons">
-    <button class="btn export" onclick="exportCSV()">⬇️ Export CSV</button>
-    <button class="back-btn" id="backBtn" onclick="history.back()"><i class="fa fa-arrow-left"></i> Back</button>
+    <button onclick="exportPDF()">⬇️ Export PDF</button>
+    <button onclick="history.back()"><i class="fa fa-arrow-left"></i> Back</button>
   </div>
 
 <script>
-const SUPABASE_URL = 'https://ndishfwnkzdedfcywcle.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5kaXNoZndua3pkZWRmY3l3Y2xlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYwOTk0MjcsImV4cCI6MjA3MTY3NTQyN30.CXQSfhR0MVLF40v2Tp-BcENBpHpPshG9Ys3zLYiBQaM';
+const SUPABASE_URL = "https://ndishfwnkzdedfcywcle.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5kaXNoZndua3pkZWRmY3l3Y2xlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYwOTk0MjcsImV4cCI6MjA3MTY3NTQyN30.CXQSfhR0MVLF40v2Tp-BcENBpHpPshG9Ys3zLYiBQaM"; // replace with your anon key
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 async function calculateFinanceSummary(company_id) {
   const { data: students, error: studentsError } = await supabase
-    .from('students')
-    .select('id, name, totalFee')
-    .eq('company_id', company_id);
+    .from("students")
+    .select("id, name, totalFee")
+    .eq("company_id", company_id);
 
   const { data: fees, error: feesError } = await supabase
-    .from('fees')
-    .select('student_id, amount')
-    .eq('company_id', company_id);
+    .from("fees")
+    .select("student_id, amount, date")
+    .eq("company_id", company_id);
 
   if (studentsError || feesError) {
     console.error("Error fetching finance data:", studentsError || feesError);
@@ -211,11 +221,14 @@ function drawChart(collected, pending) {
 
 async function drawTrendChart(company_id) {
   const { data: fees, error } = await supabase
-    .from('fees')
-    .select('amount, date')
-    .eq('company_id', company_id);
+    .from("fees")
+    .select("amount, date")
+    .eq("company_id", company_id);
 
-  if (error) return;
+  if (error) {
+    console.error("Error fetching trend data:", error);
+    return;
+  }
 
   const today = new Date();
   const last30Days = [];
@@ -237,14 +250,14 @@ async function drawTrendChart(company_id) {
   const ctx = document.getElementById("trendChart").getContext("2d");
   if (window.trendChart) window.trendChart.destroy();
   window.trendChart = new Chart(ctx, {
-    type: 'line',
+    type: "line",
     data: {
       labels: last30Days,
       datasets: [{
-        label: 'Daily Fee Collected (Rp)',
+        label: "Daily Fee Collected (Rp)",
         data: last30Days.map(d => dailyCollection[d] || 0),
-        borderColor: '#2563eb',
-        backgroundColor: 'rgba(37, 99, 235, 0.1)',
+        borderColor: "#2563eb",
+        backgroundColor: "rgba(37, 99, 235, 0.1)",
         tension: 0.3,
         fill: true
       }]
@@ -265,42 +278,59 @@ function renderPendingTable(students, paidMap) {
     .slice(0, 10);
 
   pendingData.forEach(s => {
-    tbody.innerHTML += `
-      <tr>
-        <td>${s.name}</td>
-        <td>Rp${s.total.toLocaleString()}</td>
-        <td>Rp${s.paid.toLocaleString()}</td>
-        <td><span class="badge pending">Rp${s.pending.toLocaleString()}</span></td>
-      </tr>`;
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td>${s.name}</td>
+      <td>Rp${s.total.toLocaleString()}</td>
+      <td>Rp${s.paid.toLocaleString()}</td>
+      <td><span class="badge pending">Rp${s.pending.toLocaleString()}</span></td>
+    `;
+    tbody.appendChild(row);
   });
 }
 
-function exportCSV() {
+function exportPDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  doc.setFontSize(14);
+  doc.text("📌 Top Pending Students", 14, 20);
+
   const rows = [["Student", "Total Fee", "Paid", "Pending"]];
   document.querySelectorAll("#pendingTable tr").forEach(tr => {
     const cells = [...tr.querySelectorAll("td")].map(td => td.innerText);
     rows.push(cells);
   });
-  let csvContent = "data:text/csv;charset=utf-8," + rows.map(r => r.join(",")).join("\n");
-  const link = document.createElement("a");
-  link.setAttribute("href", encodeURI(csvContent));
-  link.setAttribute("download", "pending_students.csv");
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
+
+  let y = 30;
+  rows.forEach(row => {
+    doc.text(row.join(" | "), 14, y);
+    y += 10;
+  });
+
+  doc.save("pending_students.pdf");
 }
 
 window.onload = async () => {
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) { window.location.href = "index.html"; return; }
+  const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+  if (sessionError) {
+    console.error("Session error:", sessionError);
+    return;
+  }
+  if (!session) {
+    window.location.href = "index.html";
+    return;
+  }
 
-  const { data: companyData } = await supabase
+  const { data: companyData, error: companyError } = await supabase
     .from("users")
     .select("company_id")
     .eq("id", session.user.id)
     .single();
 
-  if (!companyData) return;
+  if (companyError || !companyData) {
+    console.error("Company fetch error:", companyError);
+    return;
+  }
 
   const company_id = companyData.company_id;
   await calculateFinanceSummary(company_id);
