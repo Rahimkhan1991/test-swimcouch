@@ -198,7 +198,7 @@
         loadStudents(document.getElementById("classSelect").value, e.target.value);
         loadPayments(null);
       });
-      
+      document.getElementById("backBtn").addEventListener("click", () => history.back());
     });
   </script>
 
@@ -247,16 +247,24 @@
       border: 1px solid #d1d5db;
       font-size: 0.95rem;
     }
-    table {
-      width: 95%;
-      border-collapse: collapse;
-      margin-top: 15px;
-    }
-    th, td {
-      padding: 14px;
-      border-bottom: 1px solid #e5e7eb;
-      text-align: left;
-    }
+   .table-container {
+  width: 100%;
+  overflow-x: auto;   /* allows scrolling on small screens */
+}
+
+table {
+  width: 100%;
+  min-width: 480px;   /* keeps columns readable */
+  border-collapse: collapse;
+  margin-top: 15px;
+}
+th, td {
+  padding: 12px;
+  border-bottom: 1px solid #e5e7eb;
+  text-align: left;
+  font-size: 0.9rem;
+}
+
     th {
       background: #f9fafb;
       font-weight: 600;
@@ -315,14 +323,16 @@
       <select id="studentSelect"><option value="">-- Select Student --</option></select>
       <input type="text" id="studentSearch" placeholder="🔍 Search by name...">
     </div>
-    <table id="paymentTable">
+ <div class="table-container">
+  <table id="paymentTable">
       <thead>
         <tr><th>Date</th><th>Receipt No.</th><th>Amount</th><th>Action</th></tr>
       </thead>
       <tbody>
         <tr><td colspan="4">Select a student to view payments.</td></tr>
       </tbody>
-    </table>
+      </table>
+</div>
   </div>
   <div class="back-button-container">
   <a href="javascript:history.back()" class="back-button">
