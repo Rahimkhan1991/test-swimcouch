@@ -3,63 +3,139 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Parent Dashboard — Enhanced</title>
+  <title>Parent Dashboard — Revamped</title>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
-
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
 
   <style>
-    :root{--primary:#6366f1;--primary-2:#4f46e5;--bg:#f6f7fb;--card:#fff;--muted:#6b7280;--success:#22c55e;--danger:#ef4444}
-    *{box-sizing:border-box}
-    body{font-family:Inter,Segoe UI,Roboto,system-ui; margin:0; background:linear-gradient(180deg,#f8fafc, #eef2ff); color:#0f172a; padding:18px; display:flex; justify-content:center}
-    .container{width:100%; max-width:1100px}
-    header{display:flex;align-items:center;gap:16px;margin-bottom:18px}
-    .brand{display:flex;align-items:center;gap:12px;background:var(--card);padding:12px 16px;border-radius:12px;box-shadow:0 6px 20px rgba(15,23,42,0.06)}
-    .brand img{height:52px;width:52px;border-radius:10px;object-fit:cover}
-    .brand h1{font-size:1.25rem;margin:0;color:var(--primary)}
-    .profile-menu{margin-left:auto;display:flex;align-items:center;gap:12px}
-    .profile-btn{background:transparent;border:0;padding:8px 12px;border-radius:10px;cursor:pointer}
+    :root {
+      --primary:#6366f1;
+      --primary-2:#4f46e5;
+      --bg:#f4f6fb;
+      --card:rgba(255,255,255,0.75);
+      --muted:#6b7280;
+      --success:#22c55e;
+      --danger:#ef4444;
+    }
 
-    .dashboard-grid{display:grid;grid-template-columns:380px 1fr;gap:16px}
+    *{box-sizing:border-box;margin:0;padding:0}
+    body {
+      font-family:Inter,Segoe UI,Roboto,system-ui;
+      background:linear-gradient(135deg,#eef2ff,#f8fafc);
+      min-height:100vh;
+      padding:20px;
+      color:#111827;
+      display:flex;
+      justify-content:center;
+    }
+    .container { width:100%; max-width:1200px }
 
-    /* Left column */
-    .left-col .card{background:var(--card);border-radius:12px;padding:14px;box-shadow:0 6px 20px rgba(15,23,42,0.04);margin-bottom:14px}
-    .student-carousel{display:flex;align-items:center;gap:10px}
-    .student-card{min-width:120px;background:linear-gradient(180deg,#fff,#fbfdff);border-radius:12px;padding:10px;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;border:1px solid transparent}
-    .student-card.active{border-color:var(--primary);box-shadow:0 4px 18px rgba(99,102,241,0.12)}
-    .student-card img{height:64px;width:64px;border-radius:50%;object-fit:cover}
-    .student-card h4{margin:0;font-size:0.95rem}
-    .stat-row{display:flex;justify-content:space-between;padding:8px 0}
-    .stat{display:flex;flex-direction:column}
-    .stat .value{font-weight:700}
+    /* Header */
+    header {
+      display:flex; align-items:center; gap:16px; margin-bottom:20px;
+    }
+    .brand {
+      display:flex; align-items:center; gap:12px;
+      background:var(--card); backdrop-filter:blur(10px);
+      padding:12px 18px; border-radius:16px;
+      box-shadow:0 8px 24px rgba(0,0,0,0.06);
+    }
+    .brand img { height:50px; width:50px; border-radius:12px; object-fit:cover }
+    .brand h1 { font-size:1.3rem; color:var(--primary); margin:0 }
+    .profile-menu { margin-left:auto; display:flex; align-items:center; gap:14px }
+    .profile-btn {
+      background:var(--primary); border:0; color:white;
+      padding:10px 14px; border-radius:12px; cursor:pointer;
+      transition:background 0.3s;
+    }
+    .profile-btn:hover { background:var(--primary-2) }
 
-    /* Right column */
-    .card{background:var(--card);border-radius:12px;padding:18px;box-shadow:0 6px 20px rgba(15,23,42,0.04)}
-    .tabs{display:flex;gap:8px;margin-bottom:12px}
-    .tab{padding:8px 12px;border-radius:10px;cursor:pointer;background:transparent;border:1px solid transparent}
-    .tab.active{background:linear-gradient(90deg,var(--primary),var(--primary-2));color:white}
+    /* Dashboard Layout */
+    .dashboard-grid {
+      display:grid; grid-template-columns:340px 1fr; gap:20px;
+    }
 
-    .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-    .chart-wrap{height:220px}
+    /* Card */
+    .card {
+      background:var(--card); backdrop-filter:blur(12px);
+      border-radius:16px; padding:18px;
+      box-shadow:0 8px 24px rgba(0,0,0,0.05);
+      transition:transform 0.25s ease, box-shadow 0.25s ease;
+    }
+    .card:hover { transform:translateY(-4px); box-shadow:0 12px 28px rgba(0,0,0,0.08) }
+
+    /* Student carousel */
+    .student-carousel { display:flex; gap:14px; overflow-x:auto; padding-bottom:6px }
+    .student-card {
+      min-width:120px; text-align:center; padding:14px;
+      background:rgba(255,255,255,0.6);
+      border-radius:14px; cursor:pointer;
+      border:2px solid transparent;
+      transition:all 0.25s ease;
+    }
+    .student-card:hover { transform:scale(1.05) }
+    .student-card.active {
+      border-color:var(--primary);
+      box-shadow:0 4px 16px rgba(99,102,241,0.3);
+    }
+    .student-card img { height:64px;width:64px;border-radius:50%;margin-bottom:8px }
+    .student-card h4 { font-size:1rem;margin:0 }
+
+    /* Summary */
+    .stat-row { display:flex; justify-content:space-between; padding:8px 0 }
+    .stat { display:flex; flex-direction:column }
+    .stat .value { font-weight:700; font-size:1.1rem }
+
+    /* Tabs */
+    .tabs { display:flex; gap:10px; margin-bottom:14px }
+    .tab {
+      padding:8px 14px; border-radius:12px;
+      border:1px solid #e5e7eb; cursor:pointer;
+      transition:all 0.3s;
+    }
+    .tab.active {
+      background:linear-gradient(90deg,var(--primary),var(--primary-2));
+      color:white; border:0;
+    }
+
+    /* Charts */
+    .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:16px }
+    .chart-wrap { height:220px }
 
     /* Calendar */
-    .calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-top:12px}
-    .day-name{font-size:0.78rem;color:var(--muted);text-align:center}
-    .day-cell{background:#f8fafc;padding:10px;border-radius:8px;text-align:center;min-height:72px;position:relative}
-    .day-cell.present{background:linear-gradient(180deg,#dcfce7,#bbf7d0)}
-    .day-cell.absent{background:linear-gradient(180deg,#fee2e2,#fecaca)}
-    .day-cell .dot{position:absolute;right:8px;top:8px;height:10px;width:10px;border-radius:50%}
-    .dot.present{background:var(--success)}
-    .dot.absent{background:var(--danger)}
+    .calendar { display:grid; grid-template-columns:repeat(7,1fr); gap:8px; margin-top:12px }
+    .day-name { font-size:0.78rem; color:var(--muted); text-align:center }
+    .day-cell {
+      background:#f9fafb; padding:10px; border-radius:10px;
+      text-align:center; min-height:72px; position:relative;
+      transition:transform 0.2s, box-shadow 0.2s;
+    }
+    .day-cell:hover { transform:scale(1.05); box-shadow:0 4px 12px rgba(0,0,0,0.08) }
+    .day-cell.present { background:linear-gradient(180deg,#dcfce7,#bbf7d0) }
+    .day-cell.absent { background:linear-gradient(180deg,#fee2e2,#fecaca) }
+    .day-cell .dot { position:absolute; right:8px; top:8px; height:10px; width:10px; border-radius:50% }
+    .dot.present { background:var(--success) }
+    .dot.absent { background:var(--danger) }
 
-    .legend{display:flex;gap:10px;justify-content:center;margin-top:12px}
-    .legend-item{display:flex;gap:8px;align-items:center}
+    /* Legend */
+    .legend { display:flex; gap:12px; justify-content:center; margin-top:10px }
+    .legend-item { display:flex; gap:6px; align-items:center; font-size:0.85rem }
 
-    /* responsive */
-    @media (max-width:1000px){.dashboard-grid{grid-template-columns:1fr;}.left-col{order:2}.right-col{order:1}}
+    /* Responsive */
+    @media (max-width:1000px) {
+      .dashboard-grid { grid-template-columns:1fr }
+      .left-col { order:2 } .right-col { order:1 }
+    }
+
+    /* Fade animation */
+    .fade-in { animation: fadeIn 0.4s ease forwards; }
+    @keyframes fadeIn {
+      from { opacity:0; transform:translateY(8px) }
+      to { opacity:1; transform:translateY(0) }
+    }
   </style>
 </head>
 <body>
@@ -81,13 +157,14 @@
 
     <!-- Dashboard -->
     <div class="dashboard-grid">
+      <!-- Left -->
       <div class="left-col">
-        <div class="card">
-          <h3 style="margin-top:0">Children</h3>
+        <div class="card fade-in">
+          <h3 style="margin:0 0 10px">Children</h3>
           <div class="student-carousel" id="studentList"></div>
         </div>
 
-        <div class="card" id="summaryCard">
+        <div class="card fade-in">
           <h4 style="margin:0 0 8px">This Month Summary</h4>
           <div class="stat-row">
             <div class="stat"><span class="label">Present</span><span class="value" id="summaryPresent">—</span></div>
@@ -96,17 +173,18 @@
           <div style="height:160px"><canvas id="attendanceDonut"></canvas></div>
         </div>
 
-        <div class="card" id="quickMetrics">
+        <div class="card fade-in">
           <h4 style="margin:0 0 8px">Quick Performance</h4>
           <div id="metricList"></div>
         </div>
       </div>
 
+      <!-- Right -->
       <div class="right-col">
-        <div class="card">
+        <div class="card fade-in">
           <div style="display:flex;align-items:center;justify-content:space-between">
             <h3 style="margin:0">Overview</h3>
-            <div>
+            <div class="tabs">
               <button class="tab active" data-tab="attendance" onclick="switchTab('attendance', this)">
                 <i class="fa-regular fa-calendar-days"></i> Attendance
               </button>
@@ -117,26 +195,26 @@
           </div>
 
           <!-- Attendance Tab -->
-          <div id="attendanceTab" class="tab-panel">
+          <div id="attendanceTab" class="tab-panel fade-in">
             <div class="grid-2">
-              <div class="card" style="padding:12px">
+              <div class="card">
                 <h4 style="margin:0">Monthly Attendance</h4>
                 <div class="chart-wrap"><canvas id="miniAttendance"></canvas></div>
               </div>
-              <div class="card" style="padding:12px">
+              <div class="card">
                 <h4 style="margin:0">Attendance Trend</h4>
                 <div class="chart-wrap"><canvas id="attendanceTrend"></canvas></div>
               </div>
             </div>
 
-            <div style="margin-top:12px">
-              <div style="display:flex;align-items:center;gap:8px;justify-content:space-between">
+            <div style="margin-top:14px">
+              <div style="display:flex;align-items:center;justify-content:space-between">
                 <div>
                   <button onclick="changeMonth(-1)"><i class="fa-solid fa-chevron-left"></i></button>
                   <strong id="currentMonth"></strong>
                   <button onclick="changeMonth(1)"><i class="fa-solid fa-chevron-right"></i></button>
                 </div>
-                <div style="color:var(--muted);font-size:0.95rem">Click a day for details</div>
+                <div style="color:var(--muted);font-size:0.9rem">Click a day for details</div>
               </div>
 
               <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-top:10px">
@@ -155,13 +233,13 @@
           </div>
 
           <!-- Performance Tab -->
-          <div id="performanceTab" class="tab-panel" style="display:none;margin-top:12px">
-            <div style="display:flex;gap:12px;align-items:flex-start">
-              <div style="flex:1" class="card">
+          <div id="performanceTab" class="tab-panel fade-in" style="display:none;margin-top:12px">
+            <div style="display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap">
+              <div style="flex:1;min-width:260px" class="card">
                 <h4 style="margin:0">Metric Averages</h4>
                 <div style="height:240px"><canvas id="metricsBar"></canvas></div>
               </div>
-              <div style="flex:1" class="card">
+              <div style="flex:1;min-width:260px" class="card">
                 <h4 style="margin:0">Progress Over Time</h4>
                 <div style="height:240px"><canvas id="metricsLine"></canvas></div>
               </div>
@@ -177,8 +255,9 @@
     </div>
   </div>
 
-<script>
-const SUPABASE_URL = "https://ndishfwnkzdedfcywcle.supabase.co";
+  <!-- Scripts (unchanged backend logic) -->
+  <script>
+    const SUPABASE_URL = "https://ndishfwnkzdedfcywcle.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5kaXNoZndua3pkZWRmY3l3Y2xlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYwOTk0MjcsImV4cCI6MjA3MTY3NTQyN30.CXQSfhR0MVLF40v2Tp-BcENBpHpPshG9Ys3zLYiBQaM";
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -462,6 +541,6 @@ function changeMonth(delta){ currentMonth=currentMonth.add(delta,'month'); refre
 function logout(){ supabase.auth.signOut().then(()=>window.location.href='index.html'); }
 
 window.onload = init;
-</script>
+  </script>
 </body>
 </html>
