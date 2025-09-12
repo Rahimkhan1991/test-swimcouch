@@ -234,7 +234,7 @@ box-shadow: 0 4px 10px rgba(0,0,0,0.3);
 <div class="dropdown-list" id="classList"></div>
 </div>
 
-<button id="addBtn"style="margin-top:12px; background:#6366F1;"><i class="fa-solid fa-check"></i> Add Student</button>
+<button id="addBtn" style="margin-top:12px; background:#6366F1;"><i class="fa-solid fa-check"></i> Add Student</button>
 <button id="backBtn" style="margin-top:12px; background:#6366F1;"><i class="fa-solid fa-arrow-left"></i> Back</button>
 </div>
 
@@ -248,44 +248,44 @@ let selectedClass = null;
 
 /* === Toast === */
 function showToast(msg, type="success") {
-const toast = document.createElement("div");
-toast.className = "toast " + type;
-toast.textContent = msg;
-document.getElementById("toastContainer").appendChild(toast);
-setTimeout(() => toast.remove(), 3000);
+  const toast = document.createElement("div");
+  toast.className = "toast " + type;
+  toast.textContent = msg;
+  document.getElementById("toastContainer").appendChild(toast);
+  setTimeout(() => toast.remove(), 3000);
 }
 
 /* === Session & Header === */
 async function getSessionUser() {
-const { data: { session }, error } = await supabase.auth.getSession();
-if (error || !session) {
-window.location.href = 'index.html';
-return null;
-}
-return session.user;
+  const { data: { session }, error } = await supabase.auth.getSession();
+  if (error || !session) {
+    window.location.href = 'index.html';
+    return null;
+  }
+  return session.user;
 }
 
 async function loadDynamicHeader(user) {
-const { data, error } = await supabase
-.from('users')
-.select('company_id, companies(display_name, logo_url)')
-.eq('id', user.id)
-.single();
+  const { data, error } = await supabase
+    .from('users')
+    .select('company_id, companies(display_name, logo_url)')
+    .eq('id', user.id)
+    .single();
 
-if (error || !data || !data.companies) {
-console.error("Error fetching company data:", error?.message);
-return;
-}
+  if (error || !data || !data.companies) {
+    console.error("Error fetching company data:", error?.message);
+    return;
+  }
 
-currentCompanyId = data.company_id;
-document.getElementById("companyNameDisplay").textContent =
-data.companies.display_name || "Add Student";
+  currentCompanyId = data.company_id;
+  document.getElementById("companyNameDisplay").textContent =
+    data.companies.display_name || "Add Student";
 
-if (data.companies.logo_url) {
-const logo = document.getElementById("headerLogo");
-logo.src = data.companies.logo_url;
-logo.style.display = "inline-block";
-}
+  if (data.companies.logo_url) {
+    const logo = document.getElementById("headerLogo");
+    logo.src = data.companies.logo_url;
+    logo.style.display = "inline-block";
+  }
 }
 
 /* === Balance === */
@@ -293,21 +293,37 @@ const totalFee = document.getElementById("totalFee");
 const initialPayment = document.getElementById("initialPayment");
 const balanceFee = document.getElementById("balanceFee");
 function updateBalance() {
-const total = parseFloat(totalFee.value) || 0;
-const paid = parseFloat(initialPayment.value) || 0;
-balanceFee.value = total - paid >= 0 ? total - paid : 0;
+  const total = parseFloat(totalFee.value) || 0;
+  const paid = parseFloat(initialPayment.value) || 0;
+  balanceFee.value = total - paid >= 0 ? total - paid : 0;
 }
 totalFee.addEventListener("input", updateBalance);
 initialPayment.addEventListener("input", updateBalance);
 
+/* === Live Input Formatting === */
+const nameInput = document.getElementById("name");
+const parentEmailInput = document.getElementById("parentEmail");
+
+// Auto-capitalize each word in name as user types
+nameInput.addEventListener("input", () => {
+  nameInput.value = nameInput.value
+    .toLowerCase()
+    .replace(/\b\w/g, char => char.toUpperCase());
+});
+
+// Always lowercase email
+parentEmailInput.addEventListener("input", () => {
+  parentEmailInput.value = parentEmailInput.value.toLowerCase();
+});
+
 /* === Days Chips === */
 function getSelectedDays() {
-return [...document.querySelectorAll(".chip.selected")].map(c => c.dataset.day);
+  return [...document.querySelectorAll(".chip.selected")].map(c => c.dataset.day);
 }
 document.getElementById("daysChips").addEventListener("click", e => {
-if (e.target.classList.contains("chip")) {
-e.target.classList.toggle("selected");
-}
+  if (e.target.classList.contains("chip")) {
+    e.target.classList.toggle("selected");
+  }
 });
 
 /* === Class Dropdown === */
@@ -316,151 +332,156 @@ const classBtn = classDropdown.querySelector(".dropdown-btn");
 const classList = document.getElementById("classList");
 
 classBtn.addEventListener("click", () => {
-classDropdown.classList.toggle("active");
+  classDropdown.classList.toggle("active");
 });
 
 async function fetchClasses() {
-if (!currentCompanyId) return;
-const { data, error } = await supabase
-.from('classes')
-.select('id, name')
-.eq('company_id', currentCompanyId)
-.order('name');
+  if (!currentCompanyId) return;
+  const { data, error } = await supabase
+    .from('classes')
+    .select('id, name')
+    .eq('company_id', currentCompanyId)
+    .order('name');
 
-if (error) {
-console.error("Error fetching classes:", error.message);
-return;
-}
+  if (error) {
+    console.error("Error fetching classes:", error.message);
+    return;
+  }
 
-classList.innerHTML = "";
-data.forEach(cls => {
-const div = document.createElement("div");
-div.textContent = cls.name;
-div.addEventListener("click", () => {
-selectedClass = cls;
-classBtn.textContent = "Class: " + cls.name;
-classDropdown.classList.remove("active");
-});
-classList.appendChild(div);
-});
+  classList.innerHTML = "";
+  data.forEach(cls => {
+    const div = document.createElement("div");
+    div.textContent = cls.name;
+    div.addEventListener("click", () => {
+      selectedClass = cls;
+      classBtn.textContent = "Class: " + cls.name;
+      classDropdown.classList.remove("active");
+    });
+    classList.appendChild(div);
+  });
 }
 
 /* === Invite Parent via Edge Function === */
 async function createParentAccount(email, companyId) {
-if (!email || !companyId) return;
-const { error } = await supabase.functions.invoke('invite-parent', {
-body: { email, companyId }
-});
-if (error) console.error("Error inviting parent:", error.message);
+  if (!email || !companyId) return;
+  const { error } = await supabase.functions.invoke('invite-parent', {
+    body: { email, companyId }
+  });
+  if (error) console.error("Error inviting parent:", error.message);
 }
 
-// New function to clear the form
+// Clear form
 function clearForm() {
-document.getElementById("name").value = "";
-document.getElementById("phone").value = "";
-document.getElementById("parentEmail").value = "";
-document.getElementById("totalFee").value = "";
-document.getElementById("initialPayment").value = "";
-document.getElementById("balanceFee").value = "";
-document.querySelectorAll(".chip.selected").forEach(chip => chip.classList.remove("selected"));
-selectedClass = null;
-document.querySelector(".dropdown-btn").textContent = "Select Class";
+  document.getElementById("name").value = "";
+  document.getElementById("phone").value = "";
+  document.getElementById("parentEmail").value = "";
+  document.getElementById("totalFee").value = "";
+  document.getElementById("initialPayment").value = "";
+  document.getElementById("balanceFee").value = "";
+  document.querySelectorAll(".chip.selected").forEach(chip => chip.classList.remove("selected"));
+  selectedClass = null;
+  document.querySelector(".dropdown-btn").textContent = "Select Class";
 }
 
 /* === Add Student === */
 async function addStudent(user) {
-const name = document.getElementById("name").value.trim();
-const phone = document.getElementById("phone").value.trim();
-const parentEmail = document.getElementById("parentEmail").value.trim();
-const days = getSelectedDays();
-const total = parseFloat(totalFee.value) || 0;
-const initial = parseFloat(initialPayment.value) || 0;
-const balance = total - initial;
+  let name = document.getElementById("name").value.trim();
+  const phone = document.getElementById("phone").value.trim();
+  let parentEmail = document.getElementById("parentEmail").value.trim();
 
-if (!name || !phone || days.length === 0 || !selectedClass) {
-showToast("Please fill all required fields.", "error");
-return;
-}
-if (initial > total) {
-showToast("Initial payment cannot exceed total fee.", "error");
-return;
-}
+  // Normalize
+  name = name.toLowerCase().replace(/\b\w/g, char => char.toUpperCase());
+  parentEmail = parentEmail.toLowerCase();
 
-// check duplicates
-const { data: existing, error: fetchError } = await supabase
-.from('students')
-.select('name, phone')
-.eq('company_id', currentCompanyId);
-if (fetchError) {
-showToast("Error checking duplicates", "error");
-return;
-}
-if (existing.some(s => s.name.toLowerCase() === name.toLowerCase())) {
-showToast("Student name already exists.", "error");
-return;
-}
-if (existing.some(s => s.phone === phone)) {
-showToast("Phone already exists.", "error");
-return;
-}
+  const days = getSelectedDays();
+  const total = parseFloat(totalFee.value) || 0;
+  const initial = parseFloat(initialPayment.value) || 0;
+  const balance = total - initial;
 
-// insert student
-const { data: studentData, error: studentError } = await supabase
-.from('students')
-.insert([{
-name, phone,
-parent_email: parentEmail || null,
-day: days,
-totalFee: total,
-initialPayment: initial,
-balanceFee: balance,
-class_id: selectedClass.id,
-user_id: user.id,
-company_id: currentCompanyId
-}])
-.select();
+  if (!name || !phone || days.length === 0 || !selectedClass) {
+    showToast("Please fill all required fields.", "error");
+    return;
+  }
+  if (initial > total) {
+    showToast("Initial payment cannot exceed total fee.", "error");
+    return;
+  }
 
-if (studentError) {
-showToast("Error adding student", "error");
-return;
-}
+  // check duplicates
+  const { data: existing, error: fetchError } = await supabase
+    .from('students')
+    .select('name, phone')
+    .eq('company_id', currentCompanyId);
+  if (fetchError) {
+    showToast("Error checking duplicates", "error");
+    return;
+  }
+  if (existing.some(s => s.name.toLowerCase() === name.toLowerCase())) {
+    showToast("Student name already exists.", "error");
+    return;
+  }
+  if (existing.some(s => s.phone === phone)) {
+    showToast("Phone already exists.", "error");
+    return;
+  }
 
-// insert fee
-const { error: feeError } = await supabase
-.from('fees')
-.insert([{
-student_id: studentData[0].id,
-amount: initial,
-date: new Date().toISOString().split("T")[0],
-user_id: user.id,
-company_id: currentCompanyId
-}]);
-if (feeError) {
-showToast("Error saving fee record", "error");
-return;
-}
+  // insert student
+  const { data: studentData, error: studentError } = await supabase
+    .from('students')
+    .insert([{
+      name, phone,
+      parent_email: parentEmail || null,
+      day: days,
+      totalFee: total,
+      initialPayment: initial,
+      balanceFee: balance,
+      class_id: selectedClass.id,
+      user_id: user.id,
+      company_id: currentCompanyId
+    }])
+    .select();
 
-if (parentEmail) {
-await createParentAccount(parentEmail, currentCompanyId);
-}
+  if (studentError) {
+    showToast("Error adding student", "error");
+    return;
+  }
 
-showToast("Student added successfully!", "success");
-clearForm(); // Clear the form fields
+  // insert fee
+  const { error: feeError } = await supabase
+    .from('fees')
+    .insert([{
+      student_id: studentData[0].id,
+      amount: initial,
+      date: new Date().toISOString().split("T")[0],
+      user_id: user.id,
+      company_id: currentCompanyId
+    }]);
+  if (feeError) {
+    showToast("Error saving fee record", "error");
+    return;
+  }
+
+  if (parentEmail) {
+    await createParentAccount(parentEmail, currentCompanyId);
+  }
+
+  showToast("Student added successfully!", "success");
+  clearForm();
 }
 
 /* === Init === */
 window.onload = async () => {
-const user = await getSessionUser();
-if (!user) return;
-await loadDynamicHeader(user);
-await fetchClasses();
+  const user = await getSessionUser();
+  if (!user) return;
+  await loadDynamicHeader(user);
+  await fetchClasses();
 
-document.getElementById("addBtn").addEventListener("click", () => addStudent(user));
-document.getElementById("backBtn").addEventListener("click", () => history.back());
+  document.getElementById("addBtn").addEventListener("click", () => addStudent(user));
+  document.getElementById("backBtn").addEventListener("click", () => history.back());
 
-document.addEventListener("click", e => {
-if (!classDropdown.contains(e.target)) classDropdown.classList.remove("active");
-});
+  document.addEventListener("click", e => {
+    if (!classDropdown.contains(e.target)) classDropdown.classList.remove("active");
+  });
 };
 </script>
 </body>
