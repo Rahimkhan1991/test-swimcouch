@@ -329,13 +329,13 @@ async function generateReport() {
   });
   let perfSummaryHTML = "";
   if (Object.keys(summaryMap).length>0){
-    perfSummaryHTML = `<h3>⭐ Performance Summary</h3><table class="report-table"><thead><tr><th>Metric</th><th>Average</th></tr></thead><tbody>`;
+    perfSummaryHTML = `<h3>⭐ Performance Summary</h3><div class="table-container"><table class="report-table"><thead><tr><th>Metric</th><th>Average</th></tr></thead><tbody>`;
     for (const [metric,val] of Object.entries(summaryMap)){
       const avg = (val.total/val.count).toFixed(1);
       const stars = "★".repeat(Math.round(avg));
       perfSummaryHTML += `<tr><td>${metric}</td><td><span class="stars">${stars}</span></td></tr>`;
     }
-    perfSummaryHTML += `</tbody></table>`;
+    perfSummaryHTML += `</tbody></table></div>`;
   }
 
   // Attendance rendering
