@@ -352,9 +352,16 @@ async function renderPerformance() {
     // First, fetch performance_records (try with relation, fallback if error)
     let records = [];
     let { data: recordsData, error: recordsError } = await supabase
-      .from("performance_records")
-      .select("score, notes, created_at, metric_id, attendance:attendance_id(date)")
-      .eq("student_id", activeStudent.id);
+  .from("performance_records")
+  .select(`
+    score, notes, created_at, metric_id,
+    attendance:attendance_id (
+      date,
+      student_id
+    )
+  `)
+  .eq("attendance.student_id", activeStudent.id);
+
 
     if (recordsError) {
       console.warn("No relation available for attendance. Falling back…", recordsError.message);
