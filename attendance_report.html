@@ -126,13 +126,20 @@
     .kpi .value { font-size: 24px; font-weight: 700; color: var(--accent); }
     .kpi .label { font-size: 14px; color: #6b7280; }
     /* Table */
-    .report-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 15px;
-      border-radius: 12px;
-      overflow: hidden;
-    }
+    .table-container {
+  width: 100%;
+  overflow-x: auto;   /* enable horizontal scroll */
+}
+
+.report-table {
+  width: 100%;
+  min-width: 480px;   /* ensures readability on mobile */
+  border-collapse: collapse;
+  margin-top: 15px;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
     .report-table th, .report-table td {
       padding: 12px;
       border-bottom: 1px solid #e5e7eb;
@@ -345,8 +352,9 @@ async function generateReport() {
     for (let i = 0; i < attendance.length; i += sessionSettings.length) {
       const chunk = attendance.slice(i, i + sessionSettings.length);
       attendanceHTML += `<h4 style="margin-top:15px; color:#2563eb;">📦 Session ${sessionNum}</h4>`;
-      attendanceHTML += `<table class="report-table">
-        <thead><tr><th>Date</th><th>Status</th><th>Performance</th></tr></thead><tbody>`;
+      attendanceHTML += `<div class="table-container"><table class="report-table">
+  <thead><tr><th>Date</th><th>Status</th><th>Performance</th></tr></thead><tbody>`;
+
       chunk.forEach(att => {
         let perfHtml = "";
         if (perfMap[att.id]){
@@ -366,7 +374,8 @@ async function generateReport() {
       sessionNum++;
     }
   } else {
-    attendanceHTML = `<table class="report-table"><thead><tr><th>Date</th><th>Status</th><th>Performance</th></tr></thead><tbody>`;
+    attendanceHTML = `<div class="table-container"><table class="report-table"><thead><tr><th>Date</th><th>Status</th><th>Performance</th></tr></thead><tbody>`;
+
     attendance.forEach(att=>{
       let perfHtml = "";
       if (perfMap[att.id]){
